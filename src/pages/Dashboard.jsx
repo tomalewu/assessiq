@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { setAdminAuth } from '../App'
+import { getCurrentUser, setCurrentUser, isAdmin } from '../App'
 import { dbAddRole, dbUpdateRole, dbDeleteRole, dbRoles,
          dbAllCandidates, dbDeleteCandidate, dbSaveCandidate, dbAddCandidate } from '../db'
 import { buildProfile } from '../scoring'
@@ -188,7 +188,7 @@ export default function Dashboard() {
   const makeRole = () => {
     if(!form.title.trim()) return
     setCreating(true)
-    const r = dbAddRole({title:form.title,dept:form.dept,threshold:Number(form.threshold)||12})
+    const r = dbAddRole({title:form.title,dept:form.dept,threshold:Number(form.threshold)||12,createdBy:me?.id||'admin',createdByName:me?.name||'Admin'})
     setForm({title:'',dept:'',threshold:12})
     setNewRoleModal(false); setCreating(false); setLinkModal(r); refresh()
   }
@@ -243,8 +243,10 @@ export default function Dashboard() {
           <span style={{fontSize:11,color:'var(--ink3)',fontWeight:400,marginLeft:3}}>Admin</span>
         </div>
         <div className="nav-r">
+          {me && <span style={{fontSize:12,color:'var(--ink3)',marginRight:4}}>{me.name} <span style={{color:me.role==='admin'?'var(--ok)':'var(--accent)',fontWeight:600,textTransform:'capitalize'}}>({me.role})</span></span>}
           <button className="btn btn-g btn-sm" onClick={refresh} title="Refresh">↻</button>
-          <button className="btn btn-g btn-sm" onClick={()=>nav('/admin/settings')}>⚙ Settings</button>
+          {userIsAdmin && <button className="btn btn-g btn-sm" onClick={()=>nav('/admin/users')}>👥 Users</button>}
+          {userIsAdmin && <button className="btn btn-g btn-sm" onClick={()=>nav('/admin/settings')}>⚙ Settings</button>}
           <button className="btn btn-g btn-sm" onClick={logout}>Sign out</button>
         </div>
       </nav>
@@ -306,7 +308,7 @@ export default function Dashboard() {
                     <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:10}}>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{fontWeight:700,fontSize:14,marginBottom:2}}>{role.title}</div>
-                        <div style={{fontSize:12,color:'var(--ink3)'}}>{role.dept}</div>
+                        <div style={{fontSize:12,color:'var(--ink3)'}}>{role.dept}{role.createdByName && role.createdByName!=='Admin' && <span style={{marginLeft:8,color:'var(--ink3)',fontSize:11}}>by {role.createdByName}</span>}</div>
                       </div>
                       <div style={{display:'flex',gap:5,alignItems:'center',flexShrink:0,flexWrap:'wrap'}}>
                         <span className="badge bb">{rc.length}</span>
@@ -314,8 +316,8 @@ export default function Dashboard() {
                           onClick={e=>{e.stopPropagation();setLinkModal(role);setCopied(false)}}>🔗</button>
                         <button className="btn btn-s btn-sm" style={{fontSize:11}}
                           onClick={e=>{e.stopPropagation();setBulkModal(role)}}>📧</button>
-                        <button className="btn btn-g btn-sm" style={{fontSize:11,padding:'5px 7px',color:'var(--bad)'}}
-                          onClick={e=>{e.stopPropagation();setDeleteConfirm({type:'role',id:role.id,name:role.title})}}>🗑</button>
+                        {(userIsAdmin || role.createdBy===me?.id) && <button className="btn btn-g btn-sm" style={{fontSize:11,padding:'5px 7px',color:'var(--bad)'}}
+                          onClick={e=>{e.stopPropagation();setDeleteConfirm({type:'role',id:role.id,name:role.title})}}>🗑</button>}
                       </div>
                     </div>
                     <div style={{display:'flex',alignItems:'center',gap:8,marginTop:10,fontSize:12}}>
@@ -414,8 +416,8 @@ export default function Dashboard() {
                               <div style={{display:'flex',gap:4}}>
                                 <button className="btn btn-g btn-sm" style={{fontSize:11,padding:'4px 7px'}}
                                   onClick={()=>{setNoteModal(c);setNoteText(c.notes||'')}}>📝</button>
-                                <button className="btn btn-g btn-sm" style={{fontSize:11,padding:'4px 7px',color:'var(--bad)'}}
-                                  onClick={()=>setDeleteConfirm({type:'candidate',id:c.id,name:c.name})}>🗑</button>
+                                {userIsAdmin && <button className="btn btn-g btn-sm" style={{fontSize:11,padding:'4px 7px',color:'var(--bad)'}}
+                                  onClick={()=>setDeleteConfirm({type:'candidate',id:c.id,name:c.name})}>🗑</button>}
                               </div>
                             </td>
                           </tr>

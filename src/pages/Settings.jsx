@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { setCurrentUser } from '../App'
 import { dbGetSettings, dbSaveSettings, dbLoadSettings } from '../db'
 
 export default function Settings() {
@@ -34,6 +35,8 @@ export default function Settings() {
         </div>
         <div className="nav-r">
           <button className="btn btn-g btn-sm" onClick={() => nav('/admin')}>← Dashboard</button>
+          <button className="btn btn-g btn-sm" onClick={() => nav('/admin/users')}>👥 Users</button>
+          <button className="btn btn-g btn-sm" onClick={() => { setCurrentUser(null); nav('/') }}>Sign out</button>
         </div>
       </nav>
 
