@@ -6,25 +6,36 @@ import Dashboard   from './pages/Dashboard'
 import Assessment  from './pages/Assessment'
 import ResultsPage from './pages/ResultsPage'
 import Settings    from './pages/Settings'
+import Users       from './pages/Users'
 
-// Simple admin auth via sessionStorage
-export function isAdminAuthed() { return sessionStorage.getItem('adminOk') === '1' }
-export function setAdminAuth(v) { v ? sessionStorage.setItem('adminOk','1') : sessionStorage.removeItem('adminOk') }
+export function getCurrentUser() {
+  try { return JSON.parse(sessionStorage.getItem('aiq_user') || 'null') } catch { return null }
+}
+export function setCurrentUser(u) {
+  if (u) sessionStorage.setItem('aiq_user', JSON.stringify(u))
+  else    sessionStorage.removeItem('aiq_user')
+}
+export function isAdmin()     { const u = getCurrentUser(); return u && u.role === 'admin' }
+export function isRecruiter() { const u = getCurrentUser(); return u && u.role === 'recruiter' }
+export function isLoggedIn()  { return !!getCurrentUser() }
 
+function RequireAuth({ children }) {
+  return isLoggedIn() ? children : <Navigate to="/admin/login" replace />
+}
 function RequireAdmin({ children }) {
-  return isAdminAuthed() ? children : <Navigate to="/admin/login" replace />
+  return isAdmin() ? children : <Navigate to="/admin" replace />
 }
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/"              element={<Home />} />
-      <Route path="/admin/login"   element={<AdminLogin />} />
-      <Route path="/admin"         element={<RequireAdmin><Dashboard /></RequireAdmin>} />
-      {/* Candidate route — this is the link you send candidates */}
+      <Route path="/"               element={<Home />} />
+      <Route path="/admin/login"    element={<AdminLogin />} />
+      <Route path="/admin"          element={<RequireAuth><Dashboard /></RequireAuth>} />
+      <Route path="/admin/settings" element={<RequireAdmin><Settings /></RequireAdmin>} />
+      <Route path="/admin/users"    element={<RequireAdmin><Users /></RequireAdmin>} />
       <Route path="/assess/:linkId" element={<Assessment />} />
       <Route path="/results"        element={<ResultsPage />} />
-      <Route path="/admin/settings"  element={<RequireAdmin><Settings /></RequireAdmin>} />
       <Route path="*"               element={<Navigate to="/" replace />} />
     </Routes>
   )
