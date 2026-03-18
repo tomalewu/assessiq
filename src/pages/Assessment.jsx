@@ -475,168 +475,86 @@ function TraitBar({ name, value, color, delay = 0 }) {
 // ── PDF download ──────────────────────────────────────────────────────
 function downloadPDF(candidate, result, profile) {
   const mins = Math.floor(result.timeTaken / 60)
-  const secs  = result.timeTaken % 60
-  const date  = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
-  const dob   = candidate.dob ? new Date(candidate.dob).toLocaleDateString('en-GB') : 'N/A'
+  const secs = result.timeTaken % 60
+  const date = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+  const dob  = candidate.dob ? new Date(candidate.dob).toLocaleDateString('en-GB') : 'N/A'
+  const fitColor = profile.fit.color
+    .replace('var(--ok)',     '#00b37e')
+    .replace('var(--accent)', '#4f6ef7')
+    .replace('var(--warn)',   '#f59e0b')
+    .replace('var(--bad)',    '#ef4444')
 
   const traitRows = Object.entries(profile.traits).map(([k, v]) => {
     const label = v >= 80 ? 'Exceptional' : v >= 65 ? 'Strong' : v >= 50 ? 'Average' : v >= 35 ? 'Below Avg' : 'Developing'
-    const bar   = '█'.repeat(Math.round(v / 10)) + '░'.repeat(10 - Math.round(v / 10))
-    return '<tr><td>' + (TRAIT_NAMES[k]||k) + '</td><td style="font-family:monospace;letter-spacing:2px;color:#4f6ef7">' + bar + '</td><td style="text-align:right;font-weight:700">' + v + '</td><td style="color:#888">' + label + '</td></tr>'
+    return '<tr><td>' + (TRAIT_NAMES[k]||k) + '</td><td style="text-align:right;font-weight:700;color:#4f6ef7">' + v + '/100</td><td style="color:#888">' + label + '</td></tr>'
   }).join('')
 
-  const fitColor = profile.fit.color.replace('var(--ok)','#00b37e').replace('var(--accent)','#4f6ef7').replace('var(--warn)','#f59e0b').replace('var(--bad)','#ef4444')
+  const fitIcon = profile.fit.label === 'Strong Fit' ? 'STRONG FIT' : profile.fit.label === 'Good Fit' ? 'GOOD FIT' : profile.fit.label === 'Moderate Fit' ? 'MODERATE FIT' : 'LOW FIT'
 
-  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">
-<title>AssessIQ Result — ' +
-    candidate.name +
-    '</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: \'Segoe UI\', Arial, sans-serif; background: #f5f6fa; color: #0a0f1e; padding: 32px; }
-  .page { max-width: 720px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px solid #e2e5f0; }
-  .logo { font-size: 22px; font-weight: 800; color: #4f6ef7; letter-spacing: -.5px; }
-  .logo span { display: inline-block; width: 28px; height: 28px; background: linear-gradient(135deg,#4f6ef7,#7c5cfc); border-radius: 8px; margin-right: 8px; vertical-align: middle; }
-  .date { font-size: 13px; color: #8891aa; }
-  .fit-banner { background: ' +
-    profile.fit.bg||'#eef1fe' +
-    '; border: 2px solid ' +
-    fitColor +
-    '33; border-radius: 12px; padding: 20px 24px; margin-bottom: 28px; display: flex; align-items: center; gap: 16px; }
-  .fit-icon { font-size: 32px; }
-  .fit-label { font-size: 20px; font-weight: 800; color: ' +
-    fitColor +
-    '; }
-  .fit-desc { font-size: 13px; color: #3d4663; margin-top: 4px; line-height: 1.5; }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
-  .card { background: #f5f6fa; border-radius: 12px; padding: 20px; }
-  .card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #8891aa; margin-bottom: 12px; }
-  .score-big { font-size: 42px; font-weight: 800; letter-spacing: -2px; color: ' +
-    fitColor +
-    '; }
-  .score-big span { font-size: 18px; color: #8891aa; font-weight: 400; }
-  .sub-scores { display: flex; gap: 12px; margin-top: 12px; }
-  .sub-score { flex: 1; text-align: center; background: #fff; border-radius: 8px; padding: 10px; }
-  .sub-score .val { font-size: 20px; font-weight: 700; }
-  .sub-score .lbl { font-size: 11px; color: #8891aa; margin-top: 2px; }
-  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .info-row { display: flex; flex-direction: column; }
-  .info-lbl { font-size: 11px; color: #8891aa; text-transform: uppercase; letter-spacing: .04em; }
-  .info-val { font-size: 14px; font-weight: 600; margin-top: 2px; }
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  table th { text-align: left; padding: 8px 12px; background: #f5f6fa; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #8891aa; }
-  table td { padding: 10px 12px; border-bottom: 1px solid #e2e5f0; }
-  .percentile { font-size: 36px; font-weight: 800; letter-spacing: -1px; color: ' +
-    fitColor +
-    '; }
-  .insight { background: #0a0f1e; border-radius: 12px; padding: 20px 24px; color: rgba(255,255,255,.85); font-size: 13px; line-height: 1.8; margin-top: 20px; }
-  .insight-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: rgba(255,255,255,.4); margin-bottom: 10px; }
-  .footer { margin-top: 32px; padding-top: 20px; border-top: 1px solid #e2e5f0; display: flex; justify-content: space-between; font-size: 11px; color: #8891aa; }
-  @media print { body { padding: 0; background: #fff; } .page { box-shadow: none; border-radius: 0; } }
-</style>
-</head><body>
-<div class="page">
-  <div class="header">
-    <div class="logo"><span></span>AssessIQ</div>
-    <div class="date">Generated: ' +
-    date +
-    '</div>
-  </div>
+  const lines = [
+    '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+    '<title>AssessIQ Result - ' + candidate.name + '</title>',
+    '<style>',
+    'body{font-family:Arial,sans-serif;background:#f5f6fa;color:#0a0f1e;padding:32px;margin:0}',
+    '.page{max-width:720px;margin:0 auto;background:#fff;border-radius:16px;padding:40px;box-shadow:0 4px 24px rgba(0,0,0,.08)}',
+    '.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #e2e5f0}',
+    '.logo{font-size:22px;font-weight:800;color:#4f6ef7}',
+    '.fit-banner{background:#f0fdf4;border:2px solid ' + fitColor + '33;border-radius:12px;padding:20px 24px;margin-bottom:28px}',
+    '.fit-label{font-size:20px;font-weight:800;color:' + fitColor + '}',
+    '.fit-desc{font-size:13px;color:#3d4663;margin-top:4px;line-height:1.5}',
+    '.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px}',
+    '.card{background:#f5f6fa;border-radius:12px;padding:20px}',
+    '.card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#8891aa;margin-bottom:12px}',
+    '.score-big{font-size:42px;font-weight:800;letter-spacing:-2px;color:' + fitColor + '}',
+    '.sub-scores{display:flex;gap:12px;margin-top:12px}',
+    '.sub-score{flex:1;text-align:center;background:#fff;border-radius:8px;padding:10px}',
+    '.sub-score .val{font-size:20px;font-weight:700}',
+    '.sub-score .lbl{font-size:11px;color:#8891aa;margin-top:2px}',
+    '.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}',
+    '.info-lbl{font-size:11px;color:#8891aa;text-transform:uppercase;letter-spacing:.04em}',
+    '.info-val{font-size:14px;font-weight:600;margin-top:2px}',
+    'table{width:100%;border-collapse:collapse;font-size:13px}',
+    'table th{text-align:left;padding:8px 12px;background:#f5f6fa;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#8891aa}',
+    'table td{padding:10px 12px;border-bottom:1px solid #e2e5f0}',
+    '.insight{background:#0a0f1e;border-radius:12px;padding:20px 24px;color:rgba(255,255,255,.85);font-size:13px;line-height:1.8;margin-top:20px}',
+    '.insight-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.4);margin-bottom:10px}',
+    '.footer{margin-top:32px;padding-top:20px;border-top:1px solid #e2e5f0;display:flex;justify-content:space-between;font-size:11px;color:#8891aa}',
+    '@media print{body{padding:0;background:#fff}.page{box-shadow:none;border-radius:0}}',
+    '</style></head><body><div class="page">',
+    '<div class="header"><div class="logo">AssessIQ</div><div style="font-size:13px;color:#8891aa">Generated: ' + date + '</div></div>',
+    '<div class="fit-banner">',
+    '<div class="fit-label">' + fitIcon + '</div>',
+    '<div class="fit-desc">' + profile.fit.desc + '</div>',
+    '<div style="margin-top:8px;font-size:13px;color:' + fitColor + ';font-weight:700">Percentile: ' + profile.percentile + 'th</div>',
+    '</div>',
+    '<div class="grid">',
+    '<div class="card"><div class="card-title">Overall Score</div>',
+    '<div class="score-big">' + result.totalScore + '<span style="font-size:18px;color:#8891aa;font-weight:400">/20</span></div>',
+    '<div class="sub-scores">',
+    '<div class="sub-score"><div class="val" style="color:#4f6ef7">' + result.logicScore + '/10</div><div class="lbl">Logic</div></div>',
+    '<div class="sub-score"><div class="val" style="color:#7c5cfc">' + result.numScore + '/10</div><div class="lbl">Numerical</div></div>',
+    '<div class="sub-score"><div class="val" style="font-family:monospace">' + mins + ':' + String(secs).padStart(2,'0') + '</div><div class="lbl">Time</div></div>',
+    '</div></div>',
+    '<div class="card"><div class="card-title">Candidate Details</div>',
+    '<div class="info-grid">',
+    '<div><div class="info-lbl">Name</div><div class="info-val">' + candidate.name + '</div></div>',
+    '<div><div class="info-lbl">Email</div><div class="info-val">' + candidate.email + '</div></div>',
+    '<div><div class="info-lbl">Phone</div><div class="info-val">' + (candidate.phone || 'N/A') + '</div></div>',
+    '<div><div class="info-lbl">Date of Birth</div><div class="info-val">' + dob + '</div></div>',
+    '<div><div class="info-lbl">Role</div><div class="info-val">' + candidate.roleName + '</div></div>',
+    '<div><div class="info-lbl">Speed</div><div class="info-val">' + profile.speedLabel + ' Completion</div></div>',
+    '</div></div></div>',
+    '<div class="card" style="margin-bottom:20px"><div class="card-title">Cognitive Trait Profile</div>',
+    '<table><tr><th>Trait</th><th style="text-align:right">Score</th><th>Level</th></tr>' + traitRows + '</table>',
+    '</div>',
+    '<div class="insight"><div class="insight-title">Assessment Insight</div>',
+    '<strong style="color:#fff">' + candidate.name + '</strong> ' + profile.insight,
+    '</div>',
+    '<div class="footer"><span>AssessIQ Cognitive Assessment Platform</span><span>Confidential - For HR use only</span></div>',
+    '</div></body></html>'
+  ]
 
-  <div class="fit-banner">
-    <div class="fit-icon">' +
-    profile.fit.label === 'Strong Fit' ? '🌟' : profile.fit.label === 'Good Fit' ? '✅' : profile.fit.label === 'Moderate Fit' ? '🔶' : '🔴' +
-    '</div>
-    <div>
-      <div class="fit-label">' +
-    profile.fit.label +
-    '</div>
-      <div class="fit-desc">' +
-    profile.fit.desc +
-    '</div>
-    </div>
-    <div style="margin-left:auto;text-align:right">
-      <div style="font-size:11px;color:#8891aa">Percentile Rank</div>
-      <div style="font-size:24px;font-weight:800;color:' +
-    fitColor +
-    '">' +
-    profile.percentile +
-    'th</div>
-    </div>
-  </div>
-
-  <div class="grid">
-    <div class="card">
-      <div class="card-title">Overall Score</div>
-      <div class="score-big">' +
-    result.totalScore +
-    '<span>/20</span></div>
-      <div class="sub-scores">
-        <div class="sub-score"><div class="val" style="color:#4f6ef7">' +
-    result.logicScore +
-    '/10</div><div class="lbl">Logic</div></div>
-        <div class="sub-score"><div class="val" style="color:#7c5cfc">' +
-    result.numScore +
-    '/10</div><div class="lbl">Numerical</div></div>
-        <div class="sub-score"><div class="val" style="font-family:monospace">' +
-    mins +
-    ':' +
-    String(secs).padStart(2,'0') +
-    '</div><div class="lbl">Time</div></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-title">Candidate Details</div>
-      <div class="info-grid">
-        <div class="info-row"><span class="info-lbl">Name</span><span class="info-val">' +
-    candidate.name +
-    '</span></div>
-        <div class="info-row"><span class="info-lbl">Email</span><span class="info-val">' +
-    candidate.email +
-    '</span></div>
-        <div class="info-row"><span class="info-lbl">Phone</span><span class="info-val">' +
-    candidate.phone || 'N/A' +
-    '</span></div>
-        <div class="info-row"><span class="info-lbl">Date of Birth</span><span class="info-val">' +
-    dob +
-    '</span></div>
-        <div class="info-row"><span class="info-lbl">Role</span><span class="info-val">' +
-    candidate.roleName +
-    '</span></div>
-        <div class="info-row"><span class="info-lbl">Speed</span><span class="info-val">' +
-    profile.speedLabel +
-    ' Completion</span></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card" style="margin-bottom:20px">
-    <div class="card-title">Cognitive Trait Profile</div>
-    <table>
-      <tr><th>Trait</th><th>Score Visualisation</th><th style="text-align:right">Score</th><th>Level</th></tr>
-      ' +
-    traitRows +
-    '
-    </table>
-  </div>
-
-  <div class="insight">
-    <div class="insight-title">Assessment Insight</div>
-    <strong style="color:#fff">' +
-    candidate.name +
-    '</strong> ' +
-    profile.insight +
-    '
-  </div>
-
-  <div class="footer">
-    <span>AssessIQ Cognitive Assessment Platform</span>
-    <span>Confidential — For HR use only</span>
-  </div>
-</div>
-</body></html>'
-
+  const html = lines.join('')
   const win = window.open('', '_blank')
   if (win) {
     win.document.write(html)
@@ -645,7 +563,6 @@ function downloadPDF(candidate, result, profile) {
   }
 }
 
-// ── Candidate Results Page ────────────────────────────────────────────
 function CandidateResults({ candidate, result, profile, nav }) {
   const [reveal, setReveal] = useState(false)
   useEffect(() => { const t = setTimeout(() => setReveal(true), 200); return () => clearTimeout(t) }, [])
