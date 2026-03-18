@@ -8,7 +8,7 @@ export default function Users() {
   const me   = getCurrentUser()
   const [users, setUsers]       = useState([])
   const [loading, setLoading]   = useState(true)
-  const [modal, setModal]       = useState(null)  // null | 'add' | {user}
+  const [modal, setModal]       = useState(null)
   const [form, setForm]         = useState({ name: '', email: '', password: '', role: 'recruiter' })
   const [saving, setSaving]     = useState(false)
   const [err, setErr]           = useState('')
@@ -88,7 +88,6 @@ export default function Users() {
           </p>
         </div>
 
-        {/* Permission summary */}
         <div className="card card-xl" style={{ padding: 24, marginBottom: 24 }}>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 16 }}>Permission Summary</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -113,7 +112,6 @@ export default function Users() {
           </div>
         </div>
 
-        {/* Users table */}
         <div className="shdr">
           <div>
             <div className="stitle">Users</div>
@@ -133,7 +131,6 @@ export default function Users() {
               <tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th><th></th></tr>
             </thead>
             <tbody>
-              {/* Super admin row */}
               <tr>
                 <td>
                   <div style={{ fontWeight: 600 }}>Super Admin</div>
@@ -176,13 +173,12 @@ export default function Users() {
         </div>
       </div>
 
-      {/* Add/Edit Modal */}
       {modal && (
         <div className="overlay" onClick={() => setModal(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h3>{modal === 'add' ? 'Add New User' : 'Edit User'}</h3>
             <div className="msub">
-              {modal === 'add' ? 'Create a new admin or recruiter account.' : 'Update this user\'s details and permissions.'}
+              {modal === 'add' ? 'Create a new admin or recruiter account.' : 'Update this user details and permissions.'}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
               <div className="fg">
@@ -227,7 +223,6 @@ export default function Users() {
         </div>
       )}
 
-      {/* Delete confirm */}
       {deleteConfirm && (
         <div className="overlay" onClick={() => setDeleteConfirm(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
