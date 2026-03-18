@@ -1,0 +1,808 @@
+import React, { useState, useEffect, useRef } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import { dbRoleByLink, dbAddCandidate, dbSaveCandidate, dbLoadSettings, dbAllCandidates } from '../db'
+import { loadQuestions } from '../questions'
+import { buildProfile, TRAIT_NAMES, TRAIT_COLORS } from '../scoring'
+
+// ── Already took test screen ──────────────────────────────────────────
+function AlreadyTaken({ candidate, nav }) {
+  const profile = buildProfile(candidate.totalScore, candidate.logicScore, candidate.numScore, candidate.timeTaken)
+  return (
+    <div className="shell">
+      <nav className="nav">
+        <div className="logo"><div className="logo-mark">A</div>AssessIQ</div>
+        <div className="nav-r">
+          <button className="btn btn-g btn-sm" onClick={() => nav('/')}>Home</button>
+        </div>
+      </nav>
+      <div className="center">
+        <div style={{ width: '100%', maxWidth: 480, textAlign: 'center' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>📋</div>
+          <h2 style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-.4px', marginBottom: 8 }}>
+            Already Completed
+          </h2>
+          <p style={{ color: 'var(--ink2)', fontSize: 14, lineHeight: 1.7, marginBottom: 28 }}>
+            You have already completed this assessment for <strong>{candidate.roleName}</strong>.
+            Each candidate may only attempt each role once.
+          </p>
+          <div className="card card-xl" style={{ padding: 28, marginBottom: 20 }}>
+            <div style={{ fontSize: 13, color: 'var(--ink3)', marginBottom: 16 }}>Your previous result</div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 48, fontWeight: 800, letterSpacing: '-2px', color: profile.fit.color }}>
+                  {candidate.totalScore}<span style={{ fontSize: 20, color: 'var(--ink3)', fontWeight: 400 }}>/20</span>
+                </div>
+                <span className="badge" style={{ background: profile.fit.bg, color: profile.fit.color, marginTop: 8 }}>
+                  <span className="dot" />{profile.fit.label}
+                </span>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+              <div style={{ textAlign: 'center', padding: '12px 20px', background: 'var(--paper2)', borderRadius: 10 }}>
+                <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--accent)' }}>{candidate.logicScore}/10</div>
+                <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 2 }}>Logic</div>
+              </div>
+              <div style={{ textAlign: 'center', padding: '12px 20px', background: 'var(--paper2)', borderRadius: 10 }}>
+                <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--accent2)' }}>{candidate.numScore}/10</div>
+                <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 2 }}>Numerical</div>
+              </div>
+              <div style={{ textAlign: 'center', padding: '12px 20px', background: 'var(--paper2)', borderRadius: 10 }}>
+                <div style={{ fontWeight: 700, fontSize: 18, color: 'var(--ink)', fontFamily: 'JetBrains Mono' }}>
+                  {profile.percentile}th
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 2 }}>Percentile</div>
+              </div>
+            </div>
+          </div>
+          <p style={{ fontSize: 12, color: 'var(--ink3)', lineHeight: 1.6 }}>
+            Completed on {new Date(candidate.completedAt).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+          <button className="btn btn-s" style={{ marginTop: 20 }} onClick={() => nav('/')}>← Back to Home</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Welcome / entry form ──────────────────────────────────────────────
+function Welcome({ role, onBegin, onAlreadyTaken }) {
+  const [form, setForm]   = useState({ name: '', email: '', phone: '', dob: '' })
+  const [errs, setErrs]   = useState({})
+  const [checking, setChecking] = useState(false)
+
+  const validate = () => {
+    const e = {}
+    if (!form.name.trim())  e.name  = 'Required'
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Valid email required'
+    if (!form.phone.trim()) e.phone = 'Required'
+    if (!form.dob)          e.dob   = 'Required'
+    else {
+      const age = (Date.now() - new Date(form.dob)) / (365.25 * 24 * 3600 * 1000)
+      if (age < 16 || age > 80) e.dob = 'Please enter a valid date of birth'
+    }
+    setErrs(e)
+    return Object.keys(e).length === 0
+  }
+
+  const submit = async () => {
+    if (!validate()) return
+    setChecking(true)
+    // Check if this email already completed this role
+    try {
+      const all = await dbAllCandidates()
+      const existing = all.find(c =>
+        c.email.toLowerCase() === form.email.toLowerCase() &&
+        c.roleId === role.id &&
+        c.status === 'completed'
+      )
+      if (existing) { onAlreadyTaken(existing); return }
+    } catch(e) { console.warn('duplicate check failed', e) }
+    setChecking(false)
+    const c = dbAddCandidate({ ...form, roleId: role.id, roleName: role.title })
+    onBegin(c)
+  }
+
+  return (
+    <div className="shell">
+      <nav className="nav">
+        <div className="logo"><div className="logo-mark">A</div>AssessIQ</div>
+      </nav>
+      <div className="center">
+        <div style={{ width: '100%', maxWidth: 520 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }} className="au">
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '7px 16px', background: 'var(--accent-dim)', border: '1px solid var(--accent-mid)', borderRadius: 999 }}>
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)' }} />
+              <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600 }}>{role.title}</span>
+              {role.dept && <span style={{ fontSize: 12, color: 'var(--ink3)' }}>· {role.dept}</span>}
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center', marginBottom: 30 }} className="au">
+            <h1 style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-.6px', lineHeight: 1.1, marginBottom: 12 }}>
+              Cognitive Assessment
+            </h1>
+            <p style={{ color: 'var(--ink2)', fontSize: 15, lineHeight: 1.7, maxWidth: 420, margin: '0 auto' }}>
+              This test measures your logical and numerical reasoning — a key predictor of on-the-job performance.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', background: 'var(--paper2)', border: '1px solid var(--line)', borderRadius: 12, padding: '14px 0', marginBottom: 28 }} className="au">
+            {[['20', 'Questions'], ['20 min', 'Time limit'], ['No back', 'Forward only'], ['AI-scored', 'Instant results']].map(([v, l], i) => (
+              <div key={i} style={{ flex: 1, textAlign: 'center', borderRight: i < 3 ? '1px solid var(--line)' : 'none' }}>
+                <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-.3px' }}>{v}</div>
+                <div style={{ color: 'var(--ink3)', fontSize: 11, marginTop: 3 }}>{l}</div>
+              </div>
+            ))}
+          </div>
+
+          <div className="card card-xl au" style={{ padding: 32 }}>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 18, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 22, height: 22, background: 'var(--accent)', borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 12, fontWeight: 800 }}>1</span>
+              Your Details
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 24 }}>
+              {[
+                ['name',  'Full Name',         'e.g. Priya Sharma',      'text'],
+                ['email', 'Work Email',         'e.g. priya@company.com', 'email'],
+                ['phone', 'Phone Number',       'e.g. +91 98765 43210',   'tel'],
+              ].map(([k, l, ph, t]) => (
+                <div className="fg" key={k}>
+                  <label className="fl">{l}</label>
+                  <input className="fi" type={t} placeholder={ph} value={form[k]}
+                    onChange={e => { setForm(p => ({ ...p, [k]: e.target.value })); setErrs(p => ({ ...p, [k]: '' })) }}
+                    style={{ borderColor: errs[k] ? 'var(--bad)' : '' }} />
+                  {errs[k] && <span className="ferr">{errs[k]}</span>}
+                </div>
+              ))}
+              {/* Date of Birth */}
+              <div className="fg">
+                <label className="fl">Date of Birth</label>
+                <input className="fi" type="date"
+                  max={new Date(Date.now() - 16 * 365.25 * 24 * 3600 * 1000).toISOString().split('T')[0]}
+                  value={form.dob}
+                  onChange={e => { setForm(p => ({ ...p, dob: e.target.value })); setErrs(p => ({ ...p, dob: '' })) }}
+                  style={{ borderColor: errs.dob ? 'var(--bad)' : '' }} />
+                {errs.dob && <span className="ferr">{errs.dob}</span>}
+              </div>
+            </div>
+            <button className="btn btn-p btn-xl" style={{ width: '100%', justifyContent: 'center' }} onClick={submit} disabled={checking}>
+              {checking
+                ? <><span className="sp sp-sm" style={{ borderTopColor: '#fff' }} /> Checking…</>
+                : <>Start Assessment <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg></>
+              }
+            </button>
+            <p style={{ textAlign: 'center', fontSize: 11, color: 'var(--ink3)', marginTop: 12, lineHeight: 1.6 }}>
+              By starting, you confirm this is your own work. Results are shared with the hiring team.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Loading screen ────────────────────────────────────────────────────
+function Loader({ onReady }) {
+  const [step, setStep] = useState(0)
+  const msgs = ['Generating logical patterns…', 'Building numerical problems…', 'Randomising your unique set…', 'Almost ready…']
+  useEffect(() => {
+    const ts = [700, 1500, 2300].map((t, i) => setTimeout(() => setStep(i + 1), t))
+    dbLoadSettings().then(settings => {
+      loadQuestions(settings).then(qs => setTimeout(() => onReady(qs), 2800))
+    })
+    return () => ts.forEach(clearTimeout)
+  }, [])
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, background: 'var(--paper2)' }}>
+      <div style={{ width: 64, height: 64, borderRadius: 20, background: 'linear-gradient(135deg,var(--accent),var(--accent2))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span className="sp sp-lg" style={{ borderColor: 'rgba(255,255,255,.3)', borderTopColor: '#fff' }} />
+      </div>
+      <div style={{ fontWeight: 800, fontSize: 19, letterSpacing: '-.4px' }}>Preparing Your Assessment</div>
+      <div style={{ fontSize: 13, color: 'var(--ink3)', height: 20 }}>{msgs[step]}</div>
+      <div style={{ width: 240, height: 3, background: 'var(--line)', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{ height: '100%', background: 'var(--accent)', borderRadius: 2, width: (step / 3 * 100) + '%', transition: 'width .7s ease' }} />
+      </div>
+      <p style={{ fontSize: 12, color: 'var(--ink3)', maxWidth: 260, textAlign: 'center', lineHeight: 1.7, marginTop: 4 }}>
+        AI generates a unique question set for every candidate — no two tests are the same.
+      </p>
+    </div>
+  )
+}
+
+// ── Countdown timer ───────────────────────────────────────────────────
+function Timer({ secs, onDone }) {
+  const [rem, setRem] = useState(secs)
+  const ref = useRef(null)
+  useEffect(() => {
+    ref.current = setInterval(() => {
+      setRem(p => { if (p <= 1) { clearInterval(ref.current); onDone(); return 0 } return p - 1 })
+    }, 1000)
+    return () => clearInterval(ref.current)
+  }, [])
+  const m = String(Math.floor(rem / 60)).padStart(2, '0')
+  const s = String(rem % 60).padStart(2, '0')
+  return (
+    <div className={'timer' + (rem < 120 ? ' hot' : '')}>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+      </svg>
+      {m}:{s}
+    </div>
+  )
+}
+
+// ── Per-question countdown ring ───────────────────────────────────────
+function QTimer({ secs, total }) {
+  const pct   = secs / total
+  const size  = 48
+  const r     = (size - 6) / 2
+  const circ  = 2 * Math.PI * r
+  const dash  = circ * pct
+  const color = secs > 20 ? 'var(--ok)' : secs > 10 ? 'var(--warn)' : 'var(--bad)'
+  return (
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--paper3)" strokeWidth={4} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={4}
+          strokeLinecap="round" strokeDasharray={dash + ' ' + circ}
+          style={{ transition: 'stroke-dasharray .9s linear' }} />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 13, fontWeight: 800, fontFamily: 'JetBrains Mono', color }}>
+        {secs}
+      </div>
+    </div>
+  )
+}
+
+// ── Quiz ──────────────────────────────────────────────────────────────
+function Quiz({ candidate, questions, onDone }) {
+  const [idx, setIdx]           = useState(0)
+  const [answers, setAnswers]   = useState({})
+  const [sel, setSel]           = useState(null)
+  const [qTime, setQTime]       = useState(60)
+  const [timedOut, setTimedOut] = useState(false)
+  const t0        = useRef(Date.now())
+  const qTimerRef = useRef(null)
+  const q       = questions[idx]
+  const isLast  = idx === questions.length - 1
+
+  useEffect(() => {
+    setQTime(60)
+    setTimedOut(false)
+    if (qTimerRef.current) clearInterval(qTimerRef.current)
+    qTimerRef.current = setInterval(() => {
+      setQTime(t => {
+        if (t <= 1) {
+          clearInterval(qTimerRef.current)
+          setTimedOut(true)
+          setTimeout(() => {
+            setAnswers(prev => {
+              const a = { ...prev, [q.id]: sel || '__timeout__' }
+              if (isLast) { finish(a); return a }
+              setIdx(i => i + 1)
+              setSel(null)
+              return a
+            })
+          }, 800)
+          return 0
+        }
+        return t - 1
+      })
+    }, 1000)
+    return () => clearInterval(qTimerRef.current)
+  }, [idx])
+
+  const next = () => {
+    if (!sel && !timedOut) return
+    clearInterval(qTimerRef.current)
+    const a = { ...answers, [q.id]: sel || '__timeout__' }
+    setAnswers(a)
+    if (isLast) finish(a)
+    else { setIdx(i => i + 1); setSel(null) }
+  }
+
+  const finish = (ans) => {
+    const elapsed = Math.round((Date.now() - t0.current) / 1000)
+    let ls = 0, ns = 0
+    questions.forEach(q => {
+      if (ans[q.id] === q.answer) { if (q.type === 'logic') ls++; else ns++ }
+    })
+    const result  = { logicScore: ls, numScore: ns, totalScore: ls + ns, timeTaken: elapsed }
+    const profile = buildProfile(ls + ns, ls, ns, elapsed)
+    dbSaveCandidate(candidate.id, { ...result, percentile: profile.percentile, status: 'completed', completedAt: new Date().toISOString() })
+    onDone(result, profile)
+  }
+
+  return (
+    <div className="shell">
+      <nav className="nav">
+        <div className="logo"><div className="logo-mark">A</div>AssessIQ</div>
+        <div style={{ flex: 1, margin: '0 24px' }}>
+          <div className="pb-wrap"><div className="pb-fill" style={{ width: (idx / questions.length * 100) + '%' }} /></div>
+          <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 3 }}>{idx}/{questions.length} completed</div>
+        </div>
+        <Timer secs={1200} onDone={() => finish(answers)} />
+      </nav>
+
+      <div style={{ display: 'flex', justifyContent: 'center', padding: '36px 24px' }}>
+        <div style={{ width: '100%', maxWidth: 620, animation: 'slide .4s ease' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+            <span className={'badge ' + (q.type === 'logic' ? 'bb' : 'bg')}>
+              {q.type === 'logic' ? '🔷 Logical Reasoning' : '🔢 Numerical Reasoning'}
+            </span>
+            <span style={{ fontSize: 12, color: 'var(--ink3)' }}>Question {idx + 1} of {questions.length}</span>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+              {timedOut && <span className="badge br"><span className="dot" />Time's up</span>}
+              {!timedOut && <QTimer secs={qTime} total={60} />}
+            </div>
+          </div>
+
+          <div className="qdots">
+            {questions.map((_, i) => <div key={i} className={'qd' + (i < idx ? ' done' : i === idx ? ' now' : '')} />)}
+          </div>
+
+          <div className="card card-xl" style={{ padding: 30 }}>
+            {timedOut && (
+              <div style={{ background: 'var(--bad-dim)', border: '1px solid #fca5a5', borderRadius: 9, padding: '10px 14px', marginBottom: 18, fontSize: 13, color: 'var(--bad)', fontWeight: 600 }}>
+                ⏰ Time's up for this question — moving on automatically
+              </div>
+            )}
+            {q.type === 'logic' ? (
+              <>
+                <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Which symbol completes the pattern?</h2>
+                <p style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 20, lineHeight: 1.6 }}>
+                  Study the 3×3 grid. Find the symbol that belongs in the <strong>bottom-right cell (?)</strong>.
+                </p>
+                <div className="agrid" style={{ maxWidth: 210 }}>
+                  {q.grid.flatMap((row, ri) => row.map((cell, ci) => (
+                    <div key={ri + '-' + ci} className={'acell' + (cell === '?' ? ' qm' : '')}>{cell}</div>
+                  )))}
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.55, marginBottom: 14 }}>{q.question}</h2>
+                {q.tableHtml && <div style={{ marginBottom: 18, overflowX: 'auto' }} dangerouslySetInnerHTML={{ __html: q.tableHtml }} />}
+              </>
+            )}
+
+            <div className="opts">
+              {q.options.map((opt, i) => (
+                <button key={i} className={'opt' + (sel === opt ? ' sel' : '')} onClick={() => !timedOut && setSel(opt)} disabled={timedOut}>
+                  <span className="olabel">{['A','B','C','D'][i]}</span>
+                  <span style={{ fontFamily: q.type === 'logic' ? 'JetBrains Mono' : 'inherit', fontSize: q.type === 'logic' ? 22 : 13 }}>{opt}</span>
+                </button>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 26, display: 'flex', justifyContent: 'flex-end' }}>
+              <button className="btn btn-p btn-lg" onClick={next} disabled={!sel && !timedOut}>
+                {isLast ? 'Submit Assessment' : 'Next Question'}
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Main Assessment page ──────────────────────────────────────────────
+export default function Assessment() {
+  const { linkId } = useParams()
+  const nav        = useNavigate()
+  const role = (() => {
+    try { const d = JSON.parse(atob(linkId)); if (d && d.title) return d } catch {}
+    try { return dbRoleByLink(linkId) } catch {}
+    return null
+  })()
+
+  const [stage,    setStage]   = useState('welcome')
+  const [candidate, setCand]  = useState(null)
+  const [questions, setQs]    = useState(null)
+  const [result,   setResult] = useState(null)
+  const [profile,  setProfile]= useState(null)
+  const [prevCand, setPrevCand] = useState(null)
+
+  if (!role) return (
+    <div className="shell">
+      <nav className="nav"><div className="logo"><div className="logo-mark">A</div>AssessIQ</div></nav>
+      <div className="center">
+        <div style={{ textAlign: 'center', maxWidth: 360 }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔗</div>
+          <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Invalid Link</h2>
+          <p style={{ color: 'var(--ink3)', fontSize: 14, lineHeight: 1.7 }}>This link is not valid or has expired. Please contact your recruiter.</p>
+          <button className="btn btn-p" style={{ marginTop: 20 }} onClick={() => nav('/')}>Go Home</button>
+        </div>
+      </div>
+    </div>
+  )
+
+  if (prevCand) return <AlreadyTaken candidate={prevCand} nav={nav} />
+
+  if (stage === 'welcome') return (
+    <Welcome
+      role={role}
+      onBegin={c => { setCand(c); setStage('loading') }}
+      onAlreadyTaken={c => setPrevCand(c)}
+    />
+  )
+  if (stage === 'loading') return <Loader onReady={qs => { setQs(qs); setStage('quiz') }} />
+  if (stage === 'quiz' && questions) return (
+    <Quiz candidate={candidate} questions={questions} onDone={(r, p) => { setResult(r); setProfile(p); setStage('done') }} />
+  )
+  if (stage === 'done' && result) return (
+    <CandidateResults candidate={candidate} result={result} profile={profile} nav={nav} />
+  )
+  return null
+}
+
+// ── Score Ring ────────────────────────────────────────────────────────
+function ScoreRing({ score, total, size = 110, color = 'var(--accent)' }) {
+  const r = (size - 12) / 2, circ = 2 * Math.PI * r, dash = circ * (score / total)
+  return (
+    <div className="ring-wrap" style={{ width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--paper3)" strokeWidth={7} />
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={7}
+          strokeLinecap="round" strokeDasharray={dash + ' ' + circ} style={{ transition: 'stroke-dasharray .9s ease' }} />
+      </svg>
+      <div className="ring-inner"><div className="ring-val">{score}</div><div className="ring-sub">/ {total}</div></div>
+    </div>
+  )
+}
+
+function TraitBar({ name, value, color, delay = 0 }) {
+  const [w, setW] = useState(0)
+  useEffect(() => { const t = setTimeout(() => setW(value), 300 + delay); return () => clearTimeout(t) }, [value, delay])
+  const label = value >= 80 ? 'Exceptional' : value >= 65 ? 'Strong' : value >= 50 ? 'Average' : value >= 35 ? 'Below Avg' : 'Developing'
+  return (
+    <div className="trait-wrap">
+      <div className="trait-hdr">
+        <span style={{ fontSize: 13, fontWeight: 600 }}>{name}</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 11, color: 'var(--ink3)' }}>{label}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color }}>{value}</span>
+        </span>
+      </div>
+      <div className="trait-track"><div className="trait-fill" style={{ width: w + '%', background: color }} /></div>
+    </div>
+  )
+}
+
+// ── PDF download ──────────────────────────────────────────────────────
+function downloadPDF(candidate, result, profile) {
+  const mins = Math.floor(result.timeTaken / 60)
+  const secs  = result.timeTaken % 60
+  const date  = new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+  const dob   = candidate.dob ? new Date(candidate.dob).toLocaleDateString('en-GB') : 'N/A'
+
+  const traitRows = Object.entries(profile.traits).map(([k, v]) => {
+    const label = v >= 80 ? 'Exceptional' : v >= 65 ? 'Strong' : v >= 50 ? 'Average' : v >= 35 ? 'Below Avg' : 'Developing'
+    const bar   = '█'.repeat(Math.round(v / 10)) + '░'.repeat(10 - Math.round(v / 10))
+    return '<tr><td>' + (TRAIT_NAMES[k]||k) + '</td><td style="font-family:monospace;letter-spacing:2px;color:#4f6ef7">' + bar + '</td><td style="text-align:right;font-weight:700">' + v + '</td><td style="color:#888">' + label + '</td></tr>'
+  }).join('')
+
+  const fitColor = profile.fit.color.replace('var(--ok)','#00b37e').replace('var(--accent)','#4f6ef7').replace('var(--warn)','#f59e0b').replace('var(--bad)','#ef4444')
+
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>AssessIQ Result — ' +
+    candidate.name +
+    '</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: \'Segoe UI\', Arial, sans-serif; background: #f5f6fa; color: #0a0f1e; padding: 32px; }
+  .page { max-width: 720px; margin: 0 auto; background: #fff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 2px solid #e2e5f0; }
+  .logo { font-size: 22px; font-weight: 800; color: #4f6ef7; letter-spacing: -.5px; }
+  .logo span { display: inline-block; width: 28px; height: 28px; background: linear-gradient(135deg,#4f6ef7,#7c5cfc); border-radius: 8px; margin-right: 8px; vertical-align: middle; }
+  .date { font-size: 13px; color: #8891aa; }
+  .fit-banner { background: ' +
+    profile.fit.bg||'#eef1fe' +
+    '; border: 2px solid ' +
+    fitColor +
+    '33; border-radius: 12px; padding: 20px 24px; margin-bottom: 28px; display: flex; align-items: center; gap: 16px; }
+  .fit-icon { font-size: 32px; }
+  .fit-label { font-size: 20px; font-weight: 800; color: ' +
+    fitColor +
+    '; }
+  .fit-desc { font-size: 13px; color: #3d4663; margin-top: 4px; line-height: 1.5; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+  .card { background: #f5f6fa; border-radius: 12px; padding: 20px; }
+  .card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #8891aa; margin-bottom: 12px; }
+  .score-big { font-size: 42px; font-weight: 800; letter-spacing: -2px; color: ' +
+    fitColor +
+    '; }
+  .score-big span { font-size: 18px; color: #8891aa; font-weight: 400; }
+  .sub-scores { display: flex; gap: 12px; margin-top: 12px; }
+  .sub-score { flex: 1; text-align: center; background: #fff; border-radius: 8px; padding: 10px; }
+  .sub-score .val { font-size: 20px; font-weight: 700; }
+  .sub-score .lbl { font-size: 11px; color: #8891aa; margin-top: 2px; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .info-row { display: flex; flex-direction: column; }
+  .info-lbl { font-size: 11px; color: #8891aa; text-transform: uppercase; letter-spacing: .04em; }
+  .info-val { font-size: 14px; font-weight: 600; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table th { text-align: left; padding: 8px 12px; background: #f5f6fa; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #8891aa; }
+  table td { padding: 10px 12px; border-bottom: 1px solid #e2e5f0; }
+  .percentile { font-size: 36px; font-weight: 800; letter-spacing: -1px; color: ' +
+    fitColor +
+    '; }
+  .insight { background: #0a0f1e; border-radius: 12px; padding: 20px 24px; color: rgba(255,255,255,.85); font-size: 13px; line-height: 1.8; margin-top: 20px; }
+  .insight-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: rgba(255,255,255,.4); margin-bottom: 10px; }
+  .footer { margin-top: 32px; padding-top: 20px; border-top: 1px solid #e2e5f0; display: flex; justify-content: space-between; font-size: 11px; color: #8891aa; }
+  @media print { body { padding: 0; background: #fff; } .page { box-shadow: none; border-radius: 0; } }
+</style>
+</head><body>
+<div class="page">
+  <div class="header">
+    <div class="logo"><span></span>AssessIQ</div>
+    <div class="date">Generated: ' +
+    date +
+    '</div>
+  </div>
+
+  <div class="fit-banner">
+    <div class="fit-icon">' +
+    profile.fit.label === 'Strong Fit' ? '🌟' : profile.fit.label === 'Good Fit' ? '✅' : profile.fit.label === 'Moderate Fit' ? '🔶' : '🔴' +
+    '</div>
+    <div>
+      <div class="fit-label">' +
+    profile.fit.label +
+    '</div>
+      <div class="fit-desc">' +
+    profile.fit.desc +
+    '</div>
+    </div>
+    <div style="margin-left:auto;text-align:right">
+      <div style="font-size:11px;color:#8891aa">Percentile Rank</div>
+      <div style="font-size:24px;font-weight:800;color:' +
+    fitColor +
+    '">' +
+    profile.percentile +
+    'th</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-title">Overall Score</div>
+      <div class="score-big">' +
+    result.totalScore +
+    '<span>/20</span></div>
+      <div class="sub-scores">
+        <div class="sub-score"><div class="val" style="color:#4f6ef7">' +
+    result.logicScore +
+    '/10</div><div class="lbl">Logic</div></div>
+        <div class="sub-score"><div class="val" style="color:#7c5cfc">' +
+    result.numScore +
+    '/10</div><div class="lbl">Numerical</div></div>
+        <div class="sub-score"><div class="val" style="font-family:monospace">' +
+    mins +
+    ':' +
+    String(secs).padStart(2,'0') +
+    '</div><div class="lbl">Time</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Candidate Details</div>
+      <div class="info-grid">
+        <div class="info-row"><span class="info-lbl">Name</span><span class="info-val">' +
+    candidate.name +
+    '</span></div>
+        <div class="info-row"><span class="info-lbl">Email</span><span class="info-val">' +
+    candidate.email +
+    '</span></div>
+        <div class="info-row"><span class="info-lbl">Phone</span><span class="info-val">' +
+    candidate.phone || 'N/A' +
+    '</span></div>
+        <div class="info-row"><span class="info-lbl">Date of Birth</span><span class="info-val">' +
+    dob +
+    '</span></div>
+        <div class="info-row"><span class="info-lbl">Role</span><span class="info-val">' +
+    candidate.roleName +
+    '</span></div>
+        <div class="info-row"><span class="info-lbl">Speed</span><span class="info-val">' +
+    profile.speedLabel +
+    ' Completion</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">Cognitive Trait Profile</div>
+    <table>
+      <tr><th>Trait</th><th>Score Visualisation</th><th style="text-align:right">Score</th><th>Level</th></tr>
+      ' +
+    traitRows +
+    '
+    </table>
+  </div>
+
+  <div class="insight">
+    <div class="insight-title">Assessment Insight</div>
+    <strong style="color:#fff">' +
+    candidate.name +
+    '</strong> ' +
+    profile.insight +
+    '
+  </div>
+
+  <div class="footer">
+    <span>AssessIQ Cognitive Assessment Platform</span>
+    <span>Confidential — For HR use only</span>
+  </div>
+</div>
+</body></html>'
+
+  const win = window.open('', '_blank')
+  if (win) {
+    win.document.write(html)
+    win.document.close()
+    setTimeout(() => win.print(), 500)
+  }
+}
+
+// ── Candidate Results Page ────────────────────────────────────────────
+function CandidateResults({ candidate, result, profile, nav }) {
+  const [reveal, setReveal] = useState(false)
+  useEffect(() => { const t = setTimeout(() => setReveal(true), 200); return () => clearTimeout(t) }, [])
+  const mins = Math.floor(result.timeTaken / 60)
+  const secs  = result.timeTaken % 60
+
+  return (
+    <div className="shell">
+      <nav className="nav">
+        <div className="logo"><div className="logo-mark">A</div>AssessIQ</div>
+        <div className="nav-r">
+          <button className="btn btn-s btn-sm" onClick={() => downloadPDF(candidate, result, profile)}>
+            📄 Download PDF
+          </button>
+          <button className="btn btn-g btn-sm" onClick={() => nav('/')}>
+            Exit
+          </button>
+        </div>
+      </nav>
+
+      <div className="page" style={{ maxWidth: 900 }}>
+        <div style={{ marginBottom: 28, animation: 'up .4s ease' }}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>🎉</div>
+          <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: '-.5px', marginBottom: 6 }}>Assessment Complete</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <span className="badge bb">{candidate.roleName}</span>
+            <span style={{ fontSize: 13, color: 'var(--ink2)' }}>
+              Thank you, {candidate.name}. Your results have been submitted to the hiring team.
+            </span>
+          </div>
+        </div>
+
+        {/* Fit Banner */}
+        <div style={{ background: profile.fit.bg, border: '1.5px solid ' + profile.fit.color + '44', borderRadius: 14, padding: '18px 24px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 16, animation: 'up .45s ease', flexWrap: 'wrap' }}>
+          <div style={{ width: 50, height: 50, borderRadius: 13, background: profile.fit.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
+            {profile.fit.label === 'Strong Fit' ? '🌟' : profile.fit.label === 'Good Fit' ? '✅' : profile.fit.label === 'Moderate Fit' ? '🔶' : '🔴'}
+          </div>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ fontWeight: 800, fontSize: 18, color: profile.fit.color }}>{profile.fit.label}</div>
+            <div style={{ fontSize: 13, color: 'var(--ink2)', lineHeight: 1.6, marginTop: 3 }}>{profile.fit.desc}</div>
+          </div>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <div style={{ fontSize: 11, color: 'var(--ink3)', marginBottom: 2 }}>Percentile Rank</div>
+            <div style={{ fontWeight: 800, fontSize: 26, color: profile.fit.color }}>
+              {profile.percentile}<span style={{ fontSize: 14, fontWeight: 400, color: 'var(--ink3)' }}>th</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="g2" style={{ alignItems: 'start', gap: 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="card card-xl au" style={{ padding: 26, animationDelay: '.1s' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--ink3)', marginBottom: 18 }}>Overall Score</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                <ScoreRing score={result.totalScore} total={20} size={100} color={profile.fit.color} />
+                <div style={{ flex: 1 }}>
+                  {[['Logic', result.logicScore, 10, 'var(--accent)'], ['Numerical', result.numScore, 10, 'var(--accent2)']].map(([l, s, t, c]) => (
+                    <div key={l} style={{ marginBottom: 10 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                        <span style={{ color: 'var(--ink2)' }}>{l}</span>
+                        <span style={{ fontWeight: 700, color: c }}>{s}/{t}</span>
+                      </div>
+                      <div className="pb-wrap" style={{ height: 6 }}>
+                        <div className="pb-fill" style={{ width: reveal ? (s/t*100) + '%' : '0%', background: c, transition: 'width 1s ease' }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="card card-xl au" style={{ padding: 26, animationDelay: '.15s' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--ink3)', marginBottom: 4 }}>Percentile Rank</div>
+              <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: '-1px', marginBottom: 4 }}>
+                {profile.percentile}<span style={{ fontSize: 16, fontWeight: 400, color: 'var(--ink3)' }}>th</span>
+              </div>
+              <p style={{ fontSize: 12, color: 'var(--ink3)', lineHeight: 1.6, marginBottom: 14 }}>
+                Scored higher than {profile.percentile}% of all candidates.
+              </p>
+              <div className="gauge-track">
+                <div className="gauge-needle" style={{ left: reveal ? profile.percentile + '%' : '50%' }} />
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--ink3)', marginTop: 4 }}>
+                <span>0th</span><span>25th</span><span>50th</span><span>75th</span><span>100th</span>
+              </div>
+            </div>
+
+            <div className="card card-xl au" style={{ padding: 26, animationDelay: '.2s' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--ink3)', marginBottom: 4 }}>Completion Speed</div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
+                <div style={{ fontSize: 28, fontWeight: 800, fontFamily: 'JetBrains Mono', letterSpacing: '-1px' }}>
+                  {mins}:{String(secs).padStart(2, '0')}
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--ink3)' }}>of 20:00</div>
+              </div>
+              <span className={'badge ' + (profile.speedLabel === 'Fast' ? 'bg' : profile.speedLabel === 'Average' ? 'bb' : 'ba')}>
+                <span className="dot" />{profile.speedLabel} Completion
+              </span>
+              <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 10, lineHeight: 1.6 }}>{profile.speedDesc}</div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div className="card card-xl au" style={{ padding: 26, animationDelay: '.25s' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--ink3)', marginBottom: 20 }}>Cognitive Trait Profile</div>
+              {Object.entries(profile.traits).map(([k, v], i) => (
+                <TraitBar key={k} name={TRAIT_NAMES[k]} value={v} color={TRAIT_COLORS[k]} delay={i * 100} />
+              ))}
+            </div>
+
+            <div className="card card-xl au" style={{ padding: 26, animationDelay: '.3s' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--ink3)', marginBottom: 16 }}>Performance Level</div>
+              {[{ label: 'Logic', score: result.logicScore, max: 10 }, { label: 'Numerical', score: result.numScore, max: 10 }].map(({ label, score, max }) => {
+                const lvl = Math.round((score / max) * 5)
+                const lvlLabel = score >= 9 ? 'Exceptional' : score >= 7 ? 'High' : score >= 5 ? 'Medium' : score >= 3 ? 'Low' : 'Very Low'
+                return (
+                  <div key={label} style={{ marginBottom: 20 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, marginBottom: 8 }}>
+                      <span>{label}</span><span style={{ color: 'var(--ink3)', fontWeight: 400 }}>{lvlLabel}</span>
+                    </div>
+                    <div className="level-bar">
+                      {[1,2,3,4,5].map(i => {
+                        const filled = i <= lvl
+                        const h = 16 + i * 7
+                        const col = !filled ? 'var(--paper3)' : i >= 4 ? 'var(--ok)' : i >= 3 ? 'var(--accent)' : 'var(--warn)'
+                        return <div key={i} className="level-seg" style={{ height: h, background: reveal ? col : 'var(--paper3)', transition: 'background .6s ease ' + (i * 0.1) + 's' }} />
+                      })}
+                    </div>
+                    <div className="level-labels">
+                      <span>Very Low</span><span>Low</span><span>Medium</span><span>High</span><span>Exceptional</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="card card-xl au" style={{ padding: 26, animationDelay: '.35s', background: 'var(--ink)', border: 'none' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'rgba(255,255,255,.4)', marginBottom: 12 }}>What This Means</div>
+              <p style={{ fontSize: 13, lineHeight: 1.8, color: 'rgba(255,255,255,.85)' }}>
+                <strong style={{ color: '#fff' }}>{candidate.name}</strong> {profile.insight}
+              </p>
+            </div>
+
+            {/* Action buttons */}
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button className="btn btn-s btn-lg" style={{ flex: 1, justifyContent: 'center' }}
+                onClick={() => downloadPDF(candidate, result, profile)}>
+                📄 Download PDF Result
+              </button>
+              <button className="btn btn-p btn-lg" style={{ flex: 1, justifyContent: 'center' }}
+                onClick={() => nav('/')}>
+                Exit Assessment
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
