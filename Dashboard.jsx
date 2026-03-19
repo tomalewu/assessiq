@@ -117,6 +117,9 @@ function BulkInviteModal({ role, onClose }) {
 
 export default function Dashboard() {
   const nav = useNavigate()
+  const me  = getCurrentUser()
+  const userIsAdmin = isAdmin()
+  const logout      = () => { setCurrentUser(null); nav('/') }
   const [roles, setRoles]                 = useState([])
   const [allCandidates, setAllCandidates] = useState([])
   const [loading, setLoading]             = useState(true)
@@ -221,9 +224,6 @@ export default function Dashboard() {
 
   const fmtDate  = d=>!d?'—':new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})
   const sortIcon = col=>sortBy===col?(sortDir==='asc'?'↑':'↓'):''
-  const me         = getCurrentUser()
-  const userIsAdmin = isAdmin()
-  const logout      = () => { setCurrentUser(null); nav('/') }
 
   if(loading) return(
     <div className="shell">
