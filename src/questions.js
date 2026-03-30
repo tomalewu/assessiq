@@ -155,7 +155,7 @@ export function makeNumQuestions(n, difficulty, seed) {
 async function generateWithGemini(apiKey, difficulty) {
   const diffNote = difficulty === 'easy' ? 'Simple and straightforward.' : difficulty === 'hard' ? 'Complex, multi-step, requiring deep reasoning.' : 'Moderate difficulty.'
   const prompt = 'Generate 10 logical reasoning (3x3 grid with symbols ▲ ● ■ ◆ ★ ○ □ △, last cell ?) and 10 numerical reasoning questions. ' + diffNote + ' Return ONLY a JSON array. Logic: {"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","●","◆"],"answer":"▲","exp":"reason"} Numerical: {"id":"N1","type":"numerical","question":"text","tableHtml":null,"options":["a","b","c","d"],"answer":"a","exp":"reason"}'
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + apiKey
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
