@@ -189,7 +189,8 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
 
   // Filter + search + sort
   let filtered = rc
-  if (filterStatus !== 'all') filtered = filtered.filter(c => c.status === filterStatus)
+  if (filterStatus === 'flagged') filtered = filtered.filter(c => c.flagged)
+  else if (filterStatus !== 'all') filtered = filtered.filter(c => c.status === filterStatus)
   if (search.trim()) {
     const q = search.toLowerCase()
     filtered = filtered.filter(c => (c.name||'').toLowerCase().includes(q) || (c.email||'').toLowerCase().includes(q))
@@ -354,6 +355,12 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
                           {c.notes && <div style={{ fontSize:11,color:'var(--accent)',marginTop:1 }}>📝 {c.notes.slice(0,30)}{c.notes.length>30?'…':''}</div>}
                           {c.cvUrl && <a href={c.cvUrl} target="_blank" rel="noreferrer" onClick={e=>e.stopPropagation()}
                             style={{ fontSize:11,color:'var(--ok)',fontWeight:600,textDecoration:'none',display:'block',marginTop:1 }}>📎 View CV</a>}
+                          {c.tabSwitches > 0 && (
+                            <div style={{ fontSize:11, marginTop:1, display:'flex', alignItems:'center', gap:3,
+                              color: c.flagged ? 'var(--bad)' : 'var(--warn)', fontWeight:600 }}>
+                              {c.flagged ? '🚩 Flagged' : '⚠️'} {c.tabSwitches} tab switch{c.tabSwitches !== 1 ? 'es' : ''}
+                            </div>
+                          )}
                         </td>
                         <td>{c.status==='completed'?<b>{c.totalScore}<span style={{ color:'var(--ink3)',fontWeight:400 }}>/20</span></b>:'—'}</td>
                         <td style={{ fontFamily:'JetBrains Mono',fontSize:12 }}>{c.status==='completed'?Math.floor(c.timeTaken/60)+'m':'—'}</td>

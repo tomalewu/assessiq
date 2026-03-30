@@ -521,10 +521,30 @@ function Quiz({ candidate, questions, onDone, difficulty }) {
   const Q_TIME = difficulty === 'easy' ? 45 : difficulty === 'hard' ? 45 : 60
   const [qTime, setQTime]       = useState(Q_TIME)
   const [timedOut, setTimedOut] = useState(false)
+  const [tabWarning, setTabWarning] = useState(false)
+  const [violations, setViolations] = useState(0)
   const t0        = useRef(Date.now())
   const qTimerRef = useRef(null)
   const q       = questions[idx]
   const isLast  = idx === questions.length - 1
+
+  // Tab switch detection
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.hidden) {
+        setViolations(v => {
+          const newCount = v + 1
+          import('../db').then(({ dbSaveCandidate }) => {
+            dbSaveCandidate(candidate.id, { tabSwitches: newCount, flagged: newCount >= 3 })
+          }).catch(() => {})
+          return newCount
+        })
+        setTabWarning(true)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
+    return () => document.removeEventListener('visibilitychange', handleVisibility)
+  }, [candidate.id])
 
   useEffect(() => {
     setQTime(Q_TIME)
@@ -575,13 +595,48 @@ function Quiz({ candidate, questions, onDone, difficulty }) {
 
   return (
     <div className="shell">
+      {/* Tab switch warning overlay */}
+      {tabWarning && (
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,.85)', zIndex:9999,
+          display:'flex', alignItems:'center', justifyContent:'center', padding:24 }}>
+          <div style={{ background:'var(--paper)', borderRadius:20, padding:40, maxWidth:440, textAlign:'center', boxShadow:'var(--sh-lg)' }}>
+            <div style={{ fontSize:52, marginBottom:16 }}>⚠️</div>
+            <h2 style={{ fontSize:22, fontWeight:800, letterSpacing:'-.4px', marginBottom:10, color:'var(--bad)' }}>
+              Tab Switch Detected
+            </h2>
+            <p style={{ fontSize:14, color:'var(--ink2)', lineHeight:1.7, marginBottom:16 }}>
+              You left the assessment window. This action has been <strong>recorded and reported</strong> to the recruitment team.
+            </p>
+            <div style={{ background:'var(--bad-dim)', border:'1.5px solid var(--bad)', borderRadius:10,
+              padding:'12px 16px', marginBottom:24, fontSize:13, color:'var(--bad)', fontWeight:600 }}>
+              Warning {violations} of 3 — {violations >= 3 ? 'Your attempt has been flagged.' : (3 - violations) + ' more will flag your attempt.'}
+            </div>
+            <p style={{ fontSize:12, color:'var(--ink3)', marginBottom:20, lineHeight:1.6 }}>
+              Please keep this window active and in focus for the remainder of the assessment. Do not switch tabs, open other applications, or minimize this window.
+            </p>
+            <button className="btn btn-p btn-lg" style={{ width:'100%', justifyContent:'center' }}
+              onClick={() => setTabWarning(false)}>
+              I understand — Continue Assessment
+            </button>
+          </div>
+        </div>
+      )}
+
       <nav className="nav">
         <div className="logo"><div className="logo-mark">A</div>AssessIQ</div>
         <div style={{ flex: 1, margin: '0 24px' }}>
           <div className="pb-wrap"><div className="pb-fill" style={{ width: (idx / questions.length * 100) + '%' }} /></div>
           <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 3 }}>{idx}/{questions.length} completed</div>
         </div>
-        <Timer secs={1200} onDone={() => finish(answers)} />
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          {violations > 0 && (
+            <div title={'Tab switches: ' + violations} style={{ display:'flex', alignItems:'center', gap:5,
+              fontSize:11, color: violations >= 3 ? 'var(--bad)' : 'var(--warn)', fontWeight:600 }}>
+              <span>⚠️</span> {violations} switch{violations !== 1 ? 'es' : ''}
+            </div>
+          )}
+          <Timer secs={1200} onDone={() => finish(answers)} />
+        </div>
       </nav>
 
       <div style={{ display: 'flex', justifyContent: 'center', padding: '36px 24px' }}>
