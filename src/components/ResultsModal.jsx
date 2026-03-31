@@ -46,65 +46,8 @@ function TraitBar({ name, value, color, delay = 0 }) {
 
 
 // ── PDF Download from Modal ───────────────────────────────────────────
-function downloadCognitivePDF(candidate, result, profile) {
-  const passed = result.totalScore >= 12
-  const traits = ['Logical Reasoning','Numerical Reasoning','Processing Speed','Problem Solving','Analytical Thinking']
-  const colors = ['#6366f1','#ef4444','#22c55e','#f59e0b','#8b5cf6']
-
-  const traitRows = profile.traits.map((val, i) => {
-    const label = val >= 85 ? 'Exceptional' : val >= 70 ? 'Strong' : val >= 50 ? 'Good' : val >= 30 ? 'Developing' : 'Low'
-    const bar = '<div style="height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin-top:4px">' +
-      '<div style="height:100%;width:' + val + '%;background:' + colors[i] + ';border-radius:4px"></div></div>'
-    return '<tr><td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;font-weight:600;width:200px">' + traits[i] + '</td>' +
-      '<td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;font-size:13px;color:' + colors[i] + ';font-weight:700;width:100px">' + label + ' ' + val + '%</td>' +
-      '<td style="padding:8px 12px;border-bottom:1px solid #f3f4f6;width:200px">' + bar + '</td></tr>'
-  }).join('')
-
-  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8">' +
-    '<title>Cognitive Report - ' + candidate.name + '</title>' +
-    '<style>body{font-family:Arial,sans-serif;margin:40px;color:#111827;max-width:750px}' +
-    'h1{font-size:20px;font-weight:800;margin:0 0 4px;color:#1e1b4b}' +
-    '.meta{color:#6b7280;font-size:12px;line-height:1.8;margin-bottom:20px}' +
-    '.banner{padding:16px 20px;border-radius:10px;margin-bottom:20px;display:flex;align-items:center;gap:16px;' +
-    'background:' + (passed?'#d1fae5':'#fee2e2') + ';border:2px solid ' + (passed?'#10b981':'#ef4444') + '}' +
-    '.score{font-size:36px;font-weight:800;color:' + (passed?'#059669':'#dc2626') + '}' +
-    '.fit{font-size:16px;font-weight:700;color:' + (passed?'#059669':'#dc2626') + '}' +
-    'table{width:100%;border-collapse:collapse}' +
-    'th{background:#1e1b4b;color:#fff;padding:8px 12px;text-align:left;font-size:12px}' +
-    '.insight{background:#1e1b4b;color:#fff;border-radius:10px;padding:16px 20px;margin-top:20px;font-size:13px;line-height:1.7}' +
-    '.footer{margin-top:24px;font-size:11px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:12px;text-align:center}' +
-    '@media print{body{margin:20px}}</style></head><body>' +
-    '<h1>' + candidate.name + ' — Cognitive Assessment Report</h1>' +
-    '<div class="meta">' +
-    'Email: ' + candidate.email + ' &nbsp;|&nbsp; ' +
-    'Role: ' + candidate.roleName + ' &nbsp;|&nbsp; ' +
-    'Date: ' + (candidate.completedAt?new Date(candidate.completedAt).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'—') +
-    '</div>' +
-    '<div class="banner">' +
-    '<div><div class="score">' + result.totalScore + '/20</div><div class="fit">' + (passed?'Pass':'Fail') + ' — ' + profile.fit.label + '</div></div>' +
-    '<div style="margin-left:auto;text-align:right;font-size:13px;color:#374151">' +
-    'Logic: <strong>' + result.logicScore + '/10</strong><br>' +
-    'Numerical: <strong>' + result.numScore + '/10</strong><br>' +
-    'Percentile: <strong>' + (candidate.percentile||0) + 'th</strong><br>' +
-    'Time: <strong>' + Math.floor((result.timeTaken||0)/60) + 'm ' + (result.timeTaken||0)%60 + 's</strong>' +
-    '</div></div>' +
-    '<table><thead><tr><th>Cognitive Trait</th><th>Level</th><th>Score</th></tr></thead><tbody>' +
-    traitRows + '</tbody></table>' +
-    (profile.insight ? '<div class="insight"><strong>Recruiter Insight</strong><br><br>' + profile.insight + '</div>' : '') +
-    '<div class="footer">AssessIQ Cognitive Assessment &nbsp;|&nbsp; Confidential &nbsp;|&nbsp; ' + new Date().toLocaleString() + '</div>' +
-    '</body></html>'
-
-  const iframe = document.createElement('iframe')
-  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:800px;height:600px;border:none'
-  document.body.appendChild(iframe)
-  iframe.contentDocument.open()
-  iframe.contentDocument.write(html)
-  iframe.contentDocument.close()
-  iframe.contentWindow.focus()
-  setTimeout(() => {
-    iframe.contentWindow.print()
-    setTimeout(() => document.body.removeChild(iframe), 3000)
-  }, 600)
+function downloadCognitivePDF(candidateId) {
+  window.open(window.location.origin + '/report/cognitive/' + candidateId, '_blank')
 }
 
 export default function ResultsModal({ candidate, result, profile, onClose, benchmark }) {
@@ -139,7 +82,7 @@ export default function ResultsModal({ candidate, result, profile, onClose, benc
             </div>
           </div>
           <div style={{ display:'flex', gap:8, alignItems:'center', flexShrink:0, marginLeft:16 }}>
-            <button className="btn btn-s btn-sm" onClick={() => downloadCognitivePDF(candidate, result, profile)}>📄 Download PDF</button>
+            <button className="btn btn-s btn-sm" onClick={() => downloadCognitivePDF(candidate.id)}>📄 Download PDF</button>
             <button className="btn btn-g btn-sm" onClick={onClose}>✕ Close</button>
           </div>
         </div>
