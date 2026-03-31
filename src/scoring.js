@@ -20,10 +20,10 @@ export function buildProfile(totalScore, logicScore, numScore, timeTaken) {
   }
 
   let fit
-  if      (pct >= 0.85) fit = { label: 'Strong Fit',  color: 'var(--ok)',     bg: 'var(--ok-dim)',    desc: 'Exceptional cognitive ability — well above the benchmark for this role. Highly recommended.' }
-  else if (pct >= 0.70) fit = { label: 'Good Fit',     color: 'var(--accent)', bg: 'var(--accent-dim)',desc: 'Strong reasoning skills that meet the cognitive benchmark. A solid candidate to advance.' }
-  else if (pct >= 0.55) fit = { label: 'Moderate Fit', color: 'var(--warn)',   bg: 'var(--warn-dim)',  desc: 'Meets some benchmarks. Consider a structured interview to probe weaker dimensions.' }
-  else                  fit = { label: 'Low Fit',       color: 'var(--bad)',    bg: 'var(--bad-dim)',   desc: 'Below the recommended threshold for this role. Further evaluation is advised.' }
+  if      (pct >= 0.85) fit = { label: 'Strong Fit',   color: 'var(--ok)',    bg: 'var(--ok-dim)',    desc: 'Exceptional cognitive ability — well above the benchmark for this role. Highly recommended.' }
+  else if (pct >= 0.70) fit = { label: 'Good Fit',      color: 'var(--accent)',bg: 'var(--accent-dim)',desc: 'Strong reasoning skills that meet the cognitive benchmark. A solid candidate to advance.' }
+  else if (pct >= 0.55) fit = { label: 'Moderate Fit',  color: 'var(--warn)', bg: 'var(--warn-dim)',  desc: 'Meets some benchmarks. Consider a structured interview to probe weaker dimensions.' }
+  else                  fit = { label: 'Low Fit',        color: 'var(--bad)',  bg: 'var(--bad-dim)',   desc: 'Below the recommended threshold for this role. Further evaluation is advised.' }
 
   let speedLabel
   if      (speedPct > 70) speedLabel = 'Fast'
@@ -34,7 +34,7 @@ export function buildProfile(totalScore, logicScore, numScore, timeTaken) {
   if      (totalScore >= 17) insight = 'demonstrates exceptional cognitive capacity — top-tier logical and numerical reasoning that signals strong potential for complex analytical roles.'
   else if (totalScore >= 14) insight = 'shows well-above-average reasoning ability. Logical and numerical skills are solid foundations for this role.'
   else if (totalScore >= 10) insight = 'meets baseline cognitive benchmarks. Some areas show strength; a structured interview is recommended to probe weaker dimensions.'
-  else                       insight = 'scored below the recommended threshold for this role. Further evaluation is advised before proceeding.'
+  else                       insight = "'s scores are below the recommended threshold for this role. Further evaluation is advised before proceeding."
 
   let speedDesc
   if      (speedLabel === 'Fast')    speedDesc = 'Completed well ahead of schedule — strong processing speed and confidence under time pressure.'
