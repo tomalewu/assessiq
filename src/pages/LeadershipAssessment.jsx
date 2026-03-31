@@ -99,7 +99,9 @@ function LQuiz({ candidate, questions, onDone }) {
   const [answers, setAnswers] = useState({})
   const [sel, setSel]         = useState(null)
   const [secs, setSecs]       = useState(1800) // 30 minutes
-  const t0 = Date.now()
+  const t0Ref = React.useRef(Date.now())
+
+  const answersRef = React.useRef({})
 
   // Hard 30-minute timer
   useEffect(() => {
@@ -107,8 +109,7 @@ function LQuiz({ candidate, questions, onDone }) {
       setSecs(s => {
         if (s <= 1) {
           clearInterval(tick)
-          // Auto-submit with answers collected so far
-          onDone({ ...answers }, Math.round((Date.now() - t0) / 1000))
+          onDone({ ...answersRef.current }, Math.round((Date.now() - t0Ref.current) / 1000))
           return 0
         }
         return s - 1
@@ -124,10 +125,11 @@ function LQuiz({ candidate, questions, onDone }) {
   const next = () => {
     if (sel === null) return
     const newAnswers = { ...answers, [q.id]: sel }
+    answersRef.current = newAnswers
     setAnswers(newAnswers)
     setSel(null)
     if (isLast) {
-      onDone(newAnswers, Math.round((Date.now() - t0) / 1000))
+      onDone(newAnswers, Math.round((Date.now() - t0Ref.current) / 1000))
     } else {
       setIdx(i => i + 1)
     }
@@ -268,10 +270,16 @@ function LResults({ candidate, results, role }) {
           </div>
 
           {/* Footer */}
-          <div style={{ background:'var(--paper2)', borderRadius:12, padding:'18px 24px', textAlign:'center', fontSize:13, color:'var(--ink3)', lineHeight:1.7 }}>
+          <div style={{ background:'var(--paper2)', borderRadius:12, padding:'18px 24px', textAlign:'center', fontSize:13, color:'var(--ink3)', lineHeight:1.7, marginBottom:16 }}>
             Thank you for completing this assessment, <strong>{candidate.name}</strong>.
             Your results have been shared with the recruitment team for <strong>{role.title}</strong>.
             They will be in touch if you are selected to proceed.
+          </div>
+          <div style={{ display:'flex', justifyContent:'center' }}>
+            <button className="btn btn-p btn-lg" style={{ justifyContent:'center', minWidth:200 }}
+              onClick={() => window.location.href = '/'}>
+              Exit Assessment
+            </button>
           </div>
         </div>
       </div>
