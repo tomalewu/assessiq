@@ -153,33 +153,25 @@ export function makeNumQuestions(n, difficulty, seed) {
 }
 
 async function generateWithGemini(apiKey, difficulty) {
-  const diffNote = difficulty === 'hard'
-    ? 'DIFFICULTY: HARD. All questions must be genuinely difficult and complex. Logical grids must use 4-symbol Latin squares or anti-diagonal patterns that require careful multi-step deduction. Numerical questions must involve compound interest, work-rate problems with 3+ variables, percentage chains, ratio+proportion combined, or complex data table interpretation requiring multiple calculations. Do NOT generate simple or easy questions.'
-    : difficulty === 'easy'
-    ? 'DIFFICULTY: EASY. Questions should be simple and accessible. Logical grids should have obvious repeating patterns. Numerical questions should involve basic arithmetic, simple percentages, or single-step ratio problems.'
-    : 'DIFFICULTY: MEDIUM. Questions should be moderately challenging, requiring 2-3 steps of reasoning.'
-  const prompt = 'Generate exactly 10 logical reasoning questions and 10 numerical reasoning questions. ' + diffNote + ' Return ONLY a valid JSON array with no other text, no markdown, no explanation. Each logic question: {"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","●","◆"],"answer":"▲","exp":"reason"} Each numerical question: {"id":"N1","type":"numerical","question":"full question text","tableHtml":null,"options":["a","b","c","d"],"answer":"a","exp":"step-by-step explanation"}'
+  const diff = difficulty === 'hard' ? 'HARD: complex multi-step problems, compound interest, 3-variable work-rate, Latin square grids' : difficulty === 'easy' ? 'EASY: simple single-step problems, obvious repeating grid patterns' : 'MEDIUM: 2-step problems, moderate grid patterns'
+  const prompt = 'Generate 10 logic + 10 numerical questions. Difficulty: ' + diff + '. Return ONLY a JSON array, no markdown. Logic item: {"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","●","◆"],"answer":"▲","exp":"why"} Numerical item: {"id":"N1","type":"numerical","question":"Q","tableHtml":null,"options":["a","b","c","d"],"answer":"a","exp":"why"}'
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.9, maxOutputTokens: 5000 } })
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 8192 } })
   })
   const data = await res.json()
   return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
 }
 
 async function generateWithAnthropic(apiKey, difficulty) {
-  const diffNote = difficulty === 'hard'
-    ? 'DIFFICULTY: HARD. All questions must be genuinely difficult. Logical grids must use complex 4-symbol Latin squares or anti-diagonal rotation patterns. Numerical questions must involve compound interest, multi-variable work-rate, percentage chains, or complex table interpretation requiring multiple calculation steps. Do NOT generate simple questions.'
-    : difficulty === 'easy'
-    ? 'DIFFICULTY: EASY. Simple, accessible questions with obvious patterns and single-step arithmetic.'
-    : 'DIFFICULTY: MEDIUM. Moderately challenging, requiring 2-3 steps of reasoning.'
-  const prompt = 'Generate exactly 10 logical reasoning questions and 10 numerical reasoning questions. ' + diffNote + ' Return ONLY a valid JSON array. Logic: {"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","●","◆"],"answer":"▲","exp":"reason"} Numerical: {"id":"N1","type":"numerical","question":"text","tableHtml":null,"options":["a","b","c","d"],"answer":"a","exp":"step-by-step explanation"}'
+  const diff = difficulty === 'hard' ? 'HARD: complex multi-step, compound interest, 3-variable work-rate, Latin square grids' : difficulty === 'easy' ? 'EASY: simple single-step, obvious patterns' : 'MEDIUM: 2-step problems'
+  const prompt = 'Generate 10 logic + 10 numerical questions. Difficulty: ' + diff + '. Return ONLY a JSON array, no markdown. Logic: {"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","●","◆"],"answer":"▲","exp":"why"} Numerical: {"id":"N1","type":"numerical","question":"Q","tableHtml":null,"options":["a","b","c","d"],"answer":"a","exp":"why"}'
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 5000, messages: [{ role: 'user', content: prompt }] })
+    body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 8000, messages: [{ role: 'user', content: prompt }] })
   })
   const data = await res.json()
   return data.content?.[0]?.text || ''
