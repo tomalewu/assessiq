@@ -7,7 +7,9 @@ import Assessment  from './pages/Assessment'
 import ResultsPage from './pages/ResultsPage'
 import Settings    from './pages/Settings'
 import Users       from './pages/Users'
-import Help        from './pages/Help'
+import Help               from './pages/Help'
+import LeadershipAssessment from './pages/LeadershipAssessment'
+import LeadershipDashboard  from './pages/LeadershipDashboard'
 
 // ─── Session storage for current user ─────────────────────────────────────────
 export function getCurrentUser() {
@@ -43,6 +45,8 @@ export default function App() {
       <Route path="/assess/:linkId"  element={<Assessment />} />
       <Route path="/results"         element={<ResultsPage />} />
       <Route path="/admin/help"       element={<RequireAuth><Help /></RequireAuth>} />
+      <Route path="/leadership/:payload" element={<LeadershipAssessment />} />
+      <Route path="/admin/leadership"    element={<RequireAuth><LeadershipDashboard /></RequireAuth>} />
       <Route path="*"                element={<Navigate to="/" replace />} />
     </Routes>
   )
