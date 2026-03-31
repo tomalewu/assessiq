@@ -106,60 +106,62 @@ function exportExcel(candidates, roles) {
 }
 
 // ── Bulk PDF (all candidates one doc) ────────────────────────────────
-function bulkPDFCognitive(candidates, roles, origin) {
+function BulkPDFModal({ candidates, roles, origin, onClose }) {
   const roleMap = {}
   roles.forEach(r => { roleMap[r.id] = r })
   const completed = candidates.filter(c => c.status === 'completed')
-  if (!completed.length) { alert('No completed candidates to export.'); return }
 
-  const pages = completed.map(c => {
-    const role      = roleMap[c.roleId]
-    const threshold = role?.threshold || 12
-    const passed    = (c.totalScore||0) >= threshold
-    const reportUrl = origin + '/report/cognitive/' + c.id
-    return '<div style="page-break-after:always;padding:32px;font-family:Arial,sans-serif;max-width:700px;margin:0 auto">' +
-      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">' +
-      '<div>' +
-      '<h2 style="margin:0 0 4px;font-size:18px;color:#1e1b4b">' + c.name + '</h2>' +
-      '<div style="font-size:12px;color:#6b7280;line-height:1.8">' +
-      'Email: ' + c.email + ' &nbsp;|&nbsp; Role: ' + (c.roleName||role?.title||'') + '<br>' +
-      'Date: ' + (c.completedAt?new Date(c.completedAt).toLocaleDateString('en-GB'):'—') +
-      '</div></div>' +
-      '<div style="text-align:center;background:' + (passed?'#d1fae5':'#fee2e2') + ';border:2px solid ' + (passed?'#10b981':'#ef4444') + ';border-radius:10px;padding:12px 20px">' +
-      '<div style="font-size:28px;font-weight:800;color:' + (passed?'#059669':'#dc2626') + '">' + (c.totalScore||0) + '/20</div>' +
-      '<div style="font-size:13px;font-weight:700;color:' + (passed?'#059669':'#dc2626') + '">' + (passed?'Pass':'Fail') + '</div>' +
-      '</div></div>' +
-      '<table style="width:100%;border-collapse:collapse;margin-bottom:16px">' +
-      '<tr><td style="padding:6px 10px;background:#f3f4f6;font-size:12px;font-weight:600;border:1px solid #e5e7eb">Logic Score</td>' +
-      '<td style="padding:6px 10px;border:1px solid #e5e7eb;font-size:12px">' + (c.logicScore||0) + '/10</td>' +
-      '<td style="padding:6px 10px;background:#f3f4f6;font-size:12px;font-weight:600;border:1px solid #e5e7eb">Numerical Score</td>' +
-      '<td style="padding:6px 10px;border:1px solid #e5e7eb;font-size:12px">' + (c.numScore||0) + '/10</td></tr>' +
-      '<tr><td style="padding:6px 10px;background:#f3f4f6;font-size:12px;font-weight:600;border:1px solid #e5e7eb">Percentile</td>' +
-      '<td style="padding:6px 10px;border:1px solid #e5e7eb;font-size:12px">' + (c.percentile||0) + 'th</td>' +
-      '<td style="padding:6px 10px;background:#f3f4f6;font-size:12px;font-weight:600;border:1px solid #e5e7eb">Time Taken</td>' +
-      '<td style="padding:6px 10px;border:1px solid #e5e7eb;font-size:12px">' + Math.floor((c.timeTaken||0)/60) + 'm ' + (c.timeTaken||0)%60 + 's</td></tr>' +
-      '</table>' +
-      '<div style="font-size:11px;color:#9ca3af;margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between">' +
-      '<span>Full report: <a href="' + reportUrl + '">' + reportUrl + '</a></span>' +
-      '<span>AssessIQ Cognitive Assessment | Confidential</span>' +
-      '</div></div>'
-  }).join('')
-
-  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bulk Cognitive Reports</title>' +
-    '<style>@media print{@page{margin:0}body{margin:0}}</style>' +
-    '</head><body>' + pages + '</body></html>'
-  // Use hidden iframe to print without popup blocker
-  const iframe = document.createElement('iframe')
-  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none'
-  document.body.appendChild(iframe)
-  iframe.contentDocument.open()
-  iframe.contentDocument.write(html)
-  iframe.contentDocument.close()
-  setTimeout(() => {
-    iframe.contentWindow.focus()
-    iframe.contentWindow.print()
-    setTimeout(() => document.body.removeChild(iframe), 2000)
-  }, 800)
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()} style={{ maxWidth:500 }}>
+        <h3>Bulk PDF Export</h3>
+        <div className="msub">{completed.length} completed candidate{completed.length!==1?'s':''} will be included.</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:12, margin:'16px 0' }}>
+          {completed.map(c => {
+            const role = roleMap[c.roleId]
+            const passed = (c.totalScore||0) >= (role?.threshold||12)
+            return (
+              <div key={c.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px',
+                background:'var(--paper2)', borderRadius:9, fontSize:13 }}>
+                <span style={{ fontWeight:600, flex:1 }}>{c.name}</span>
+                <span style={{ fontSize:12, color:'var(--ink3)' }}>{c.totalScore}/20</span>
+                <span className={'badge '+(passed?'bg':'br')} style={{ fontSize:11 }}>
+                  <span className="dot"/>{passed?'Pass':'Fail'}
+                </span>
+                <a href={origin+'/report/cognitive/'+c.id} target="_blank" rel="noreferrer"
+                  style={{ fontSize:11, color:'var(--accent)', fontWeight:600, textDecoration:'none' }}>
+                  📄 Open
+                </a>
+              </div>
+            )
+          })}
+          {completed.length === 0 && (
+            <div style={{ textAlign:'center', padding:'20px', color:'var(--ink3)' }}>No completed candidates.</div>
+          )}
+        </div>
+        <div style={{ padding:'12px 14px', background:'var(--accent-dim)', border:'1px solid var(--accent-mid)',
+          borderRadius:9, fontSize:12, color:'var(--ink2)', lineHeight:1.7, marginBottom:16 }}>
+          <strong>How to download PDFs:</strong><br/>
+          Click <strong>📄 Open</strong> next to each candidate → their report opens in a new tab → press <strong>Ctrl+P</strong> → Save as PDF.
+          <br/><br/>
+          Or use the <strong>📄 button</strong> next to each candidate in the table for individual reports.
+        </div>
+        <div style={{ display:'flex', gap:10 }}>
+          <button className="btn btn-s" style={{ flex:1, justifyContent:'center' }} onClick={onClose}>Close</button>
+          {completed.length > 0 && (
+            <button className="btn btn-p" style={{ flex:1, justifyContent:'center' }}
+              onClick={() => {
+                completed.forEach((c, i) => {
+                  setTimeout(() => window.open(origin+'/report/cognitive/'+c.id, '_blank'), i * 500)
+                })
+              }}>
+              Open All Reports
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ── Connection Status ─────────────────────────────────────────────────
@@ -366,7 +368,7 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
             </button>
             <button className="btn btn-s btn-sm" onClick={()=>exportCSV(rc,[role])}>📥 CSV</button>
             <button className="btn btn-s btn-sm" style={{fontSize:11,background:'#f0fdf4',border:'1px solid #86efac',color:'#166534'}} onClick={()=>exportExcel(rc,[role])}>📊 Excel</button>
-            <button className="btn btn-s btn-sm" style={{fontSize:11,background:'#ede9fe',border:'1px solid #c4b5fd',color:'#5b21b6'}} onClick={()=>bulkPDFCognitive(rc,roles,window.location.origin)}>📄 Bulk PDF</button>
+            <button className="btn btn-s btn-sm" style={{fontSize:11,background:'#ede9fe',border:'1px solid #c4b5fd',color:'#5b21b6'}} onClick={()=>setBulkPDFModal({candidates:rc,roles})}>📄 Bulk PDF</button>
             {/* Pass mark edit */}
             <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, marginLeft:'auto' }}>
               <span style={{ color:'var(--ink3)' }}>Pass:</span>
@@ -500,6 +502,7 @@ export default function Dashboard() {
   const [copied, setCopied]               = useState(false)
   const [activeTab, setActiveTab]         = useState('roles')
   const [showCharts, setShowCharts]       = useState(false)
+  const [bulkPDFModal, setBulkPDFModal]   = useState(null)
   const [showArchived, setShowArchived]   = useState(false)
 
   const refresh = useCallback(async () => {
@@ -992,6 +995,15 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {bulkPDFModal&&(
+        <BulkPDFModal
+          candidates={bulkPDFModal.candidates}
+          roles={bulkPDFModal.roles}
+          origin={window.location.origin}
+          onClose={()=>setBulkPDFModal(null)}
+        />
       )}
 
       {viewResult&&(

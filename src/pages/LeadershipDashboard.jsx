@@ -132,61 +132,48 @@ function exportLeadershipExcel(candidates, roleName) {
   URL.revokeObjectURL(url)
 }
 
-// ── Bulk PDF Leadership ───────────────────────────────────────────────
-function bulkPDFLeadership(candidates, roleName, origin) {
+// ── Bulk PDF Leadership Modal ────────────────────────────────────────
+function BulkPDFLeadershipModal({ candidates, roleName, origin, onClose }) {
   const completed = candidates.filter(c => c.status === 'completed')
-  if (!completed.length) { alert('No completed candidates to export.'); return }
+  const fitEmoji = (f) => f==='Strong Fit'?'🌟':f==='Moderate Fit'?'✨':'🌱'
 
-  const pages = completed.map(c => {
-    const { dimScores, fitLabel, leadershipStyle, leadershipPct: pct } = c
-    const fitColor  = fitLabel==='Strong Fit'?'#059669':fitLabel==='Moderate Fit'?'#d97706':'#dc2626'
-    const fitBg     = fitLabel==='Strong Fit'?'#d1fae5':fitLabel==='Moderate Fit'?'#fef3c7':'#fee2e2'
-    const fitBorder = fitLabel==='Strong Fit'?'#10b981':fitLabel==='Moderate Fit'?'#f59e0b':'#ef4444'
-    const reportUrl = origin + '/report/leadership/' + c.id
-
-    const dimSummary = DIMENSIONS.map(dim => {
-      const ds   = dimScores?.[dim.id] || { score:0, max:0 }
-      const dpct = ds.max > 0 ? Math.round(ds.score/ds.max*100) : 0
-      const label = dpct >= 70 ? 'Strength' : dpct >= 45 ? 'Developing' : 'Focus Area'
-      const lc = dpct >= 70 ? '#059669' : dpct >= 45 ? '#d97706' : '#dc2626'
-      return '<tr><td style="padding:5px 10px;border:1px solid #e5e7eb;font-size:11px">' + dim.icon + ' ' + dim.label + '</td>' +
-        '<td style="padding:5px 10px;border:1px solid #e5e7eb;font-size:11px;color:' + lc + ';font-weight:700">' + label + '</td>' +
-        '<td style="padding:5px 10px;border:1px solid #e5e7eb;font-size:11px">' + ds.score + '/' + ds.max + ' (' + dpct + '%)</td></tr>'
-    }).join('')
-
-    return '<div style="page-break-after:always;padding:32px;font-family:Arial,sans-serif;max-width:700px;margin:0 auto">' +
-      '<h2 style="margin:0 0 4px;font-size:18px;color:#1e1b4b">' + c.name + '</h2>' +
-      '<div style="font-size:12px;color:#6b7280;margin-bottom:16px;line-height:1.8">' +
-      'Email: ' + c.email + ' &nbsp;|&nbsp; Role: ' + (c.roleName||roleName||'') + '<br>' +
-      'Date: ' + (c.completedAt?new Date(c.completedAt).toLocaleDateString('en-GB'):'—') + '</div>' +
-      '<div style="background:' + fitBg + ';border:2px solid ' + fitBorder + ';border-radius:10px;padding:16px 20px;margin-bottom:16px;text-align:center">' +
-      '<div style="font-size:20px;font-weight:800;color:' + fitColor + '">' + fitLabel + '</div>' +
-      '<div style="font-size:13px;color:#374151;margin-top:4px">Style: <strong>' + leadershipStyle + '</strong> &nbsp;|&nbsp; Score: ' + c.leadershipTotal + '/' + c.leadershipMax + ' (' + pct + '%)</div>' +
-      '</div>' +
-      '<table style="width:100%;border-collapse:collapse;margin-bottom:16px">' +
-      '<thead><tr><th style="padding:6px 10px;background:#1e1b4b;color:#fff;font-size:11px;text-align:left;border:1px solid #ccc">Dimension</th>' +
-      '<th style="padding:6px 10px;background:#1e1b4b;color:#fff;font-size:11px;text-align:left;border:1px solid #ccc">Rating</th>' +
-      '<th style="padding:6px 10px;background:#1e1b4b;color:#fff;font-size:11px;text-align:left;border:1px solid #ccc">Score</th></tr></thead>' +
-      '<tbody>' + dimSummary + '</tbody></table>' +
-      '<div style="font-size:11px;color:#9ca3af;margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between">' +
-      '<span>Full report: <a href="' + reportUrl + '">' + reportUrl + '</a></span>' +
-      '<span>AssessIQ Leadership | Confidential</span></div></div>'
-  }).join('')
-
-  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bulk Leadership Reports</title>' +
-    '<style>@media print{@page{margin:0}body{margin:0}}</style></head><body>' + pages + '</body></html>'
-  // Use hidden iframe to print without popup blocker
-  const iframe = document.createElement('iframe')
-  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none'
-  document.body.appendChild(iframe)
-  iframe.contentDocument.open()
-  iframe.contentDocument.write(html)
-  iframe.contentDocument.close()
-  setTimeout(() => {
-    iframe.contentWindow.focus()
-    iframe.contentWindow.print()
-    setTimeout(() => document.body.removeChild(iframe), 2000)
-  }, 800)
+  return (
+    <div className="overlay" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()} style={{ maxWidth:500 }}>
+        <h3>Bulk PDF Export — Leadership</h3>
+        <div className="msub">{completed.length} completed candidate{completed.length!==1?'s':''} will be included.</div>
+        <div style={{ display:'flex', flexDirection:'column', gap:10, margin:'16px 0' }}>
+          {completed.map(c => (
+            <div key={c.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 14px',
+              background:'var(--paper2)', borderRadius:9, fontSize:13 }}>
+              <span style={{ fontWeight:600, flex:1 }}>{c.name}</span>
+              <span style={{ fontSize:11 }}>{fitEmoji(c.fitLabel)} {c.fitLabel}</span>
+              <a href={origin+'/report/leadership/'+c.id} target="_blank" rel="noreferrer"
+                style={{ fontSize:11, color:'var(--accent)', fontWeight:600, textDecoration:'none' }}>
+                📄 Open
+              </a>
+            </div>
+          ))}
+          {completed.length === 0 && (
+            <div style={{ textAlign:'center', padding:'20px', color:'var(--ink3)' }}>No completed candidates.</div>
+          )}
+        </div>
+        <div style={{ padding:'12px 14px', background:'var(--accent-dim)', border:'1px solid var(--accent-mid)',
+          borderRadius:9, fontSize:12, color:'var(--ink2)', lineHeight:1.7, marginBottom:16 }}>
+          <strong>How to save as PDF:</strong> Click <strong>📄 Open</strong> → report opens in new tab → <strong>Ctrl+P</strong> → Save as PDF.
+        </div>
+        <div style={{ display:'flex', gap:10 }}>
+          <button className="btn btn-s" style={{ flex:1, justifyContent:'center' }} onClick={onClose}>Close</button>
+          {completed.length > 0 && (
+            <button className="btn btn-p" style={{ flex:1, justifyContent:'center' }}
+              onClick={() => completed.forEach((c,i) => setTimeout(() => window.open(origin+'/report/leadership/'+c.id,'_blank'), i*500))}>
+              Open All Reports
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function ConnectionDot({ online }) {
@@ -426,6 +413,7 @@ export default function LeadershipDashboard() {
   const [noteText, setNoteText]           = useState('')
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [expiryModal, setExpiryModal]     = useState(null)
+  const [bulkPDFModal, setBulkPDFModal]   = useState(null)
   const [expiryInput, setExpiryInput]     = useState('')
   const [showArchived, setShowArchived]   = useState(false)
   const [globalSearch, setGlobalSearch]   = useState('')
@@ -727,6 +715,15 @@ export default function LeadershipDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {bulkPDFModal && (
+        <BulkPDFLeadershipModal
+          candidates={bulkPDFModal.candidates}
+          roleName={bulkPDFModal.roleName}
+          origin={window.location.origin}
+          onClose={()=>setBulkPDFModal(null)}
+        />
       )}
 
       {/* Profile Modal */}
