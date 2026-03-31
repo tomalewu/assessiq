@@ -175,11 +175,18 @@ function bulkPDFLeadership(candidates, roleName, origin) {
 
   const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bulk Leadership Reports</title>' +
     '<style>@media print{@page{margin:0}body{margin:0}}</style></head><body>' + pages + '</body></html>'
-  const blob = new Blob([html], { type:'text/html' })
-  const url  = URL.createObjectURL(blob)
-  const a    = document.createElement('a')
-  a.href = url; a.download = 'bulk_leadership_reports.html'; a.click()
-  setTimeout(() => URL.revokeObjectURL(url), 1000)
+  // Use hidden iframe to print without popup blocker
+  const iframe = document.createElement('iframe')
+  iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none'
+  document.body.appendChild(iframe)
+  iframe.contentDocument.open()
+  iframe.contentDocument.write(html)
+  iframe.contentDocument.close()
+  setTimeout(() => {
+    iframe.contentWindow.focus()
+    iframe.contentWindow.print()
+    setTimeout(() => document.body.removeChild(iframe), 2000)
+  }, 800)
 }
 
 function ConnectionDot({ online }) {
