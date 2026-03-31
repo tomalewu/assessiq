@@ -177,8 +177,9 @@ function bulkPDFLeadership(candidates, roleName, origin) {
     '<style>@media print{@page{margin:0}body{margin:0}}</style></head><body>' + pages + '</body></html>'
   const blob = new Blob([html], { type:'text/html' })
   const url  = URL.createObjectURL(blob)
-  const w    = window.open(url, '_blank')
-  if (w) setTimeout(() => { w.print(); URL.revokeObjectURL(url) }, 800)
+  const a    = document.createElement('a')
+  a.href = url; a.download = 'bulk_leadership_reports.html'; a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
 
 function ConnectionDot({ online }) {
