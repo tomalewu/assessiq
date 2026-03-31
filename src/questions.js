@@ -159,12 +159,15 @@ async function geminiCall(apiKey, prompt) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.5, maxOutputTokens: 4096, responseMimeType: 'application/json' }
+      generationConfig: { temperature: 0.3, maxOutputTokens: 2048, responseMimeType: 'application/json' }
     })
   })
   if (!res.ok) { const err = await res.json(); throw new Error(err.error?.message || 'HTTP ' + res.status) }
   const data = await res.json()
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  const finishReason = data.candidates?.[0]?.finishReason || 'unknown'
+  console.log('Gemini finishReason:', finishReason, '| chars:', text.length, '| preview:', text.slice(0,100))
+  if (finishReason === 'MAX_TOKENS') throw new Error('Response truncated by token limit — finishReason: MAX_TOKENS')
   if (!text) throw new Error('Empty response from Gemini')
   return text
 }
@@ -205,16 +208,52 @@ async function generateWithGemini(apiKey, difficulty) {
 }
 
 async function generateWithAnthropic(apiKey, difficulty) {
-  const diff = difficulty === 'hard' ? 'HARD: complex multi-step, compound interest, 3-variable work-rate, Latin square grids' : difficulty === 'easy' ? 'EASY: simple single-step, obvious patterns' : 'MEDIUM: 2-step problems'
-  const prompt = 'Generate 10 logic + 10 numerical questions. Difficulty: ' + diff + '. Return ONLY a JSON array, no markdown. Logic: {"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","●","◆"],"answer":"▲","exp":"why"} Numerical: {"id":"N1","type":"numerical","question":"Q","tableHtml":null,"options":["a","b","c","d"],"answer":"a","exp":"why"}'
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 8000, messages: [{ role: 'user', content: prompt }] })
-  })
-  const data = await res.json()
-  return data.content?.[0]?.text || ''
+  const diff = difficulty === 'hard'
+    ? 'HARD difficulty: complex Latin square logic grids requiring multi-step deduction. Numerical: compound interest, pipes/cistern with 3 variables, percentage profit chains, ratio-proportion combined.'
+    : difficulty === 'easy'
+    ? 'EASY difficulty: simple repeating symbol patterns for logic. Basic arithmetic and single-step ratios for numerical.'
+    : 'MEDIUM difficulty: 2-step logic deduction, moderate numerical problems.'
+
+  const call = async (prompt) => {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    })
+    if (!res.ok) { const err = await res.json(); throw new Error(err.error?.message || 'HTTP ' + res.status) }
+    const data = await res.json()
+    const text = data.content?.[0]?.text || ''
+    if (!text) throw new Error('Empty response')
+    // Extract JSON array robustly
+    const s = text.indexOf('[')
+    const e = text.lastIndexOf(']')
+    if (s === -1 || e === -1) throw new Error('No JSON array in response')
+    return JSON.parse(text.slice(s, e + 1))
+  }
+
+  const logicPrompt = 'Generate exactly 5 logical reasoning questions using symbols ▲ ● ■ ◆ ★ ○ □ △ in 3x3 grids where last cell is ?. ' + diff + ' Return ONLY a JSON array, no explanation: [{"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲","exp":"Latin square rotation"}]'
+
+  const numPrompt = 'Generate exactly 5 numerical reasoning questions. ' + diff + ' Return ONLY a JSON array, no explanation: [{"id":"N1","type":"numerical","question":"If 40% of X is 120, what is X?","tableHtml":null,"options":["250","280","300","320"],"answer":"300","exp":"120/0.4=300"}]'
+
+  const [l1, l2, n1, n2] = await Promise.all([
+    call(logicPrompt),
+    call(logicPrompt.replace('"L1"', '"L6"')),
+    call(numPrompt),
+    call(numPrompt.replace('"N1"', '"N6"'))
+  ])
+
+  const logic = [...l1, ...l2].filter(q => q.type === 'logic').slice(0, 10)
+  const num   = [...n1, ...n2].filter(q => q.type === 'numerical').slice(0, 10)
+  if (logic.length < 5) throw new Error('Not enough logic: ' + logic.length)
+  if (num.length < 5)   throw new Error('Not enough numerical: ' + num.length)
+  console.log('Anthropic generated:', logic.length, 'logic +', num.length, 'numerical questions')
+  return JSON.stringify([...logic, ...num])
 }
+
 
 function parseQuestions(text) {
   const bt = String.fromCharCode(96)
@@ -235,15 +274,18 @@ export async function loadQuestions(settings, candidateId) {
   const difficulty   = s.difficulty   || 'medium'
   const seed         = makeSeed(candidateId || '')
 
+  // Try Anthropic first (more reliable JSON), then Gemini as fallback
+  if (anthropicKey) {
+    try {
+      console.log('AssessIQ: Using Anthropic AI for', difficulty, 'difficulty questions')
+      return parseQuestions(await generateWithAnthropic(anthropicKey, difficulty))
+    } catch(e) { console.warn('Anthropic failed, trying Gemini:', e.message) }
+  }
   if (geminiKey) {
     try {
       console.log('AssessIQ: Using Gemini AI for', difficulty, 'difficulty questions')
       return parseQuestions(await generateWithGemini(geminiKey, difficulty))
     } catch(e) { console.warn('Gemini failed, falling back to question bank:', e.message) }
-  }
-  if (anthropicKey) {
-    try { return parseQuestions(await generateWithAnthropic(anthropicKey, difficulty)) }
-    catch(e) { console.warn('Anthropic failed:', e.message) }
   }
   // Use seeded question bank — unique per candidate, reproducible
   console.log('AssessIQ: Using question bank for', difficulty, 'difficulty (no API key configured)')
