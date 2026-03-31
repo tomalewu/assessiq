@@ -9,6 +9,8 @@ import Settings    from './pages/Settings'
 import Users       from './pages/Users'
 import Help               from './pages/Help'
 import LeadershipAssessment from './pages/LeadershipAssessment'
+import CognitiveReport      from './pages/CognitiveReport'
+import LeadershipReport     from './pages/LeadershipReport'
 import LeadershipDashboard  from './pages/LeadershipDashboard'
 
 // ─── Session storage for current user ─────────────────────────────────────────
@@ -47,6 +49,8 @@ export default function App() {
       <Route path="/admin/help"       element={<RequireAuth><Help /></RequireAuth>} />
       <Route path="/leadership/:payload" element={<LeadershipAssessment />} />
       <Route path="/admin/leadership"    element={<RequireAuth><LeadershipDashboard /></RequireAuth>} />
+      <Route path="/report/cognitive/:candidateId" element={<CognitiveReport />} />
+      <Route path="/report/leadership/:candidateId" element={<LeadershipReport />} />
       <Route path="*"                element={<Navigate to="/" replace />} />
     </Routes>
   )
