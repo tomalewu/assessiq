@@ -4,6 +4,133 @@ import { getCurrentUser, setCurrentUser, isAdmin } from '../App'
 import { dbRoles, dbAllCandidates, dbAddRole, dbUpdateRole, dbDeleteRole, dbDeleteCandidate, dbSaveCandidate } from '../db'
 import { DIMENSIONS, getDimQualitative, getOverallNarrative } from '../leadership'
 
+// ── Generate HTML Report (for PDF print + Excel link) ────────────────
+function generateReportHTML(candidate) {
+  const { dimScores, fitLabel, leadershipStyle, leadershipPct: pct } = candidate
+  if (!dimScores) return ''
+  const overallNarrative = getOverallNarrative(fitLabel, leadershipStyle, pct)
+  const fitColor = fitLabel==='Strong Fit'?'#059669':fitLabel==='Moderate Fit'?'#d97706':'#dc2626'
+  const fitBg    = fitLabel==='Strong Fit'?'#d1fae5':fitLabel==='Moderate Fit'?'#fef3c7':'#fee2e2'
+  const fitBorder= fitLabel==='Strong Fit'?'#10b981':fitLabel==='Moderate Fit'?'#f59e0b':'#ef4444'
+
+  const dimRows = DIMENSIONS.map(dim => {
+    const ds   = dimScores[dim.id] || { score:0, max:0 }
+    const dpct = ds.max > 0 ? Math.round(ds.score / ds.max * 100) : 0
+    const label = dpct >= 70 ? 'Strength' : dpct >= 45 ? 'Developing Well' : 'Focus Area'
+    const lcolor = dpct >= 70 ? '#059669' : dpct >= 45 ? '#d97706' : '#dc2626'
+    const narrative = getDimQualitative(dim.id, dpct)
+    return '<tr><td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-weight:700;width:190px">' +
+      dim.icon + ' ' + dim.label + '</td>' +
+      '<td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;color:' + lcolor + ';font-weight:700;width:130px">' + label +
+      ' (' + dpct + '%)</td>' +
+      '<td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;line-height:1.6">' + narrative + '</td>' +
+      '<td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-size:12px;color:#6b7280;width:80px;text-align:center">' +
+      ds.score + '/' + ds.max + '</td></tr>'
+  }).join('')
+
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Leadership Report — ' + candidate.name + '</title><style>' +
+    'body{font-family:Arial,sans-serif;margin:40px;color:#111827;max-width:900px}' +
+    'h1{font-size:22px;font-weight:800;margin:0 0 4px;color:#1e1b4b}' +
+    '.meta{color:#6b7280;font-size:13px;margin-bottom:24px;line-height:1.8}' +
+    '.banner{background:' + fitBg + ';border:2px solid ' + fitBorder + ';border-radius:10px;padding:20px 24px;margin-bottom:24px}' +
+    '.fit-label{font-size:20px;font-weight:800;color:' + fitColor + ';margin-bottom:6px}' +
+    '.fit-style{font-size:13px;color:#374151;margin-bottom:10px}' +
+    '.fit-narrative{font-size:13px;color:#374151;line-height:1.75}' +
+    'table{width:100%;border-collapse:collapse;margin-top:4px}' +
+    'th{background:#1e1b4b;color:#fff;padding:10px 14px;text-align:left;font-size:12px}' +
+    '.section-title{font-size:16px;font-weight:800;margin:24px 0 12px;color:#1e1b4b}' +
+    '.footer{margin-top:32px;font-size:11px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:12px;text-align:center}' +
+    '@media print{body{margin:20px}.footer{position:fixed;bottom:0;width:100%}}' +
+    '</style></head><body>' +
+    '<h1>Leadership Assessment Report</h1>' +
+    '<div class="meta">' +
+    '<strong>Candidate:</strong> ' + candidate.name + '<br>' +
+    '<strong>Email:</strong> ' + candidate.email + '<br>' +
+    '<strong>Role:</strong> ' + candidate.roleName + '<br>' +
+    '<strong>Date:</strong> ' + (candidate.completedAt ? new Date(candidate.completedAt).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}) : '—') + '<br>' +
+    '<strong>Time Taken:</strong> ' + (candidate.timeTaken ? Math.floor(candidate.timeTaken/60)+'m '+candidate.timeTaken%60+'s' : '—') +
+    '</div>' +
+    '<div class="banner">' +
+    '<div class="fit-label">' + fitLabel + '</div>' +
+    '<div class="fit-style">Leadership Style: <strong>' + leadershipStyle + '</strong> &nbsp;|&nbsp; Overall Score: ' + candidate.leadershipTotal + '/' + candidate.leadershipMax + ' (' + pct + '%)</div>' +
+    '<div class="fit-narrative">' + overallNarrative + '</div>' +
+    '</div>' +
+    '<div class="section-title">Dimension Breakdown</div>' +
+    '<table><thead><tr><th>Dimension</th><th>Assessment</th><th>Narrative</th><th>Score</th></tr></thead>' +
+    '<tbody>' + dimRows + '</tbody></table>' +
+    '<div class="footer">AssessIQ Leadership Assessment &nbsp;|&nbsp; Confidential &nbsp;|&nbsp; Generated: ' + new Date().toLocaleString() + '</div>' +
+    '</body></html>'
+}
+
+function openReport(candidate) {
+  const html = generateReportHTML(candidate)
+  if (!html) return
+  const blob = new Blob([html], { type: 'text/html' })
+  const url  = URL.createObjectURL(blob)
+  window.open(url, '_blank')
+  setTimeout(() => URL.revokeObjectURL(url), 5000)
+}
+
+// ── Excel Export ──────────────────────────────────────────────────────
+function exportLeadershipExcel(candidates, roleName) {
+  const headers = ['Name','Email','Phone','Role','Fit','Style','Overall %','Score',
+    ...DIMENSIONS.map(d => d.label),
+    'Date','Time (min)','Notes','Report']
+
+  const rows = candidates.filter(c => c.status === 'completed').map(c => {
+    const dimPcts = DIMENSIONS.map(dim => {
+      const ds = c.dimScores?.[dim.id] || { score:0, max:0 }
+      return ds.max > 0 ? Math.round(ds.score/ds.max*100)+'%' : '—'
+    })
+    return [
+      c.name, c.email, c.phone||'', c.roleName||roleName||'',
+      c.fitLabel||'', c.leadershipStyle||'',
+      c.leadershipPct!=null?c.leadershipPct+'%':'',
+      c.leadershipTotal!=null?c.leadershipTotal+'/'+c.leadershipMax:'',
+      ...dimPcts,
+      c.completedAt?new Date(c.completedAt).toLocaleDateString('en-GB'):'',
+      c.timeTaken?Math.floor(c.timeTaken/60)+'.'+Math.round((c.timeTaken%60/60)*10):'',
+      c.notes||'',
+      'VIEW REPORT'
+    ]
+  })
+
+  // Build Excel HTML with report hyperlinks
+  const fitBg = (fit) => fit==='Strong Fit'?'#d1fae5':fit==='Moderate Fit'?'#fef3c7':fit==='Developing'?'#fee2e2':'#fff'
+
+  let html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'
+  html += '<head><meta charset="UTF-8"><style>'
+  html += 'table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:12px}'
+  html += 'th{background:#1e1b4b;color:#fff;padding:8px 12px;border:1px solid #ccc;text-align:left}'
+  html += 'td{padding:7px 12px;border:1px solid #ddd}'
+  html += '.report-link{color:#4f46e5;font-weight:700}'
+  html += '</style></head><body><table>'
+  html += '<tr>' + headers.map(h => '<th>' + h + '</th>').join('') + '</tr>'
+
+  candidates.filter(c => c.status === 'completed').forEach((c, i) => {
+    const reportHTML = generateReportHTML(c)
+    const reportBlob = reportHTML ? 'data:text/html;charset=utf-8,' + encodeURIComponent(reportHTML) : ''
+    const fit = c.fitLabel || ''
+    const row = rows[i]
+    html += '<tr style="background:' + fitBg(fit) + '">'
+    row.forEach((val, vi) => {
+      if (vi === row.length - 1 && reportBlob) {
+        html += '<td><a href="' + reportBlob + '" target="_blank" class="report-link">📄 View Report</a></td>'
+      } else {
+        html += '<td>' + String(val).replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</td>'
+      }
+    })
+    html += '</tr>'
+  })
+  html += '</table></body></html>'
+
+  const blob = new Blob([html], { type:'application/vnd.ms-excel;charset=utf-8' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href = url; a.download = 'leadership_results.xls'; a.click()
+  URL.revokeObjectURL(url)
+}
+
 function ConnectionDot({ online }) {
   return (
     <div style={{ display:'flex', alignItems:'center', gap:5, fontSize:11, color:'var(--ink3)' }}>
@@ -27,7 +154,10 @@ function LeadershipProfileModal({ candidate, onClose }) {
             <h3 style={{ margin:0 }}>{candidate.name}</h3>
             <div style={{ fontSize:12, color:'var(--ink3)', marginTop:2 }}>{candidate.email} · {candidate.roleName}</div>
           </div>
+          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <button className="btn btn-s btn-sm" style={{ fontSize:11 }} onClick={()=>openReport(candidate)}>📄 Download PDF</button>
           <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'var(--ink3)' }}>✕</button>
+        </div>
         </div>
 
         {/* Fit banner */}
@@ -186,6 +316,8 @@ function LRoleCard({ role, candidates, onLink, onDelete, onArchive, onManageExpi
                       <td style={{ fontSize:11, color:'var(--ink3)' }}>{fmtDate(c.completedAt)}</td>
                       <td onClick={e=>e.stopPropagation()}>
                         <div style={{ display:'flex', gap:4 }}>
+                          {c.status==='completed' && <button className="btn btn-g btn-sm" style={{ fontSize:11, padding:'3px 7px', color:'var(--accent)' }}
+                            onClick={()=>openReport(c)}>📄</button>}
                           <button className="btn btn-g btn-sm" style={{ fontSize:11, padding:'3px 7px' }}
                             onClick={()=>onNote(c)}>📝</button>
                           {userIsAdmin && <button className="btn btn-g btn-sm" style={{ fontSize:11, padding:'3px 7px', color:'var(--bad)' }}
