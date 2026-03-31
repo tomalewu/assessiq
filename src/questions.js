@@ -171,51 +171,36 @@ async function geminiCall(apiKey, prompt) {
 
 async function generateWithGemini(apiKey, difficulty) {
   const diff = difficulty === 'hard'
-    ? 'HARD difficulty only. Use complex 3-symbol Latin square grids for logic. For numerical: compound interest formula, pipes/cistern problems, percentage profit chains.'
-    : difficulty === 'easy' ? 'EASY difficulty only. Simple repeating patterns for logic. Basic arithmetic for numerical.'
-    : 'MEDIUM difficulty. Moderate 2-step problems.'
+    ? 'HARD: complex Latin square grids, compound interest, multi-variable problems'
+    : difficulty === 'easy' ? 'EASY: simple repeating patterns, basic arithmetic'
+    : 'MEDIUM: moderate 2-step problems'
 
-  // Ask for 5 at a time to avoid any truncation
-  const p1 = 'Return a JSON array of exactly 5 logic questions. ' + diff + ' IMPORTANT: Keep exp field under 10 words. Format: [{"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲","exp":"short reason max 10 words"}]'
-  const p2 = 'Return a JSON array of exactly 5 logic questions (different from before). ' + diff + ' IMPORTANT: Keep exp field under 10 words. Format: [{"id":"L6","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲","exp":"short reason max 10 words"}]'
-  const p3 = 'Return a JSON array of exactly 5 numerical reasoning questions. ' + diff + ' IMPORTANT: Keep exp field under 15 words. Format: [{"id":"N1","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A","exp":"short calc under 15 words"}]'
-  const p4 = 'Return a JSON array of exactly 5 numerical reasoning questions (different from before). ' + diff + ' IMPORTANT: Keep exp field under 15 words. Format: [{"id":"N6","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A","exp":"short calc under 15 words"}]'
+  // Request minimal JSON — no exp field to avoid truncation
+  const logicPrompt = 'Return a JSON array of exactly 5 logic grid questions. ' + diff + '. Use symbols ▲ ● ■ ◆ ★ ○ □ △ in 3x3 grids, last cell is ?. NO exp field. Format: [{"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲"}]'
+  const numPrompt   = 'Return a JSON array of exactly 5 numerical questions. ' + diff + '. NO exp field. Format: [{"id":"N1","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A"}]'
 
   const extractArr = (text) => {
-    console.log('Gemini raw response (first 300 chars):', text.slice(0, 300))
-    const start = text.indexOf('[')
-    const end   = text.lastIndexOf(']')
-    if (start === -1 || end === -1 || end <= start) throw new Error('No JSON array found in response')
-    const jsonStr = text.slice(start, end + 1)
-    try {
-      const arr = JSON.parse(jsonStr)
-      if (!Array.isArray(arr) || arr.length === 0) throw new Error('Empty array in response')
-      // Truncate exp field as safety net to prevent long text issues
-      return arr.map(q => ({...q, exp: (q.exp||'').slice(0,120)}))
-    } catch(e) {
-      console.error('JSON parse failed. Raw JSON:', jsonStr.slice(0, 500))
-      throw e
-    }
+    const s = text.indexOf('[')
+    const e = text.lastIndexOf(']')
+    if (s === -1 || e === -1 || e <= s) throw new Error('No array in response')
+    const arr = JSON.parse(text.slice(s, e + 1))
+    if (!Array.isArray(arr) || arr.length === 0) throw new Error('Empty array')
+    // Add default exp since we omitted it
+    return arr.map(q => ({ ...q, exp: q.answer + ' follows the pattern.' }))
   }
 
   const [r1, r2, r3, r4] = await Promise.all([
-    geminiCall(apiKey, p1),
-    geminiCall(apiKey, p2),
-    geminiCall(apiKey, p3),
-    geminiCall(apiKey, p4)
+    geminiCall(apiKey, logicPrompt),
+    geminiCall(apiKey, logicPrompt.replace('L1','L6')),
+    geminiCall(apiKey, numPrompt),
+    geminiCall(apiKey, numPrompt.replace('N1','N6'))
   ])
 
-  const allQs = [
-    ...extractArr(r1),
-    ...extractArr(r2),
-    ...extractArr(r3),
-    ...extractArr(r4)
-  ]
+  const logic = [...extractArr(r1), ...extractArr(r2)].filter(q => q.type === 'logic').slice(0,10)
+  const num   = [...extractArr(r3), ...extractArr(r4)].filter(q => q.type === 'numerical').slice(0,10)
 
-  const logic = allQs.filter(q => q.type === 'logic').slice(0, 10)
-  const num   = allQs.filter(q => q.type === 'numerical').slice(0, 10)
-  if (logic.length < 5) throw new Error('Not enough logic questions: ' + logic.length)
-  if (num.length < 5)   throw new Error('Not enough numerical questions: ' + num.length)
+  if (logic.length < 5) throw new Error('Not enough logic: ' + logic.length)
+  if (num.length < 5)   throw new Error('Not enough numerical: ' + num.length)
   return JSON.stringify([...logic, ...num])
 }
 
