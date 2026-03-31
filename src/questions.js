@@ -152,17 +152,43 @@ export function makeNumQuestions(n, difficulty, seed) {
   return shuffled.slice(0, n).map((q, i) => ({ id: 'N' + i, type: 'numerical', ...q }))
 }
 
-async function generateWithGemini(apiKey, difficulty) {
-  const diff = difficulty === 'hard' ? 'HARD: complex multi-step problems, compound interest, 3-variable work-rate, Latin square grids' : difficulty === 'easy' ? 'EASY: simple single-step problems, obvious repeating grid patterns' : 'MEDIUM: 2-step problems, moderate grid patterns'
-  const prompt = 'Generate 10 logic + 10 numerical questions. Difficulty: ' + diff + '. Return ONLY a JSON array, no markdown. Logic item: {"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","●","◆"],"answer":"▲","exp":"why"} Numerical item: {"id":"N1","type":"numerical","question":"Q","tableHtml":null,"options":["a","b","c","d"],"answer":"a","exp":"why"}'
+async function geminiCall(apiKey, prompt) {
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + apiKey
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 8192 } })
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 4096 } })
   })
+  if (!res.ok) { const err = await res.json(); throw new Error(err.error?.message || 'HTTP ' + res.status) }
   const data = await res.json()
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  if (!text) throw new Error('Empty response')
+  return text
+}
+
+async function generateWithGemini(apiKey, difficulty) {
+  const diff = difficulty === 'hard'
+    ? 'HARD: use complex patterns requiring multi-step deduction. For numerical: compound interest, 3-variable work-rate, percentage chains.'
+    : difficulty === 'easy' ? 'EASY: simple obvious patterns, single-step arithmetic.'
+    : 'MEDIUM: 2-step reasoning.'
+
+  const bt = String.fromCharCode(96)
+  const clean = t => t.replace(new RegExp(bt+bt+bt+'json','g'),'').replace(new RegExp(bt+bt+bt,'g'),'').trim()
+
+  // Two parallel calls — one for logic, one for numerical — to avoid truncation
+  const logicPrompt = 'Generate exactly 10 logical reasoning questions. Difficulty: ' + diff + ' Each question: 3x3 grid using symbols ▲ ● ■ ◆ ★ ○ □ △, last cell is ?. Return ONLY a JSON array: [{"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["A","B","C","D"],"answer":"A","exp":"why"}]'
+  const numPrompt   = 'Generate exactly 10 numerical reasoning questions. Difficulty: ' + diff + ' Return ONLY a JSON array: [{"id":"N1","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A","exp":"why"}]'
+
+  const [logicText, numText] = await Promise.all([
+    geminiCall(apiKey, logicPrompt),
+    geminiCall(apiKey, numPrompt)
+  ])
+
+  const logicQs = JSON.parse(clean(logicText))
+  const numQs   = JSON.parse(clean(numText))
+  if (!Array.isArray(logicQs) || logicQs.length < 5) throw new Error('Not enough logic Qs: ' + logicQs.length)
+  if (!Array.isArray(numQs)   || numQs.length < 5)   throw new Error('Not enough numerical Qs: ' + numQs.length)
+  return JSON.stringify([...logicQs.slice(0,10), ...numQs.slice(0,10)])
 }
 
 async function generateWithAnthropic(apiKey, difficulty) {
@@ -181,9 +207,11 @@ function parseQuestions(text) {
   const bt = String.fromCharCode(96)
   const cleaned = text.replace(new RegExp(bt + bt + bt + 'json', 'g'), '').replace(new RegExp(bt + bt + bt, 'g'), '').trim()
   const parsed = JSON.parse(cleaned)
-  if (!Array.isArray(parsed) || parsed.length < 18) throw new Error('not enough questions')
+  if (!Array.isArray(parsed) || parsed.length < 16) throw new Error('not enough questions: ' + parsed.length)
   const logic = shuffle(parsed.filter(q => q.type === 'logic')).slice(0, 10)
   const num   = shuffle(parsed.filter(q => q.type === 'numerical')).slice(0, 10)
+  if (logic.length < 8) throw new Error('not enough logic questions: ' + logic.length)
+  if (num.length < 8)   throw new Error('not enough numerical questions: ' + num.length)
   return shuffle([...logic, ...num])
 }
 
