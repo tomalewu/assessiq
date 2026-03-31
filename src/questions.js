@@ -182,14 +182,19 @@ async function generateWithGemini(apiKey, difficulty) {
   const p4 = 'Return a JSON array of exactly 5 numerical reasoning questions (different from before). ' + diff + ' Format: [{"id":"N6","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A","exp":"reason"}]'
 
   const extractArr = (text) => {
-    // Find first [ and last ] to extract JSON array robustly
+    console.log('Gemini raw response (first 300 chars):', text.slice(0, 300))
     const start = text.indexOf('[')
     const end   = text.lastIndexOf(']')
     if (start === -1 || end === -1 || end <= start) throw new Error('No JSON array found in response')
     const jsonStr = text.slice(start, end + 1)
-    const arr = JSON.parse(jsonStr)
-    if (!Array.isArray(arr) || arr.length === 0) throw new Error('Empty array in response')
-    return arr
+    try {
+      const arr = JSON.parse(jsonStr)
+      if (!Array.isArray(arr) || arr.length === 0) throw new Error('Empty array in response')
+      return arr
+    } catch(e) {
+      console.error('JSON parse failed. Raw JSON:', jsonStr.slice(0, 500))
+      throw e
+    }
   }
 
   const [r1, r2, r3, r4] = await Promise.all([
