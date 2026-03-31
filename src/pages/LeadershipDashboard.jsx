@@ -73,7 +73,7 @@ function openReport(candidate) {
 
 // ── Excel Export ──────────────────────────────────────────────────────
 function exportLeadershipExcel(candidates, roleName) {
-  const headers = ['Name','Email','Phone','Role','Fit','Style','Overall %','Score',
+  const headers = ['Name','Email','Phone','Role','Fit','Style','Overall %','Score','Report URL',
     ...DIMENSIONS.map(d => d.label),
     'Date','Time (min)','Notes','Report']
 
@@ -91,7 +91,7 @@ function exportLeadershipExcel(candidates, roleName) {
       c.completedAt?new Date(c.completedAt).toLocaleDateString('en-GB'):'',
       c.timeTaken?Math.floor(c.timeTaken/60)+'.'+Math.round((c.timeTaken%60/60)*10):'',
       c.notes||'',
-      'VIEW REPORT'
+      window.location.origin+'/report/leadership/'+c.id
     ]
   })
 
@@ -114,8 +114,9 @@ function exportLeadershipExcel(candidates, roleName) {
     const row = rows[i]
     html += '<tr style="background:' + fitBg(fit) + '">'
     row.forEach((val, vi) => {
-      if (vi === row.length - 1 && reportBlob) {
-        html += '<td><a href="' + reportBlob + '" target="_blank" class="report-link">📄 View Report</a></td>'
+      if (vi === row.length - 1) {
+        const rUrl = window.location.origin + '/report/leadership/' + c.id
+        html += '<td><a href="' + rUrl + '" target="_blank" class="report-link">📄 View Report</a></td>'
       } else {
         html += '<td>' + String(val).replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</td>'
       }
@@ -129,6 +130,55 @@ function exportLeadershipExcel(candidates, roleName) {
   const a    = document.createElement('a')
   a.href = url; a.download = 'leadership_results.xls'; a.click()
   URL.revokeObjectURL(url)
+}
+
+// ── Bulk PDF Leadership ───────────────────────────────────────────────
+function bulkPDFLeadership(candidates, roleName, origin) {
+  const completed = candidates.filter(c => c.status === 'completed')
+  if (!completed.length) { alert('No completed candidates to export.'); return }
+
+  const pages = completed.map(c => {
+    const { dimScores, fitLabel, leadershipStyle, leadershipPct: pct } = c
+    const fitColor  = fitLabel==='Strong Fit'?'#059669':fitLabel==='Moderate Fit'?'#d97706':'#dc2626'
+    const fitBg     = fitLabel==='Strong Fit'?'#d1fae5':fitLabel==='Moderate Fit'?'#fef3c7':'#fee2e2'
+    const fitBorder = fitLabel==='Strong Fit'?'#10b981':fitLabel==='Moderate Fit'?'#f59e0b':'#ef4444'
+    const reportUrl = origin + '/report/leadership/' + c.id
+
+    const dimSummary = DIMENSIONS.map(dim => {
+      const ds   = dimScores?.[dim.id] || { score:0, max:0 }
+      const dpct = ds.max > 0 ? Math.round(ds.score/ds.max*100) : 0
+      const label = dpct >= 70 ? 'Strength' : dpct >= 45 ? 'Developing' : 'Focus Area'
+      const lc = dpct >= 70 ? '#059669' : dpct >= 45 ? '#d97706' : '#dc2626'
+      return '<tr><td style="padding:5px 10px;border:1px solid #e5e7eb;font-size:11px">' + dim.icon + ' ' + dim.label + '</td>' +
+        '<td style="padding:5px 10px;border:1px solid #e5e7eb;font-size:11px;color:' + lc + ';font-weight:700">' + label + '</td>' +
+        '<td style="padding:5px 10px;border:1px solid #e5e7eb;font-size:11px">' + ds.score + '/' + ds.max + ' (' + dpct + '%)</td></tr>'
+    }).join('')
+
+    return '<div style="page-break-after:always;padding:32px;font-family:Arial,sans-serif;max-width:700px;margin:0 auto">' +
+      '<h2 style="margin:0 0 4px;font-size:18px;color:#1e1b4b">' + c.name + '</h2>' +
+      '<div style="font-size:12px;color:#6b7280;margin-bottom:16px;line-height:1.8">' +
+      'Email: ' + c.email + ' &nbsp;|&nbsp; Role: ' + (c.roleName||roleName||'') + '<br>' +
+      'Date: ' + (c.completedAt?new Date(c.completedAt).toLocaleDateString('en-GB'):'—') + '</div>' +
+      '<div style="background:' + fitBg + ';border:2px solid ' + fitBorder + ';border-radius:10px;padding:16px 20px;margin-bottom:16px;text-align:center">' +
+      '<div style="font-size:20px;font-weight:800;color:' + fitColor + '">' + fitLabel + '</div>' +
+      '<div style="font-size:13px;color:#374151;margin-top:4px">Style: <strong>' + leadershipStyle + '</strong> &nbsp;|&nbsp; Score: ' + c.leadershipTotal + '/' + c.leadershipMax + ' (' + pct + '%)</div>' +
+      '</div>' +
+      '<table style="width:100%;border-collapse:collapse;margin-bottom:16px">' +
+      '<thead><tr><th style="padding:6px 10px;background:#1e1b4b;color:#fff;font-size:11px;text-align:left;border:1px solid #ccc">Dimension</th>' +
+      '<th style="padding:6px 10px;background:#1e1b4b;color:#fff;font-size:11px;text-align:left;border:1px solid #ccc">Rating</th>' +
+      '<th style="padding:6px 10px;background:#1e1b4b;color:#fff;font-size:11px;text-align:left;border:1px solid #ccc">Score</th></tr></thead>' +
+      '<tbody>' + dimSummary + '</tbody></table>' +
+      '<div style="font-size:11px;color:#9ca3af;margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between">' +
+      '<span>Full report: <a href="' + reportUrl + '">' + reportUrl + '</a></span>' +
+      '<span>AssessIQ Leadership | Confidential</span></div></div>'
+  }).join('')
+
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bulk Leadership Reports</title>' +
+    '<style>@media print{@page{margin:0}body{margin:0}}</style></head><body>' + pages + '</body></html>'
+  const blob = new Blob([html], { type:'text/html' })
+  const url  = URL.createObjectURL(blob)
+  const w    = window.open(url, '_blank')
+  if (w) setTimeout(() => { w.print(); URL.revokeObjectURL(url) }, 800)
 }
 
 function ConnectionDot({ online }) {
@@ -155,7 +205,8 @@ function LeadershipProfileModal({ candidate, onClose }) {
             <div style={{ fontSize:12, color:'var(--ink3)', marginTop:2 }}>{candidate.email} · {candidate.roleName}</div>
           </div>
           <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-          <button className="btn btn-s btn-sm" style={{ fontSize:11 }} onClick={()=>openReport(candidate)}>📄 Download PDF</button>
+          <button className="btn btn-s btn-sm" style={{ fontSize:11 }}
+            onClick={()=>window.open(window.location.origin+'/report/leadership/'+candidate.id,'_blank')}>📄 View Report</button>
           <button onClick={onClose} style={{ background:'none', border:'none', fontSize:20, cursor:'pointer', color:'var(--ink3)' }}>✕</button>
         </div>
         </div>
@@ -317,7 +368,8 @@ function LRoleCard({ role, candidates, onLink, onDelete, onArchive, onManageExpi
                       <td onClick={e=>e.stopPropagation()}>
                         <div style={{ display:'flex', gap:4 }}>
                           {c.status==='completed' && <button className="btn btn-g btn-sm" style={{ fontSize:11, padding:'3px 7px', color:'var(--accent)' }}
-                            onClick={()=>openReport(c)}>📄</button>}
+                            title="View full report"
+                            onClick={()=>window.open(window.location.origin+'/report/leadership/'+c.id,'_blank')}>📄</button>}
                           <button className="btn btn-g btn-sm" style={{ fontSize:11, padding:'3px 7px' }}
                             onClick={()=>onNote(c)}>📝</button>
                           {userIsAdmin && <button className="btn btn-g btn-sm" style={{ fontSize:11, padding:'3px 7px', color:'var(--bad)' }}

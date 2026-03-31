@@ -30,7 +30,8 @@ function exportCSV(candidates, roles) {
       c.status === 'completed' ? (passed ? 'Pass' : 'Fail') : '',
       c.cvUrl ? 'Yes' : '',
       c.status, c.notes || '',
-      c.completedAt ? new Date(c.completedAt).toLocaleDateString('en-GB') : ''
+      c.completedAt ? new Date(c.completedAt).toLocaleDateString('en-GB') : '',
+      c.status === 'completed' ? window.location.origin + '/report/cognitive/' + c.id : ''
     ].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(',')
   })
   const csv = [headers.join(','), ...rows].join('\n')
@@ -48,7 +49,7 @@ function exportExcel(candidates, roles) {
   const rankMap = {}
   sorted.forEach((c,i) => { rankMap[c.id] = i+1 })
 
-  const headers = ['Rank','Name','Email','Phone','DOB','Role','Score /20','Logic /10','Numerical /10','Percentile','Time (min)','Result','CV','Notes','Date']
+  const headers = ['Rank','Name','Email','Phone','DOB','Role','Score /20','Logic /10','Numerical /10','Percentile','Time (min)','Result','CV','Notes','Date','Report URL']
   const rows = candidates.map(c => {
     const role      = roleMap[c.roleId]
     const threshold = role?.threshold || 12
@@ -102,6 +103,55 @@ function exportExcel(candidates, roles) {
   const a    = document.createElement('a')
   a.href = url; a.download = 'assessiq_results.xls'; a.click()
   URL.revokeObjectURL(url)
+}
+
+// ── Bulk PDF (all candidates one doc) ────────────────────────────────
+function bulkPDFCognitive(candidates, roles, origin) {
+  const roleMap = {}
+  roles.forEach(r => { roleMap[r.id] = r })
+  const completed = candidates.filter(c => c.status === 'completed')
+  if (!completed.length) { alert('No completed candidates to export.'); return }
+
+  const pages = completed.map(c => {
+    const role      = roleMap[c.roleId]
+    const threshold = role?.threshold || 12
+    const passed    = (c.totalScore||0) >= threshold
+    const reportUrl = origin + '/report/cognitive/' + c.id
+    return '<div style="page-break-after:always;padding:32px;font-family:Arial,sans-serif;max-width:700px;margin:0 auto">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px">' +
+      '<div>' +
+      '<h2 style="margin:0 0 4px;font-size:18px;color:#1e1b4b">' + c.name + '</h2>' +
+      '<div style="font-size:12px;color:#6b7280;line-height:1.8">' +
+      'Email: ' + c.email + ' &nbsp;|&nbsp; Role: ' + (c.roleName||role?.title||'') + '<br>' +
+      'Date: ' + (c.completedAt?new Date(c.completedAt).toLocaleDateString('en-GB'):'—') +
+      '</div></div>' +
+      '<div style="text-align:center;background:' + (passed?'#d1fae5':'#fee2e2') + ';border:2px solid ' + (passed?'#10b981':'#ef4444') + ';border-radius:10px;padding:12px 20px">' +
+      '<div style="font-size:28px;font-weight:800;color:' + (passed?'#059669':'#dc2626') + '">' + (c.totalScore||0) + '/20</div>' +
+      '<div style="font-size:13px;font-weight:700;color:' + (passed?'#059669':'#dc2626') + '">' + (passed?'Pass':'Fail') + '</div>' +
+      '</div></div>' +
+      '<table style="width:100%;border-collapse:collapse;margin-bottom:16px">' +
+      '<tr><td style="padding:6px 10px;background:#f3f4f6;font-size:12px;font-weight:600;border:1px solid #e5e7eb">Logic Score</td>' +
+      '<td style="padding:6px 10px;border:1px solid #e5e7eb;font-size:12px">' + (c.logicScore||0) + '/10</td>' +
+      '<td style="padding:6px 10px;background:#f3f4f6;font-size:12px;font-weight:600;border:1px solid #e5e7eb">Numerical Score</td>' +
+      '<td style="padding:6px 10px;border:1px solid #e5e7eb;font-size:12px">' + (c.numScore||0) + '/10</td></tr>' +
+      '<tr><td style="padding:6px 10px;background:#f3f4f6;font-size:12px;font-weight:600;border:1px solid #e5e7eb">Percentile</td>' +
+      '<td style="padding:6px 10px;border:1px solid #e5e7eb;font-size:12px">' + (c.percentile||0) + 'th</td>' +
+      '<td style="padding:6px 10px;background:#f3f4f6;font-size:12px;font-weight:600;border:1px solid #e5e7eb">Time Taken</td>' +
+      '<td style="padding:6px 10px;border:1px solid #e5e7eb;font-size:12px">' + Math.floor((c.timeTaken||0)/60) + 'm ' + (c.timeTaken||0)%60 + 's</td></tr>' +
+      '</table>' +
+      '<div style="font-size:11px;color:#9ca3af;margin-top:16px;padding-top:12px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between">' +
+      '<span>Full report: <a href="' + reportUrl + '">' + reportUrl + '</a></span>' +
+      '<span>AssessIQ Cognitive Assessment | Confidential</span>' +
+      '</div></div>'
+  }).join('')
+
+  const html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Bulk Cognitive Reports</title>' +
+    '<style>@media print{@page{margin:0}body{margin:0}}</style>' +
+    '</head><body>' + pages + '</body></html>'
+  const blob = new Blob([html], { type:'text/html' })
+  const url  = URL.createObjectURL(blob)
+  const w    = window.open(url, '_blank')
+  if (w) setTimeout(() => { w.print(); URL.revokeObjectURL(url) }, 800)
 }
 
 // ── Connection Status ─────────────────────────────────────────────────
@@ -308,6 +358,7 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
             </button>
             <button className="btn btn-s btn-sm" onClick={()=>exportCSV(rc,[role])}>📥 CSV</button>
             <button className="btn btn-s btn-sm" style={{fontSize:11,background:'#f0fdf4',border:'1px solid #86efac',color:'#166534'}} onClick={()=>exportExcel(rc,[role])}>📊 Excel</button>
+            <button className="btn btn-s btn-sm" style={{fontSize:11,background:'#ede9fe',border:'1px solid #c4b5fd',color:'#5b21b6'}} onClick={()=>bulkPDFCognitive(rc,roles,window.location.origin)}>📄 Bulk PDF</button>
             {/* Pass mark edit */}
             <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:12, marginLeft:'auto' }}>
               <span style={{ color:'var(--ink3)' }}>Pass:</span>
