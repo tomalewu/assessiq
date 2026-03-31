@@ -136,7 +136,7 @@ function Welcome({ role, onBegin, onAlreadyTaken, onAgeRejected }) {
           </div>
 
           <div style={{ display: 'flex', background: 'var(--paper2)', border: '1px solid var(--line)', borderRadius: 12, padding: '14px 0', marginBottom: 28 }} className="au">
-            {[['20', 'Questions'], ['20 min', 'Time limit'], ['No back', 'Forward only'], ['AI-scored', 'Instant results']].map(([v, l], i) => (
+            {[['20', 'Questions'], [role?.difficulty==='easy'||role?.difficulty==='hard'?'15 min':'20 min', 'Time limit'], ['No back', 'Forward only'], ['AI-scored', 'Instant results']].map(([v, l], i) => (
               <div key={i} style={{ flex: 1, textAlign: 'center', borderRight: i < 3 ? '1px solid var(--line)' : 'none' }}>
                 <div style={{ fontWeight: 800, fontSize: 15, letterSpacing: '-.3px' }}>{v}</div>
                 <div style={{ color: 'var(--ink3)', fontSize: 11, marginTop: 3 }}>{l}</div>
@@ -635,7 +635,7 @@ function Quiz({ candidate, questions, onDone, difficulty }) {
               <span>⚠️</span> {violations} switch{violations !== 1 ? 'es' : ''}
             </div>
           )}
-          <Timer secs={1200} onDone={() => finish(answers)} />
+          <Timer secs={difficulty === 'easy' || difficulty === 'hard' ? 900 : 1200} onDone={() => finish(answers)} />
         </div>
       </nav>
 

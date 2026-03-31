@@ -133,7 +133,7 @@ function BulkInviteModal({ role, onClose }) {
   useEffect(() => { setPreview(parse(csv)) }, [csv])
 
   const getLink = () => {
-    const payload = btoa(JSON.stringify({ id: role.id, linkId: role.linkId, title: role.title, dept: role.dept||'', isMTO: role.isMTO||false, ageLimit: role.ageLimit||28, threshold: role.threshold||12, recruiterEmail: role.recruiterEmail||'' }))
+    const payload = btoa(JSON.stringify({ id: role.id, linkId: role.linkId, title: role.title, dept: role.dept||'', isMTO: role.isMTO||false, ageLimit: role.ageLimit||28, threshold: role.threshold||12, recruiterEmail: role.recruiterEmail||'', difficulty: role.difficulty||'medium' }))
     return window.location.origin + '/assess/' + payload
   }
 
@@ -484,7 +484,7 @@ export default function Dashboard() {
   }
 
   const getLink = r => {
-    const payload = btoa(JSON.stringify({ id:r.id, linkId:r.linkId, title:r.title, dept:r.dept||'', isMTO:r.isMTO||false, ageLimit:r.ageLimit||28, threshold:r.threshold||12, recruiterEmail:r.recruiterEmail||'' }))
+    const payload = btoa(JSON.stringify({ id:r.id, linkId:r.linkId, title:r.title, dept:r.dept||'', isMTO:r.isMTO||false, ageLimit:r.ageLimit||28, threshold:r.threshold||12, recruiterEmail:r.recruiterEmail||'', difficulty:r.difficulty||'medium' }))
     return window.location.origin+'/assess/'+payload
   }
 
