@@ -131,16 +131,18 @@ export default function CognitiveReport() {
               <div style={{ fontSize:13, color:'var(--ink2)', marginTop:2 }}>{profile.fit.desc}</div>
             </div>
           </div>
-          {TRAIT_NAMES.map((trait, i) => {
-            const val = profile.traits[i]
+          {Object.keys(profile.traits).map((key) => {
+            const val   = profile.traits[key]
+            const label = TRAIT_NAMES[key] || key
+            const color = TRAIT_COLORS[key] || 'var(--accent)'
             return (
-              <div key={trait} style={{ marginBottom:12 }}>
+              <div key={key} style={{ marginBottom:12 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', fontSize:12, marginBottom:4 }}>
-                  <span style={{ fontWeight:600 }}>{trait}</span>
+                  <span style={{ fontWeight:600 }}>{label}</span>
                   <span style={{ color:'var(--ink3)' }}>{val}%</span>
                 </div>
                 <div style={{ height:8, background:'var(--paper3)', borderRadius:4, overflow:'hidden' }}>
-                  <div style={{ height:'100%', width:val+'%', background:TRAIT_COLORS[i], borderRadius:4, transition:'width .6s' }}/>
+                  <div style={{ height:'100%', width:val+'%', background:color, borderRadius:4, transition:'width .6s' }}/>
                 </div>
               </div>
             )
@@ -151,7 +153,7 @@ export default function CognitiveReport() {
         {profile.insight && (
           <div className="card card-xl" style={{ padding:24, marginBottom:20 }}>
             <div style={{ fontWeight:700, fontSize:15, marginBottom:10 }}>Recruiter Insight</div>
-            <p style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.75 }}>{profile.insight}</p>
+            <p style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.75 }}><strong>{candidate.name}</strong> {profile.insight}</p>
           </div>
         )}
 
