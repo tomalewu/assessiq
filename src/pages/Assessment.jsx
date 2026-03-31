@@ -277,7 +277,7 @@ function Practice({ role, onSkip, onReady }) {
                 </div>
                 <div className="card card-xl" style={{ padding:'14px 20px', background:'var(--accent-dim)', border:'1.5px solid var(--accent-mid)' }}>
                   <div style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.7 }}>
-                    <strong>⏱ Timer:</strong> Each question has its own countdown. The overall test has a 20-minute limit. Work quickly but carefully — unanswered questions count as wrong.
+                    <strong>⏱ Timer:</strong> Each question has its own countdown ({role?.difficulty==='easy'||role?.difficulty==='hard'?'45 seconds':'60 seconds'} per question). The overall test has a {role?.difficulty==='easy'||role?.difficulty==='hard'?'15':'20'}-minute limit. Work quickly but carefully — unanswered questions count as wrong.
                   </div>
                 </div>
               </div>
