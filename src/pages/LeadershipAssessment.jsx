@@ -334,13 +334,14 @@ export default function LeadershipAssessment() {
   )
 
   const handleBegin = (form) => {
-    const cid = genId('lc')
-    const seed = makeSeed(cid)
-    const qs = selectQuestions(20, seed)
-    const cand = { id:cid, roleId:role.id, roleName:role.title, assessmentType:'leadership',
-      name:form.name, email:form.email, phone:form.phone, status:'pending', startedAt:new Date().toISOString() }
-    dbAddCandidate(cand)
-    setCand(cand)
+    const tempId = genId('lc')
+    const seed   = makeSeed(tempId)
+    const qs     = selectQuestions(20, seed)
+    const candData = { roleId:role.id, roleName:role.title, assessmentType:'leadership',
+      name:form.name, email:form.email, phone:form.phone }
+    // dbAddCandidate generates its own ID — use the returned object
+    const savedCand = dbAddCandidate(candData)
+    setCand(savedCand)
     setQuestions(qs)
     setStage('quiz')
   }
