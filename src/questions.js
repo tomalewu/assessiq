@@ -157,38 +157,60 @@ async function geminiCall(apiKey, prompt) {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 4096 } })
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.5, maxOutputTokens: 4096, responseMimeType: 'application/json' }
+    })
   })
   if (!res.ok) { const err = await res.json(); throw new Error(err.error?.message || 'HTTP ' + res.status) }
   const data = await res.json()
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-  if (!text) throw new Error('Empty response')
+  if (!text) throw new Error('Empty response from Gemini')
   return text
 }
 
 async function generateWithGemini(apiKey, difficulty) {
   const diff = difficulty === 'hard'
-    ? 'HARD: use complex patterns requiring multi-step deduction. For numerical: compound interest, 3-variable work-rate, percentage chains.'
-    : difficulty === 'easy' ? 'EASY: simple obvious patterns, single-step arithmetic.'
-    : 'MEDIUM: 2-step reasoning.'
+    ? 'HARD difficulty only. Use complex 3-symbol Latin square grids for logic. For numerical: compound interest formula, pipes/cistern problems, percentage profit chains.'
+    : difficulty === 'easy' ? 'EASY difficulty only. Simple repeating patterns for logic. Basic arithmetic for numerical.'
+    : 'MEDIUM difficulty. Moderate 2-step problems.'
 
-  const bt = String.fromCharCode(96)
-  const clean = t => t.replace(new RegExp(bt+bt+bt+'json','g'),'').replace(new RegExp(bt+bt+bt,'g'),'').trim()
+  // Ask for 5 at a time to avoid any truncation
+  const p1 = 'Return a JSON array of exactly 5 logic questions. ' + diff + ' Format: [{"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲","exp":"reason"}]'
+  const p2 = 'Return a JSON array of exactly 5 logic questions (different from before). ' + diff + ' Format: [{"id":"L6","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲","exp":"reason"}]'
+  const p3 = 'Return a JSON array of exactly 5 numerical reasoning questions. ' + diff + ' Format: [{"id":"N1","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A","exp":"reason"}]'
+  const p4 = 'Return a JSON array of exactly 5 numerical reasoning questions (different from before). ' + diff + ' Format: [{"id":"N6","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A","exp":"reason"}]'
 
-  // Two parallel calls — one for logic, one for numerical — to avoid truncation
-  const logicPrompt = 'Generate exactly 10 logical reasoning questions. Difficulty: ' + diff + ' Each question: 3x3 grid using symbols ▲ ● ■ ◆ ★ ○ □ △, last cell is ?. Return ONLY a JSON array: [{"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["A","B","C","D"],"answer":"A","exp":"why"}]'
-  const numPrompt   = 'Generate exactly 10 numerical reasoning questions. Difficulty: ' + diff + ' Return ONLY a JSON array: [{"id":"N1","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A","exp":"why"}]'
+  const extractArr = (text) => {
+    // Find first [ and last ] to extract JSON array robustly
+    const start = text.indexOf('[')
+    const end   = text.lastIndexOf(']')
+    if (start === -1 || end === -1 || end <= start) throw new Error('No JSON array found in response')
+    const jsonStr = text.slice(start, end + 1)
+    const arr = JSON.parse(jsonStr)
+    if (!Array.isArray(arr) || arr.length === 0) throw new Error('Empty array in response')
+    return arr
+  }
 
-  const [logicText, numText] = await Promise.all([
-    geminiCall(apiKey, logicPrompt),
-    geminiCall(apiKey, numPrompt)
+  const [r1, r2, r3, r4] = await Promise.all([
+    geminiCall(apiKey, p1),
+    geminiCall(apiKey, p2),
+    geminiCall(apiKey, p3),
+    geminiCall(apiKey, p4)
   ])
 
-  const logicQs = JSON.parse(clean(logicText))
-  const numQs   = JSON.parse(clean(numText))
-  if (!Array.isArray(logicQs) || logicQs.length < 5) throw new Error('Not enough logic Qs: ' + logicQs.length)
-  if (!Array.isArray(numQs)   || numQs.length < 5)   throw new Error('Not enough numerical Qs: ' + numQs.length)
-  return JSON.stringify([...logicQs.slice(0,10), ...numQs.slice(0,10)])
+  const allQs = [
+    ...extractArr(r1),
+    ...extractArr(r2),
+    ...extractArr(r3),
+    ...extractArr(r4)
+  ]
+
+  const logic = allQs.filter(q => q.type === 'logic').slice(0, 10)
+  const num   = allQs.filter(q => q.type === 'numerical').slice(0, 10)
+  if (logic.length < 5) throw new Error('Not enough logic questions: ' + logic.length)
+  if (num.length < 5)   throw new Error('Not enough numerical questions: ' + num.length)
+  return JSON.stringify([...logic, ...num])
 }
 
 async function generateWithAnthropic(apiKey, difficulty) {
