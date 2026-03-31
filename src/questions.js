@@ -159,52 +159,49 @@ async function geminiCall(apiKey, prompt) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.3, maxOutputTokens: 2048, responseMimeType: 'application/json' }
+      generationConfig: { temperature: 0.4, maxOutputTokens: 1024, responseMimeType: 'application/json' }
     })
   })
   if (!res.ok) { const err = await res.json(); throw new Error(err.error?.message || 'HTTP ' + res.status) }
   const data = await res.json()
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
-  const finishReason = data.candidates?.[0]?.finishReason || 'unknown'
-  console.log('Gemini finishReason:', finishReason, '| chars:', text.length, '| preview:', text.slice(0,100))
-  if (finishReason === 'MAX_TOKENS') throw new Error('Response truncated by token limit — finishReason: MAX_TOKENS')
-  if (!text) throw new Error('Empty response from Gemini')
-  return text
+  const text  = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  const finish = data.candidates?.[0]?.finishReason || ''
+  if (finish === 'MAX_TOKENS') throw new Error('MAX_TOKENS — response cut off')
+  if (!text) throw new Error('Empty response')
+  const s = text.indexOf('['), e = text.lastIndexOf(']')
+  if (s === -1 || e === -1) throw new Error('No JSON array found')
+  return JSON.parse(text.slice(s, e + 1))
 }
 
 async function generateWithGemini(apiKey, difficulty) {
-  const diff = difficulty === 'hard'
-    ? 'HARD: complex Latin square grids, compound interest, multi-variable problems'
-    : difficulty === 'easy' ? 'EASY: simple repeating patterns, basic arithmetic'
-    : 'MEDIUM: moderate 2-step problems'
+  const diff = difficulty === 'hard' ? 'HARD' : difficulty === 'easy' ? 'EASY' : 'MEDIUM'
 
-  // Request minimal JSON — no exp field to avoid truncation
-  const logicPrompt = 'Return a JSON array of exactly 5 logic grid questions. ' + diff + '. Use symbols ▲ ● ■ ◆ ★ ○ □ △ in 3x3 grids, last cell is ?. NO exp field. Format: [{"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲"}]'
-  const numPrompt   = 'Return a JSON array of exactly 5 numerical questions. ' + diff + '. NO exp field. Format: [{"id":"N1","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A"}]'
+  // Ask for only 2 questions per call to stay well under token limit
+  const lp = (n) => 'JSON array of exactly 2 logic grid questions, ' + diff + ' difficulty, symbols ▲●■◆★○□△, last cell ?, no explanation field: [{"id":"L' + n + '","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲"}]'
+  const np = (n) => 'JSON array of exactly 2 numerical questions, ' + diff + ' difficulty, no explanation field: [{"id":"N' + n + '","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A"}]'
 
-  const extractArr = (text) => {
-    const s = text.indexOf('[')
-    const e = text.lastIndexOf(']')
-    if (s === -1 || e === -1 || e <= s) throw new Error('No array in response')
-    const arr = JSON.parse(text.slice(s, e + 1))
-    if (!Array.isArray(arr) || arr.length === 0) throw new Error('Empty array')
-    // Add default exp since we omitted it
-    return arr.map(q => ({ ...q, exp: q.answer + ' follows the pattern.' }))
-  }
-
-  const [r1, r2, r3, r4] = await Promise.all([
-    geminiCall(apiKey, logicPrompt),
-    geminiCall(apiKey, logicPrompt.replace('L1','L6')),
-    geminiCall(apiKey, numPrompt),
-    geminiCall(apiKey, numPrompt.replace('N1','N6'))
+  // 5 logic calls + 5 numerical calls = 10+10 questions
+  const results = await Promise.all([
+    geminiCall(apiKey, lp(1)),
+    geminiCall(apiKey, lp(3)),
+    geminiCall(apiKey, lp(5)),
+    geminiCall(apiKey, lp(7)),
+    geminiCall(apiKey, lp(9)),
+    geminiCall(apiKey, np(1)),
+    geminiCall(apiKey, np(3)),
+    geminiCall(apiKey, np(5)),
+    geminiCall(apiKey, np(7)),
+    geminiCall(apiKey, np(9)),
   ])
 
-  const logic = [...extractArr(r1), ...extractArr(r2)].filter(q => q.type === 'logic').slice(0,10)
-  const num   = [...extractArr(r3), ...extractArr(r4)].filter(q => q.type === 'numerical').slice(0,10)
-
+  const logic = results.slice(0,5).flat().filter(q => q.type === 'logic').slice(0,10)
+  const num   = results.slice(5,10).flat().filter(q => q.type === 'numerical').slice(0,10)
   if (logic.length < 5) throw new Error('Not enough logic: ' + logic.length)
   if (num.length < 5)   throw new Error('Not enough numerical: ' + num.length)
-  return JSON.stringify([...logic, ...num])
+  // Add default exp
+  const withExp = [...logic, ...num].map(q => ({...q, exp: q.exp || 'Answer: ' + q.answer}))
+  console.log('Gemini generated:', logic.length, 'logic +', num.length, 'numerical')
+  return JSON.stringify(withExp)
 }
 
 async function generateWithAnthropic(apiKey, difficulty) {
@@ -274,13 +271,6 @@ export async function loadQuestions(settings, candidateId) {
   const difficulty   = s.difficulty   || 'medium'
   const seed         = makeSeed(candidateId || '')
 
-  // Try Anthropic first (more reliable JSON), then Gemini as fallback
-  if (anthropicKey) {
-    try {
-      console.log('AssessIQ: Using Anthropic AI for', difficulty, 'difficulty questions')
-      return parseQuestions(await generateWithAnthropic(anthropicKey, difficulty))
-    } catch(e) { console.warn('Anthropic failed, trying Gemini:', e.message) }
-  }
   if (geminiKey) {
     try {
       console.log('AssessIQ: Using Gemini AI for', difficulty, 'difficulty questions')
