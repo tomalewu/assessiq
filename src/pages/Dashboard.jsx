@@ -538,6 +538,7 @@ export default function Dashboard() {
           {me && <span style={{fontSize:12,color:'var(--ink3)',marginLeft:4}}>{me.name} <span style={{color:me.role==='admin'?'var(--ok)':'var(--accent)',fontWeight:600,textTransform:'capitalize'}}>({me.role})</span></span>}
           <button className="btn btn-g btn-sm" onClick={refresh} title="Refresh">↻</button>
           <button className="btn btn-g btn-sm" onClick={()=>nav('/admin/help')}>❓ Help</button>
+          <button className="btn btn-s btn-sm" onClick={()=>nav('/admin/leadership')} style={{ fontWeight:600 }}>👥 Leadership</button>
           {userIsAdmin && <button className="btn btn-g btn-sm" onClick={()=>nav('/admin/users')}>👥 Users</button>}
           {me?.isSuper && <button className="btn btn-g btn-sm" onClick={()=>nav('/admin/settings')}>⚙ Settings</button>}
           <button className="btn btn-g btn-sm" onClick={logout}>Sign out</button>
