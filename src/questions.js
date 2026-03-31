@@ -176,10 +176,10 @@ async function generateWithGemini(apiKey, difficulty) {
     : 'MEDIUM difficulty. Moderate 2-step problems.'
 
   // Ask for 5 at a time to avoid any truncation
-  const p1 = 'Return a JSON array of exactly 5 logic questions. ' + diff + ' Format: [{"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲","exp":"reason"}]'
-  const p2 = 'Return a JSON array of exactly 5 logic questions (different from before). ' + diff + ' Format: [{"id":"L6","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲","exp":"reason"}]'
-  const p3 = 'Return a JSON array of exactly 5 numerical reasoning questions. ' + diff + ' Format: [{"id":"N1","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A","exp":"reason"}]'
-  const p4 = 'Return a JSON array of exactly 5 numerical reasoning questions (different from before). ' + diff + ' Format: [{"id":"N6","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A","exp":"reason"}]'
+  const p1 = 'Return a JSON array of exactly 5 logic questions. ' + diff + ' IMPORTANT: Keep exp field under 10 words. Format: [{"id":"L1","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲","exp":"short reason max 10 words"}]'
+  const p2 = 'Return a JSON array of exactly 5 logic questions (different from before). ' + diff + ' IMPORTANT: Keep exp field under 10 words. Format: [{"id":"L6","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲","exp":"short reason max 10 words"}]'
+  const p3 = 'Return a JSON array of exactly 5 numerical reasoning questions. ' + diff + ' IMPORTANT: Keep exp field under 15 words. Format: [{"id":"N1","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A","exp":"short calc under 15 words"}]'
+  const p4 = 'Return a JSON array of exactly 5 numerical reasoning questions (different from before). ' + diff + ' IMPORTANT: Keep exp field under 15 words. Format: [{"id":"N6","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A","exp":"short calc under 15 words"}]'
 
   const extractArr = (text) => {
     console.log('Gemini raw response (first 300 chars):', text.slice(0, 300))
@@ -190,7 +190,8 @@ async function generateWithGemini(apiKey, difficulty) {
     try {
       const arr = JSON.parse(jsonStr)
       if (!Array.isArray(arr) || arr.length === 0) throw new Error('Empty array in response')
-      return arr
+      // Truncate exp field as safety net to prevent long text issues
+      return arr.map(q => ({...q, exp: (q.exp||'').slice(0,120)}))
     } catch(e) {
       console.error('JSON parse failed. Raw JSON:', jsonStr.slice(0, 500))
       throw e
