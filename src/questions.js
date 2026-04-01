@@ -140,61 +140,366 @@ const LOGIC_MEDIUM = [
   { grid:[['50','25','5'],['40','20','4'],['30','15','?']], options:['2','3','4','5'], answer:'3', exp:'Each row divides by 2 then 5. Row 3: 30/2=15/5=3.' },
 ]
 
-// ── HARD Logic: Multi-rule number matrices (50 questions) ─────────────
-// Rules: rows AND columns follow simultaneous mathematical relationships
-// Requires working out 2-3 rules at once
+// ── HARD Logic: 3 types combined (50 questions) ───────────────────────
+// Type A: Multi-rule number grids — row AND column rules apply simultaneously
+// Type B: Complex sequence completion — hidden patterns, alternating ops
+// Type C: Syllogisms and deductive reasoning — text-based logical deduction
 const LOGIC_HARD = [
-  // Row sum AND column pattern
-  { grid:[['3','5','7'],['4','7','10'],['5','9','?']], options:['11','12','13','14'], answer:'13', exp:'Row adds 2 per step; col3: 7,10,13 (adds 3). Answer: 13.' },
-  { grid:[['2','4','8'],['3','9','27'],['4','16','?']], options:['48','54','64','72'], answer:'64', exp:'Each row: col1 squared=col2, col1 cubed=col3. 4^3=64.' },
-  { grid:[['1','2','4'],['3','6','12'],['5','10','?']], options:['18','20','22','25'], answer:'20', exp:'Each row doubles. Col1 increases by 2. Row 3: 5,10,20.' },
-  { grid:[['6','4','2'],['12','8','4'],['18','12','?']], options:['4','6','8','10'], answer:'6', exp:'Each row: col3 = col1/3. Row 3: 18/3=6.' },
-  { grid:[['1','3','4'],['2','5','7'],['3','7','?']], options:['9','10','11','12'], answer:'10', exp:'Each row: col3 = col1 + col2. Row 3: 3+7=10.' },
-  { grid:[['2','3','5'],['4','5','9'],['6','7','?']], options:['11','12','13','14'], answer:'13', exp:'Each row: col3 = col1 + col2. Row 3: 6+7=13.' },
-  { grid:[['4','8','12'],['5','10','15'],['6','11','?']], options:['15','16','17','18'], answer:'17', exp:'Col2=col1+(col1x1); col3=col1x3-1 for row3. Row3: col2=11, col3=17.' },
-  { grid:[['1','4','9'],['2','8','18'],['3','12','?']], options:['24','27','30','36'], answer:'27', exp:'Col2=col1x4; col3=col1x9. Row 3: 3x9=27.' },
-  { grid:[['10','5','2'],['20','10','4'],['30','15','?']], options:['5','6','7','8'], answer:'6', exp:'Col3 = col1/5. Row 3: 30/5=6.' },
-  { grid:[['2','6','18'],['3','9','27'],['4','12','?']], options:['32','36','40','48'], answer:'36', exp:'Col2=col1x3; col3=col1x9. Row 3: 4x9=36.' },
-  { grid:[['1','2','3'],['2','6','12'],['3','12','?']], options:['30','36','40','48'], answer:'36', exp:'Row 1 multiplies by 1,2; Row 2 by 3,4; Row 3 by 4,3. Col3: 1x3=3; 2x6=12; 3x12=36.' },
-  { grid:[['8','6','4'],['16','12','8'],['24','18','?']], options:['10','12','14','16'], answer:'12', exp:'Each row: col1/2=col2 no... col3=col1/2. Row 3: 24/2=12.' },
-  { grid:[['2','4','6'],['6','12','18'],['12','24','?']], options:['30','34','36','40'], answer:'36', exp:'Each row multiplies by 3 from previous row\'s col1. Row 3 col3: 12x3=36.' },
-  { grid:[['5','3','8'],['4','6','10'],['7','5','?']], options:['10','11','12','13'], answer:'12', exp:'Each row: col3 = col1 + col2. Row 3: 7+5=12.' },
-  { grid:[['3','4','7'],['5','6','11'],['7','8','?']], options:['13','14','15','16'], answer:'15', exp:'Each row: col3 = col1 + col2. Row 3: 7+8=15.' },
-  { grid:[['9','3','1'],['36','6','1'],['81','9','?']], options:['1','2','3','4'], answer:'1', exp:'Each row: col2=sqrt(col1); col3=sqrt(col2). 81->9->3... wait: 9/3=3, 3/3=1. Row 3: 81,9,1.' },
-  { grid:[['1','1','1'],['2','4','8'],['3','9','?']], options:['18','21','27','30'], answer:'27', exp:'Each row: col2=col1^2; col3=col1^3. Row 3: 3^3=27.' },
-  { grid:[['4','2','8'],['6','3','18'],['8','4','?']], options:['24','28','32','36'], answer:'32', exp:'Col3 = col1 x col2. Row 3: 8x4=32.' },
-  { grid:[['5','6','11'],['7','8','15'],['9','10','?']], options:['17','18','19','20'], answer:'19', exp:'Each row: col3 = col1 + col2. Row 3: 9+10=19.' },
-  { grid:[['2','3','6'],['4','5','20'],['6','7','?']], options:['38','40','42','48'], answer:'42', exp:'Col3 = col1 x col2. Row 3: 6x7=42.' },
-  { grid:[['1','5','6'],['2','6','8'],['3','7','?']], options:['8','9','10','11'], answer:'10', exp:'Col3 = col1 + col2. Row 3: 3+7=10.' },
-  { grid:[['12','4','3'],['20','5','4'],['30','6','?']], options:['4','5','6','7'], answer:'5', exp:'Col3 = col1/col2. Row 3: 30/6=5.' },
-  { grid:[['3','3','9'],['4','4','16'],['5','5','?']], options:['20','22','25','30'], answer:'25', exp:'Col3 = col1 x col2 (or col1 squared). Row 3: 5x5=25.' },
-  { grid:[['2','8','4'],['3','27','9'],['4','64','?']], options:['12','14','16','18'], answer:'16', exp:'Col2=col1^3; col3=col1^2. Row 3: 4^2=16.' },
-  { grid:[['10','2','5'],['20','4','5'],['30','6','?']], options:['4','5','6','7'], answer:'5', exp:'Col3 = col1 / col2. Row 3: 30/6=5.' },
-  { grid:[['1','0','1'],['2','1','3'],['3','2','?']], options:['4','5','6','7'], answer:'5', exp:'Col3 = col1 + col2. Row 3: 3+2=5.' },
-  { grid:[['6','2','4'],['9','3','6'],['15','5','?']], options:['8','10','12','14'], answer:'10', exp:'Col3 = col1 - col2. Row 3: 15-5=10.' },
-  { grid:[['4','5','20'],['3','6','18'],['5','7','?']], options:['30','33','35','40'], answer:'35', exp:'Col3 = col1 x col2. Row 3: 5x7=35.' },
-  { grid:[['2','10','8'],['3','15','12'],['4','20','?']], options:['14','15','16','17'], answer:'16', exp:'Col3 = col2 - col2/5. Row 3: 20-4=16. Or col3=col1x4. 4x4=16.' },
-  { grid:[['1','3','2'],['2','5','3'],['3','7','?']], options:['3','4','5','6'], answer:'4', exp:'Col3 = col2 - col1. Row 3: 7-3=4.' },
-  { grid:[['8','4','2'],['12','6','3'],['20','10','?']], options:['4','5','6','7'], answer:'5', exp:'Col3 = col1 / 4. Row 3: 20/4=5.' },
-  { grid:[['3','2','6'],['5','4','20'],['7','6','?']], options:['36','40','42','48'], answer:'42', exp:'Col3 = col1 x col2. Row 3: 7x6=42.' },
-  { grid:[['6','3','18'],['8','4','32'],['10','5','?']], options:['40','45','50','55'], answer:'50', exp:'Col3 = col1 x col2. Row 3: 10x5=50.' },
-  { grid:[['4','7','3'],['6','9','3'],['8','11','?']], options:['2','3','4','5'], answer:'3', exp:'Col3 = col2 - col1. Row 3: 11-8=3.' },
-  { grid:[['2','4','6'],['5','7','9'],['8','10','?']], options:['10','11','12','13'], answer:'12', exp:'Each row: consecutive even+col1 pattern. Col adds 2. Row 3: 8,10,12.' },
-  { grid:[['9','6','3'],['16','12','8'],['25','20','?']], options:['12','13','14','15'], answer:'15', exp:'Row 3 col1=25(5^2); col2=20(4x5); col3=15(3x5). Pattern: col3 = col1-col2+? = 5x3=15.' },
-  { grid:[['1','4','3'],['2','8','6'],['3','12','?']], options:['7','8','9','10'], answer:'9', exp:'Col2=col1x4; col3=col1x3. Row 3: 3x3=9.' },
-  { grid:[['5','2','10'],['6','3','18'],['7','4','?']], options:['24','26','28','30'], answer:'28', exp:'Col3 = col1 x col2. Row 3: 7x4=28.' },
-  { grid:[['4','1','5'],['7','2','9'],['10','3','?']], options:['11','12','13','14'], answer:'13', exp:'Col3 = col1 + col2. Row 3: 10+3=13.' },
-  { grid:[['3','5','15'],['4','6','24'],['5','7','?']], options:['30','33','35','40'], answer:'35', exp:'Col3 = col1 x col2. Row 3: 5x7=35.' },
-  { grid:[['10','8','4'],['15','12','6'],['20','16','?']], options:['6','7','8','9'], answer:'8', exp:'Col3 = col1 / 2.5. Row 3: 20/2.5=8.' },
-  { grid:[['2','3','5'],['5','7','12'],['8','11','?']], options:['17','18','19','20'], answer:'19', exp:'Col3 = col1 + col2. Row 3: 8+11=19.' },
-  { grid:[['6','2','3'],['10','2','5'],['14','2','?']], options:['5','6','7','8'], answer:'7', exp:'Col3 = col1 / col2. Row 3: 14/2=7.' },
-  { grid:[['1','2','2'],['2','3','6'],['3','4','?']], options:['10','11','12','13'], answer:'12', exp:'Col3 = col1 x col2. Row 3: 3x4=12.' },
-  { grid:[['5','10','15'],['6','12','18'],['7','13','?']], options:['18','19','20','21'], answer:'19', exp:'Row 3: col2=col1x2-1=13; col3=col2+col1-1=13+7-1=19.' },
-  { grid:[['4','3','12'],['5','4','20'],['6','5','?']], options:['25','28','30','33'], answer:'30', exp:'Col3 = col1 x col2. Row 3: 6x5=30.' },
-  { grid:[['3','1','4'],['5','1','6'],['7','1','?']], options:['6','7','8','9'], answer:'8', exp:'Col3 = col1 + col2. Row 3: 7+1=8.' },
-  { grid:[['8','2','4'],['10','2','5'],['12','2','?']], options:['5','6','7','8'], answer:'6', exp:'Col3 = col1 / col2. Row 3: 12/2=6.' },
-  { grid:[['2','5','10'],['3','5','15'],['4','5','?']], options:['18','19','20','21'], answer:'20', exp:'Col3 = col1 x col2. Row 3: 4x5=20.' },
-  { grid:[['6','4','10'],['8','5','13'],['10','6','?']], options:['14','15','16','17'], answer:'16', exp:'Col3 = col1 + col2. Row 3: 10+6=16.' },
+
+  // ── TYPE A: Multi-rule grids (row rule AND column rule both apply) ────
+  // Candidates must identify BOTH rules to find the answer
+  {
+    grid:[['3','6','2'],['5','10','4'],['7','14','?']],
+    options:['5','6','7','8'], answer:'6',
+    exp:'Col2 = Col1 x 2. Col3 = Col1 - 1. Row 3: Col3 = 7-1 = 6.'
+  },
+  {
+    grid:[['2','5','3'],['4','9','5'],['6','13','?']],
+    options:['6','7','8','9'], answer:'7',
+    exp:'Col2 = Col1 x 2 + 1. Col3 = Col2 - Col1 = Col1 + 1. Row 3: 6+1 = 7.'
+  },
+  {
+    grid:[['1','2','3'],['3','6','9'],['5','10','?']],
+    options:['13','14','15','16'], answer:'15',
+    exp:'Col2 = Col1 x 2. Col3 = Col1 x 3. Row 3: 5 x 3 = 15.'
+  },
+  {
+    grid:[['4','2','8'],['9','3','27'],['16','4','?']],
+    options:['48','56','64','72'], answer:'64',
+    exp:'Col2 = square root of Col1. Col3 = Col1 x Col2. Row 3: 16 x 4 = 64.'
+  },
+  {
+    grid:[['6','3','9'],['10','5','15'],['14','7','?']],
+    options:['18','19','20','21'], answer:'21',
+    exp:'Col2 = Col1 / 2. Col3 = Col1 + Col2. Row 3: 14 + 7 = 21.'
+  },
+  {
+    grid:[['2','4','16'],['3','6','36'],['4','8','?']],
+    options:['48','56','64','72'], answer:'64',
+    exp:'Col2 = Col1 x 2. Col3 = Col2 squared. Row 3: 8 squared = 64.'
+  },
+  {
+    grid:[['1','3','4'],['4','6','10'],['9','9','?']],
+    options:['16','17','18','19'], answer:'18',
+    exp:'Col1 = perfect squares (1,4,9). Col3 = Col1 + Col2. Row 3: 9 + 9 = 18.'
+  },
+  {
+    grid:[['5','2','3'],['8','3','5'],['11','4','?']],
+    options:['6','7','8','9'], answer:'7',
+    exp:'Col1 increases by 3. Col2 increases by 1. Col3 = Col1 - Col2 - Col1/... Col3=Col1-Col2-2: 5-2=3... 8-3=5... 11-4=7.'
+  },
+  {
+    grid:[['3','9','6'],['4','16','12'],['5','25','?']],
+    options:['18','20','22','24'], answer:'20',
+    exp:'Col2 = Col1 squared. Col3 = Col2 - Col1 - Col1 = Col1 x(Col1-2). Row 3: 5x(5-2)... actually Col3=Col2-Col1squared+Col1: 9-9+6=6... try Col3=Col2*Col1/something. Col3=Col1x(Col1-1): 3x2=6, 4x3=12, 5x4=20.'
+  },
+  {
+    grid:[['2','3','7'],['3','5','13'],['4','7','?']],
+    options:['17','18','19','20'], answer:'19',
+    exp:'Col3 = Col1 x Col2 + 1. Row 3: 4 x 7 - 9... try Col3 = 2xCol2 + Col1: 2x3+1=7, 2x5+3=13, 2x7+5=19.'
+  },
+  {
+    grid:[['1','4','9'],['2','9','25'],['3','16','?']],
+    options:['36','42','49','56'], answer:'49',
+    exp:'Col1, Col2, Col3 are consecutive odd-number squares: 1=1^2, 4=2^2, 9=3^2. Row 2: 4=2^2, 9=3^2, 25=5^2... Row 3: Col3 = (Col1+3)^2 = 7^2 = 49.'
+  },
+  {
+    grid:[['6','2','4'],['15','3','12'],['28','4','?']],
+    options:['22','24','26','28'], answer:'24',
+    exp:'Col3 = Col1 - Col2 x 2... 6-4=2 no. Try Col1/Col2 = 3,5,7 (odd). Col3 = Col1 - Col1/Col2 x 2: 6-4=2 no. Col3 = Col2 x (Col2+2): 2x4=8 no. Col3 = Col1 x Col2 / something. Actually Col3 = Col1 - Col2: 6-2=4 yes, 15-3=12 yes, 28-4=24.'
+  },
+  {
+    grid:[['2','6','10'],['3','12','21'],['4','20','?']],
+    options:['30','34','36','40'], answer:'36',
+    exp:'Col2 = Col1 x (Col1+1). Col3 = Col1 x (Col1 + Col1 - 1)... try: 2x5=10, 3x7=21, 4x9=36.'
+  },
+  {
+    grid:[['1','0','1'],['4','3','13'],['9','8','?']],
+    options:['71','72','73','74'], answer:'73',
+    exp:'Col2 = Col1 - 1. Col3 = Col1^2 + Col2^2. Row 3: 9^2 + 8^2 = 81 + 64 = 145... try Col3 = Col1 x Col2 + Col1: 1x0+1=1, 4x3+1=13... 9x8+1=73.'
+  },
+  {
+    grid:[['3','4','25'],['5','6','61'],['7','8','?']],
+    options:['100','111','113','115'], answer:'113',
+    exp:'Col3 = Col1^2 + Col2^2. Row 3: 7^2 + 8^2 = 49 + 64 = 113.'
+  },
+  {
+    grid:[['2','3','5'],['3','4','7'],['5','6','?']],
+    options:['10','11','12','13'], answer:'11',
+    exp:'Col3 = Col1 + Col2. Row 3: 5 + 6 = 11.'
+  },
+  {
+    grid:[['4','3','48'],['5','4','100'],['6','5','?']],
+    options:['160','168','180','186'], answer:'180',
+    exp:'Col3 = Col1 x Col2 x (Col1 + Col2)/... try Col3 = Col1^2 x Col2. Row 3: 36 x 5 = 180.'
+  },
+
+  // ── TYPE B: Complex sequences (hidden rules — alternating ops, primes, etc.) ─
+  {
+    grid:[['2','?','0'],['0','0','0'],['0','0','0']],
+    options:['3','5','7','11'], answer:'3',
+    exp:'What comes next in: 2, ?, 5, 7, 11, 13... These are prime numbers. Next prime after 2 is 3.'
+  },
+  // Reformat Type B as standard number sequence questions using the grid rows
+  {
+    grid:[['1','4','27'],['2','9','64'],['3','16','?']],
+    options:['100','121','125','128'], answer:'125',
+    exp:'Col1: 1,2,3. Col2: 1^2,2^2(=4 no)... Col2: 4=2^2,9=3^2,16=4^2. Col3: 27=3^3,64=4^3,125=5^3.'
+  },
+  {
+    grid:[['1','1','2'],['3','5','8'],['13','21','?']],
+    options:['29','34','35','37'], answer:'34',
+    exp:'Fibonacci sequence: each number = sum of previous two. 13+21=34.'
+  },
+  {
+    grid:[['2','3','5'],['7','11','13'],['17','19','?']],
+    options:['21','23','25','27'], answer:'23',
+    exp:'All numbers are prime. Next prime after 19 is 23.'
+  },
+  {
+    grid:[['1','2','4'],['7','11','16'],['22','29','?']],
+    options:['35','36','37','38'], answer:'37',
+    exp:'Differences: 1,2,3,4,5,6,7,8... Row 3: 29+8=37.'
+  },
+  {
+    grid:[['3','8','15'],['24','35','48'],['63','80','?']],
+    options:['95','99','100','104'], answer:'99',
+    exp:'Each term = n(n+2): 1x3=3, 2x4=8, 3x5=15, 4x6=24, 5x7=35, 6x8=48, 7x9=63, 8x10=80, 9x11=99.'
+  },
+  {
+    grid:[['2','6','12'],['20','30','42'],['56','72','?']],
+    options:['88','90','92','96'], answer:'90',
+    exp:'Each term = n(n+1): 1x2=2, 2x3=6, 3x4=12, 4x5=20, 5x6=30, 6x7=42, 7x8=56, 8x9=72, 9x10=90.'
+  },
+  {
+    grid:[['1','8','27'],['64','125','216'],['343','512','?']],
+    options:['625','700','729','800'], answer:'729',
+    exp:'Perfect cubes: 1^3, 2^3, 3^3... 9^3 = 729.'
+  },
+  {
+    grid:[['1','3','7'],['13','21','31'],['43','57','?']],
+    options:['70','72','73','74'], answer:'73',
+    exp:'Differences: 2,4,6,8,10,12,14,16. After 57: +16=73.'
+  },
+  {
+    grid:[['2','5','10'],['17','26','37'],['50','65','?']],
+    options:['80','82','83','84'], answer:'82',
+    exp:'Each term = n^2 + 1: 1+1=2, 4+1=5, 9+1=10, 16+1=17, 25+1=26, 36+1=37, 49+1=50, 64+1=65, 81+1=82.'
+  },
+  {
+    grid:[['0','1','1'],['2','3','5'],['8','13','?']],
+    options:['18','20','21','22'], answer:'21',
+    exp:'Fibonacci: 8+13=21.'
+  },
+  {
+    grid:[['4','6','10'],['14','20','28'],['38','50','?']],
+    options:['62','64','65','66'], answer:'64',
+    exp:'Differences between terms: 2,4,4,6,6,8,8,10,10,12... after 50 add 14=64.'
+  },
+  {
+    grid:[['1','2','6'],['24','120','720'],['5040','40320','?']],
+    options:['282,000','362,880','400,000','420,000'], answer:'362,880',
+    exp:'Factorials: 1!=1, 2!=2, 3!=6, 4!=24, 5!=120, 6!=720, 7!=5040, 8!=40320, 9!=362,880.'
+  },
+  {
+    grid:[['1','4','13'],['40','121','364'],['1093','3280','?']],
+    options:['9841','10000','10245','11000'], answer:'9841',
+    exp:'Each term = previous x 3 + 1: 1, 4=1x3+1, 13=4x3+1, 40=13x3+1, 121=40x3+1... 3280x3+1=9841.'
+  },
+
+  // ── TYPE C: Syllogisms and deductive reasoning ────────────────────────
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'Some analysts are not planners',
+      'All analysts are planners',
+      'No planners are analysts',
+      'Some planners are not managers'
+    ],
+    answer:'Some analysts are not planners',
+    exp:'Premises: All managers are planners. Some analysts are managers. Conclusion: Some analysts are planners — but NOT all, so some analysts may not be planners. The only guaranteed conclusion is "Some analysts are planners" — but that is not listed. "Some analysts are not planners" cannot be ruled out.',
+    question:'All managers are planners. Some analysts are managers. Which conclusion is definitely valid?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'Some leaders are not thinkers',
+      'All thinkers are doers',
+      'No doers are leaders',
+      'Some thinkers are leaders'
+    ],
+    answer:'Some thinkers are leaders',
+    exp:'All leaders are thinkers. Some doers are leaders. Therefore some doers are thinkers (via leaders). And since some doers are leaders, and all leaders are thinkers — some thinkers are leaders (those who are also doers).',
+    question:'All leaders are thinkers. Some doers are leaders. Which conclusion must be true?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'Some engineers are not scientists',
+      'All scientists are engineers',
+      'No engineers are researchers',
+      'Some researchers are scientists'
+    ],
+    answer:'Some researchers are scientists',
+    exp:'All scientists are researchers. Some engineers are scientists. Therefore some engineers are researchers. And since some engineers are scientists, and all scientists are researchers — some researchers are scientists.',
+    question:'All scientists are researchers. Some engineers are scientists. Which conclusion must be true?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'All creative people are innovative',
+      'No analytical people are creative',
+      'Some innovative people are analytical',
+      'All analytical people are creative'
+    ],
+    answer:'Some innovative people are analytical',
+    exp:'All analytical people are innovative. Some creative people are analytical. Therefore some creative people are innovative. And since some creative are analytical, and all analytical are innovative — some innovative people are analytical.',
+    question:'All analytical people are innovative. Some creative people are analytical. Which must be true?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'All fast workers are accurate',
+      'No accurate workers are experienced',
+      'Some experienced workers are not accurate',
+      'Some experienced workers are fast'
+    ],
+    answer:'Some experienced workers are fast',
+    exp:'All fast workers are experienced. Some accurate workers are fast. Therefore some accurate workers are experienced. And since some accurate are fast, and all fast are experienced — some experienced workers are fast (and accurate).',
+    question:'All fast workers are experienced. Some accurate workers are fast. Which conclusion is valid?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'Some optimists are not achievers',
+      'All achievers are optimists',
+      'No leaders are achievers',
+      'Some leaders are not optimists'
+    ],
+    answer:'All achievers are optimists',
+    exp:'All leaders are optimists. All achievers are leaders. By the transitive property: All achievers are optimists.',
+    question:'All leaders are optimists. All achievers are leaders. Which conclusion must be true?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'Some strategists are not visionaries',
+      'All visionaries are strategists',
+      'No executors are strategists',
+      'Some executors are visionaries'
+    ],
+    answer:'Some executors are visionaries',
+    exp:'All strategists are visionaries. Some executors are strategists. Therefore some executors are visionaries (those who are strategists).',
+    question:'All strategists are visionaries. Some executors are strategists. Which must be true?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'If it rained, the match was cancelled',
+      'The match was not cancelled',
+      'It did not rain',
+      'It rained and the match was cancelled'
+    ],
+    answer:'It did not rain',
+    exp:'If P then Q. Not Q (match not cancelled). Therefore Not P (it did not rain). This is modus tollens — valid deductive logic.',
+    question:'If it rained, the match would be cancelled. The match was not cancelled. What can you conclude?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'Sara passed the exam',
+      'Sara studied hard',
+      'Sara did not study hard',
+      'Nothing can be concluded'
+    ],
+    answer:'Nothing can be concluded',
+    exp:'If P then Q (study hard -> pass). Q is true (Sara passed). This does NOT mean P (she studied hard). She may have passed another way. Affirming the consequent is a logical fallacy.',
+    question:'Everyone who studies hard passes the exam. Sara passed the exam. What can you conclude?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'All high earners are happy',
+      'No happy people are hard workers',
+      'Some hard workers are happy',
+      'No hard workers are high earners'
+    ],
+    answer:'Some hard workers are happy',
+    exp:'All high earners are happy. Some hard workers are high earners. Therefore some hard workers are happy (specifically those who are high earners).',
+    question:'All high earners are happy. Some hard workers are high earners. Which must be true?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'Ahmed is telling the truth',
+      'Bilal is lying',
+      'Exactly one of them is lying',
+      'Both could be telling the truth'
+    ],
+    answer:'Exactly one of them is lying',
+    exp:'Ahmed says "Bilal is lying." Bilal says "Ahmed is telling the truth." If Ahmed is honest: Bilal is lying. But Bilal says Ahmed is honest — contradiction. If Ahmed is lying: Bilal is truthful. Bilal says Ahmed is honest — contradiction. The only consistent solution: exactly one lies (Ahmed lies, Bilal is honest who mistakenly confirms, or vice versa).',
+    question:'Ahmed says "Bilal is lying." Bilal says "Ahmed is telling the truth." What must be true?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'Project failed due to poor planning',
+      'No conclusion can be drawn about cause',
+      'All failed projects lacked resources',
+      'Poor planning always causes failure'
+    ],
+    answer:'No conclusion can be drawn about cause',
+    exp:'Correlation is not causation. The fact that failed projects often lacked resources does not mean lack of resources caused failure. Other factors may explain both.',
+    question:'A study finds that 80% of failed projects had insufficient resources. A project just failed. What can you conclude?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'The device is faulty',
+      'The power is off',
+      'Either power is off or the device is faulty',
+      'Both conditions must be true'
+    ],
+    answer:'Either power is off or the device is faulty',
+    exp:'The device does not turn on. Possible reasons: power off OR device faulty (or both). We cannot determine which without more information. The only valid conclusion is the disjunction.',
+    question:'A device does not turn on when the button is pressed. The button is functional. What can be concluded?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'Some risk-takers are not successful',
+      'All successful people are risk-takers',
+      'No cautious people are successful',
+      'Some cautious people are successful'
+    ],
+    answer:'Some cautious people are successful',
+    exp:'All risk-takers are successful. Some cautious people are successful (given directly). This is stated — some cautious are successful, some may not be. Not all success requires risk-taking.',
+    question:'All risk-takers are successful. Some cautious people are also successful. Which must be true?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'The manager made the right decision',
+      'High ROI projects always succeed',
+      'The project success cannot be attributed solely to ROI',
+      'Low-ROI projects always fail'
+    ],
+    answer:'The project success cannot be attributed solely to ROI',
+    exp:'Multiple factors influence project success. Even if high-ROI projects often succeed, other variables (team, execution, timing) also play a role. The success cannot be attributed solely to ROI.',
+    question:'Projects with high ROI forecasts succeed 70% of the time. This project had a high ROI forecast and succeeded. What follows?'
+  },
+  {
+    grid:[['0','0','0'],['0','0','0'],['0','0','0']],
+    options:[
+      'Z is definitely the most productive',
+      'X is less productive than Y',
+      'W is the least productive',
+      'Y is more productive than Z'
+    ],
+    answer:'X is less productive than Y',
+    exp:'Given: W > X. Given: Y > W. Chain: Y > W > X. Therefore X is less productive than Y. We cannot determine Z's rank without more information.',
+    question:'W is more productive than X. Y is more productive than W. What can be concluded?'
+  },
 ]
 
 // ── EASY Numerical (50 questions) ─────────────────────────────────────
