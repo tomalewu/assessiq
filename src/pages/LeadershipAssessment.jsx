@@ -99,9 +99,28 @@ function LQuiz({ candidate, questions, onDone }) {
   const [answers, setAnswers] = useState({})
   const [sel, setSel]         = useState(null)
   const [secs, setSecs]       = useState(1800) // 30 minutes
+  const [tabSwitches, setTabSwitches] = useState(0)
+  const [tabWarning, setTabWarning]   = useState(false)
+  const [flagged, setFlagged]         = useState(false)
   const t0Ref = React.useRef(Date.now())
 
   const answersRef = React.useRef({})
+
+  // Tab switch anti-cheat
+  useEffect(() => {
+    const handle = () => {
+      if (document.hidden) {
+        setTabSwitches(prev => {
+          const next = prev + 1
+          if (next >= 3) setFlagged(true)
+          else setTabWarning(true)
+          return next
+        })
+      }
+    }
+    document.addEventListener('visibilitychange', handle)
+    return () => document.removeEventListener('visibilitychange', handle)
+  }, [])
 
   // Hard 30-minute timer
   useEffect(() => {
@@ -109,7 +128,7 @@ function LQuiz({ candidate, questions, onDone }) {
       setSecs(s => {
         if (s <= 1) {
           clearInterval(tick)
-          onDone({ ...answersRef.current }, Math.round((Date.now() - t0Ref.current) / 1000))
+          onDone({ ...answersRef.current }, Math.round((Date.now() - t0Ref.current) / 1000), tabSwitches, tabSwitches >= 3)
           return 0
         }
         return s - 1
@@ -137,6 +156,33 @@ function LQuiz({ candidate, questions, onDone }) {
 
   return (
     <div className="shell">
+      {tabWarning && !flagged && (
+        <div className="overlay" style={{ zIndex:9999 }}>
+          <div className="modal" style={{ maxWidth:440, textAlign:'center' }}>
+            <div style={{ fontSize:40, marginBottom:12 }}>⚠️</div>
+            <h2 style={{ fontSize:18, fontWeight:800, marginBottom:8 }}>Tab Switch Detected</h2>
+            <p style={{ fontSize:13, color:'var(--ink2)', marginBottom:20, lineHeight:1.7 }}>
+              You have left this assessment window. This has been recorded.<br/>
+              <strong>{tabSwitches} of 3 warnings used.</strong> A third switch will flag your submission.
+            </p>
+            <button className="btn btn-p" style={{ justifyContent:'center', width:'100%' }}
+              onClick={() => setTabWarning(false)}>Return to Assessment</button>
+          </div>
+        </div>
+      )}
+      {flagged && (
+        <div className="overlay" style={{ zIndex:9999 }}>
+          <div className="modal" style={{ maxWidth:440, textAlign:'center' }}>
+            <div style={{ fontSize:40, marginBottom:12 }}>🚩</div>
+            <h2 style={{ fontSize:18, fontWeight:800, marginBottom:8 }}>Assessment Flagged</h2>
+            <p style={{ fontSize:13, color:'var(--ink2)', marginBottom:20, lineHeight:1.7 }}>
+              Your assessment has been flagged due to multiple tab switches. Your recruiter will be notified.
+            </p>
+            <button className="btn btn-p" style={{ justifyContent:'center', width:'100%' }}
+              onClick={() => setFlagged(false)}>Continue Assessment</button>
+          </div>
+        </div>
+      )}
       <nav className="nav">
         <div className="logo"><div className="logo-mark">A</div>AssessIQ</div>
         <div style={{ flex:1, margin:'0 24px' }}>
@@ -404,7 +450,7 @@ export default function LeadershipAssessment() {
 
   const handleDone = (answers, timeTaken) => {
     const r = scoreLeadership(answers)
-    const toSave = {
+    const toSave = { tabSwitches: tabSwitches||0, flagged: flagged||false,
       status: 'completed',
       completedAt: new Date().toISOString(),
       timeTaken,

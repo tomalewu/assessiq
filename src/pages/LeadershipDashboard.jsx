@@ -549,7 +549,15 @@ export default function LeadershipDashboard() {
                         onClick={()=>c.status==='completed'&&setViewModal(c)}>
                         <td><div style={{ fontWeight:600 }}>{c.name}</div><div style={{ fontSize:11,color:'var(--ink3)' }}>{c.email}</div></td>
                         <td style={{ fontSize:12 }}>{c.roleName}</td>
-                        <td style={{ fontSize:12, fontWeight:600 }}>{c.fitLabel||'Pending'}</td>
+                        <td style={{ fontSize:12, fontWeight:600 }}>
+                          {c.fitLabel||'Pending'}
+                          {(c.tabSwitches > 0) && (
+                            <span style={{ marginLeft:6, fontSize:11, fontWeight:700,
+                              color: c.flagged ? 'var(--bad)' : 'var(--warn)' }}>
+                              {c.flagged ? '🚩' : '⚠️ ' + c.tabSwitches}
+                            </span>
+                          )}
+                        </td>
                         <td style={{ fontSize:12, color:'var(--accent)' }}>{c.leadershipStyle||'—'}</td>
                         <td style={{ fontSize:11, color:'var(--ink3)' }}>{c.completedAt?new Date(c.completedAt).toLocaleDateString('en-GB'):'—'}</td>
                       </tr>
