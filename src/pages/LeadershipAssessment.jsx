@@ -148,7 +148,7 @@ function LQuiz({ candidate, questions, onDone }) {
     setAnswers(newAnswers)
     setSel(null)
     if (isLast) {
-      onDone(newAnswers, Math.round((Date.now() - t0Ref.current) / 1000))
+      onDone(newAnswers, Math.round((Date.now() - t0Ref.current) / 1000), tabSwitches, flagged)
     } else {
       setIdx(i => i + 1)
     }
@@ -448,7 +448,7 @@ export default function LeadershipAssessment() {
     setStage('quiz')
   }
 
-  const handleDone = (answers, timeTaken) => {
+  const handleDone = (answers, timeTaken, tabSwitches, flagged) => {
     const r = scoreLeadership(answers)
     const toSave = { tabSwitches: tabSwitches||0, flagged: flagged||false,
       status: 'completed',
