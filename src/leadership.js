@@ -1,7 +1,11 @@
-// ── Leadership SJT Question Bank v2 ──────────────────────────────────
-// All options are plausible. No obviously wrong answers.
-// Scoring: 0-3 per option based on leadership research best practice.
-// Candidates cannot guess by elimination — must use genuine judgement.
+// ── Leadership SJT Question Bank v3 ──────────────────────────────────
+// AI-resistant design principles:
+// 1. All 4 options are defensible best practices from different frameworks
+// 2. Scoring rubric is private — AI cannot know which option scores highest
+// 3. Context-dependent answers — buried details change the right answer
+// 4. Reverse-scored traps — most "professional-sounding" option scores lower
+// 5. Numeric/data scenarios — AI tools misweight quantitative constraints
+// 6. Double-bind options — two excellent choices but one fits the context better
 
 export const DIMENSIONS = [
   { id: 'conflict',      label: 'Conflict Resolution',       icon: '🤝' },
@@ -17,102 +21,102 @@ export const SJT_QUESTIONS = [
 
   {
     id: 'C1', dimension: 'conflict',
-    scenario: 'Two senior team members have an ongoing rivalry that is beginning to affect team dynamics. Both are high performers and critical to a major project launching in three weeks. Neither has raised the issue formally. What is your first move?',
+    scenario: 'Two senior engineers — both with 8+ years tenure — have escalated a technical disagreement to you. Engineer A wants to refactor the legacy codebase (3-month effort, lower long-term risk). Engineer B wants to ship a workaround now (2-week effort, higher long-term debt). The client delivery deadline is in 6 weeks. Both engineers have credible arguments and your CTO is watching. What do you do?',
     options: [
-      { text: "Address it directly in the next team meeting so it is acknowledged openly and the team can move forward together.", score: 1 },
-      { text: "Meet with each person individually to understand their perspective before deciding how to intervene.", score: 3 },
-      { text: "Monitor the situation closely — the project deadline may naturally force collaboration without requiring your intervention.", score: 1 },
-      { text: "Restructure their project responsibilities so they have minimal overlap for the duration of the launch.", score: 2 },
+      { text: 'Side with Engineer B — the 6-week deadline is the primary constraint and the workaround keeps the client commitment intact.', score: 2 },
+      { text: 'Side with Engineer A — short-term workarounds compound into long-term failure and technical leadership requires protecting against that.', score: 1 },
+      { text: 'Escalate to the CTO — a decision with this level of strategic and technical complexity should not rest with you alone.', score: 0 },
+      { text: 'Facilitate a structured session with both engineers to define the minimum viable refactor that reduces long-term debt without missing the deadline.', score: 3 },
     ]
   },
   {
     id: 'C2', dimension: 'conflict',
-    scenario: 'A team member reports that a colleague has been taking credit for their work in cross-functional meetings. You have not witnessed this directly, but three others have mentioned it informally. The accused colleague is well-regarded by senior leadership. What do you do?',
+    scenario: 'Your team engagement score dropped from 74 to 51 in 90 days. Exit interviews from two recent departures both cite "management style" as a reason. You have not changed your approach. One remaining senior team member privately tells you the team finds your feedback style harsh, but your manager has praised your directness repeatedly. You have a team meeting tomorrow. What is your priority action today?',
     options: [
-      { text: "Raise it with the accused colleague privately, sharing what you have heard and asking for their perspective.", score: 3 },
-      { text: "Observe the next few cross-functional meetings yourself before drawing conclusions or acting.", score: 2 },
-      { text: "Coach the affected team member on how to assert their contributions more visibly in future meetings.", score: 1 },
-      { text: "Document the incidents with the witnesses and escalate to HR to ensure proper process.", score: 1 },
+      { text: 'Prepare a structured agenda for tomorrow\'s meeting that addresses team concerns directly and transparently.', score: 2 },
+      { text: 'Speak individually with 2-3 trusted team members today to get specific examples before making any changes.', score: 3 },
+      { text: 'Review your recent feedback interactions and identify where your delivery may have landed differently than intended.', score: 2 },
+      { text: 'Trust your manager\'s assessment — your style is working at the organisational level and some team friction is the cost of high standards.', score: 0 },
     ]
   },
   {
     id: 'C3', dimension: 'conflict',
-    scenario: 'During a high-pressure project, two team members get into a heated exchange in front of the broader team. One storms out of the room. The team is visibly unsettled and the meeting was only half complete. How do you handle the rest of the session?',
+    scenario: 'Two team members have a personal conflict that is now affecting sprint velocity — down 18% over 3 weeks. One is a junior developer (6 months in, high potential). The other is your tech lead (critical to the project, 4 years tenure). The tech lead has privately told you the junior is "not cut out for this team." The junior has privately told you the tech lead is "creating a hostile environment." You have 4 weeks until your most important release. What do you address first?',
     options: [
-      { text: "Take a short break, check on the person who left, then resume the meeting with a refocus on the agenda.", score: 3 },
-      { text: "Acknowledge the tension briefly, close the meeting early, and reschedule once things have cooled down.", score: 2 },
-      { text: "Continue the meeting — stopping sends the message that emotional outbursts can derail team time.", score: 1 },
-      { text: "Address the conflict directly with the group present — unresolved tension in the room will affect the meeting quality anyway.", score: 1 },
+      { text: 'Address the tech lead first — senior team members set the cultural standard and their behaviour has disproportionate impact.', score: 3 },
+      { text: 'Bring both together immediately — transparency and direct confrontation of the issue is the fastest path to resolution.', score: 1 },
+      { text: 'Focus on the junior developer first — they are most vulnerable and most likely to leave if the environment does not improve.', score: 1 },
+      { text: 'Restructure the sprint so both individuals have minimal overlap for the next 4 weeks — protect the release first, resolve the relationship second.', score: 2 },
     ]
   },
   {
     id: 'C4', dimension: 'conflict',
-    scenario: 'Two departments have been blaming each other for a recurring operational problem that is escalating in cost. Both department heads report to you. Each presents compelling data supporting their position. What is your approach?',
+    scenario: 'A high-performing team member (top 10% of your organisation by output) has filed an informal complaint against a peer, citing repeated interruptions and dismissiveness in meetings. The accused peer is well-liked, has never had a complaint before, and denies the behaviour was intentional. HR has advised you that no formal investigation is triggered at this stage. The complainant says they will escalate formally if nothing changes. What do you do?',
     options: [
-      { text: "Commission a neutral third-party review of the end-to-end process to establish facts before convening both teams.", score: 2 },
-      { text: "Bring both department heads together, establish shared accountability for resolution, and set a joint problem-solving timeline.", score: 3 },
-      { text: "Make a provisional decision on accountability based on the data available, communicate it, and review in 30 days.", score: 2 },
-      { text: "Separate the immediate fix from the root cause — resolve the operational issue now and investigate accountability separately.", score: 2 },
+      { text: 'Treat it as a formal matter regardless of HR\'s threshold — document everything and involve HR proactively to protect both parties.', score: 2 },
+      { text: 'Have a direct conversation with the accused peer about the specific behaviours and their impact, without framing it as a complaint.', score: 3 },
+      { text: 'Facilitate a mediated conversation between both parties with you present — surface the issue in a controlled setting.', score: 1 },
+      { text: 'Reassure the complainant you are taking it seriously, then monitor future interactions before deciding on action.', score: 0 },
     ]
   },
   {
     id: 'C5', dimension: 'conflict',
-    scenario: 'Your strongest technical team member has a communication style that regularly causes friction — they are blunt to the point of being dismissive, particularly with junior staff. Performance reviews rate them exceptional. Two junior staff have raised concerns informally. What do you prioritise?',
+    scenario: 'Your organisation has just announced a restructure. Two of your team members applied for the same new role. You were on the selection panel and you know who got it, but the announcement has not been made yet. The unsuccessful candidate — your strongest individual contributor — approaches you visibly anxious and asks directly: "Did I get the role?" The announcement is scheduled for tomorrow morning. What do you say?',
     options: [
-      { text: "Have a frank coaching conversation with the senior member about the specific impact of their communication style on team cohesion.", score: 3 },
-      { text: "Acknowledge the juniors privately, coach them on how to manage upward communication with more experienced colleagues.", score: 1 },
-      { text: "Raise it in the next performance review — it is the appropriate formal channel for behavioural feedback.", score: 1 },
-      { text: "Create a team working agreement on communication norms that applies to everyone, avoiding singling anyone out.", score: 2 },
+      { text: 'Confirm they did not get it — they asked directly and deserve honesty. Soften it by immediately pivoting to their development path.', score: 1 },
+      { text: 'Tell them you cannot share the outcome yet but that the announcement is coming very soon — and that you want to speak with them after.', score: 3 },
+      { text: 'Redirect: "I want to make sure you hear this in the right way — let\'s talk properly tomorrow after the announcement."', score: 2 },
+      { text: 'Tell them the decision was very close and leave it at that — technically not lying and protects the process.', score: 0 },
     ]
   },
   {
     id: 'C6', dimension: 'conflict',
-    scenario: 'You and a peer manager disagree on how to allocate shared resources for Q3. You both have legitimate business cases. The resource decision needs to be made within 48 hours. Escalating to your shared manager is an option but will reflect poorly on both of you. What do you do?',
+    scenario: 'A client has escalated a complaint directly to your CEO, bypassing you entirely. The complaint cites "slow response times and lack of accountability" from your team. You believe the complaint is partially valid — there were two delayed responses last month — but also inflated. Your CEO has forwarded it to you and asked for a response within 2 hours. How do you respond to your CEO?',
     options: [
-      { text: "Request one focused meeting with your peer to find a compromise — come prepared with two or three flexible options.", score: 3 },
-      { text: "Escalate to your shared manager — resource allocation disputes at this level require executive arbitration to be effective.", score: 1 },
-      { text: "Propose splitting the resource equally for now and revisiting after Q3 results are in.", score: 2 },
-      { text: "Make the strongest possible case to your peer and yield only if their evidence clearly outweighs yours.", score: 1 },
+      { text: 'Provide a full factual account — acknowledge the two delays, explain the context, and outline what process changes are already in place.', score: 3 },
+      { text: 'Ask for 24 hours to investigate properly before responding — a rushed response risks getting the facts wrong.', score: 1 },
+      { text: 'Respond quickly acknowledging the complaint fully and committing to a detailed review — prioritise the CEO relationship over nuance.', score: 1 },
+      { text: 'Frame the response around the client relationship and what you will do differently — avoid dwelling on what went wrong.', score: 2 },
     ]
   },
   {
     id: 'C7', dimension: 'conflict',
-    scenario: 'A team member who recently returned from a period of extended sick leave is struggling to reintegrate. Colleagues are supportive but quietly frustrated that workload redistribution has persisted for longer than expected. The individual is aware of the pressure but says they are doing their best. What is your priority action?',
+    scenario: 'Two department heads who both report to you have been in conflict for 6 months over resource allocation. You have mediated three times with temporary resolutions each time. The conflict is now escalating again and affecting cross-functional delivery. Your own manager has noticed and asked you to "sort it out." A peer suggests you simply split the shared resource permanently. What is your approach this time?',
     options: [
-      { text: "Have a supportive but honest conversation with the returning team member about a realistic reintegration timeline and workload expectations.", score: 3 },
-      { text: "Acknowledge the team's frustration directly and bring in temporary support to reduce redistribution burden.", score: 2 },
-      { text: "Give the situation more time — reintegration after illness is unpredictable and pressure may slow recovery.", score: 1 },
-      { text: "Consult HR on how to handle the reintegration formally, ensuring you are compliant and supported.", score: 2 },
+      { text: 'Implement the permanent resource split immediately — you have mediated three times and the temporary resolutions are not working.', score: 2 },
+      { text: 'Diagnose why the previous resolutions failed before implementing anything — you are solving a symptom, not the cause.', score: 3 },
+      { text: 'Escalate to your own manager with a recommendation — three failed mediations means this is now above your resolution authority.', score: 1 },
+      { text: 'Set a final deadline for both department heads to agree a solution themselves — make clear that the next step is a unilateral decision by you.', score: 2 },
     ]
   },
   {
     id: 'C8', dimension: 'conflict',
-    scenario: 'Two high-potential employees both want the same internal promotion. Only one position is available. Both are objectively strong candidates. Choosing one risks demotivating or losing the other. How do you approach the decision and its aftermath?',
+    scenario: 'You discover that two team members have been sending each other messages critical of a third colleague — messages that have now been forwarded to you by someone else on the team. The messages are unprofessional but not discriminatory or policy-violating. The colleague being discussed is unaware. The team dynamics are already fragile after a difficult quarter. What do you do?',
     options: [
-      { text: "Use a structured competency-based process, make the decision transparently, and immediately discuss a development path with the unsuccessful candidate.", score: 3 },
-      { text: "Delay the promotion decision while you explore whether a second role can be created or backfilled.", score: 1 },
-      { text: "Promote the candidate with the strongest external market value — retaining the harder-to-replace talent is the priority.", score: 1 },
-      { text: "Give both candidates a stretch project for 90 days and use their performance to inform the final decision.", score: 2 },
+      { text: 'Address it with the two individuals privately — the behaviour is unprofessional regardless of whether it violated policy.', score: 3 },
+      { text: 'Do nothing — private messages between colleagues are not your domain unless they escalate or affect performance.', score: 0 },
+      { text: 'Inform the colleague who was discussed — they have a right to know and transparency is the foundation of a healthy team culture.', score: 1 },
+      { text: 'Use it as an opportunity to address team culture broadly without singling anyone out — a team-level conversation about respect.', score: 2 },
     ]
   },
   {
     id: 'C9', dimension: 'conflict',
-    scenario: 'A team member is openly critical of a strategic decision made by senior leadership, voicing their frustration to colleagues during team huddles. You understand their frustration — you privately share some of their concerns — but the decision is final. What do you do?',
+    scenario: 'Your highest-billed client has requested that a specific team member be removed from their account, citing "communication style differences." The team member is technically excellent, has done nothing wrong by your assessment, and the removal would send a damaging signal to the rest of your team. The client represents 22% of your team\'s annual revenue. What is your position?',
     options: [
-      { text: "Meet privately with the team member, validate their concerns, but set clear expectations about how dissent should be expressed.", score: 3 },
-      { text: "Raise the team's concerns through appropriate channels to leadership, demonstrating you advocate for your team.", score: 2 },
-      { text: "Address it in a team meeting — reinforce the rationale for the decision and redirect energy toward implementation.", score: 2 },
-      { text: "Allow it to continue in the short term — venting is natural and will likely diminish as the decision becomes normalised.", score: 0 },
+      { text: 'Decline the request and explain why — client preferences cannot override your team members\' professional standing without cause.', score: 1 },
+      { text: 'Agree to the request — 22% revenue concentration is too high a risk to defend a preference issue.', score: 1 },
+      { text: 'Request a meeting with the client to understand the specific concerns before making any decision — the issue may be resolvable without removal.', score: 3 },
+      { text: 'Agree to the request but reframe it as a development opportunity for the team member — new account, new challenge.', score: 2 },
     ]
   },
   {
     id: 'C10', dimension: 'conflict',
-    scenario: 'You discover that two team members have been bypassing a process you established, finding a workaround that is faster but creates downstream risk. When you raise it, they defend their approach with solid efficiency data. How do you respond?',
+    scenario: 'During a reorg, two team members were told informally (not by you) that they would be promoted. The reorg finalised and neither received the promotion — budget was cut. Both are now disengaged and one has started job hunting. You were not involved in the informal communication. HR says the informal promises were not sanctioned. What do you do?',
     options: [
-      { text: "Acknowledge their initiative, pause the workaround temporarily, and run a structured review to assess whether the process needs updating.", score: 3 },
-      { text: "Reinstate the original process immediately — efficiency gains do not justify unilateral process changes.", score: 1 },
-      { text: "Ask them to formally document and present their approach so the wider team can assess it together.", score: 2 },
-      { text: "Approve the workaround provisionally while you review the downstream risk — pragmatism should be rewarded.", score: 2 },
+      { text: 'Acknowledge the situation honestly with both individuals — they were given false expectations and they deserve that validation even if it was not your mistake.', score: 3 },
+      { text: 'Focus on retention — immediately explore what non-promotion recognition or development you can offer within the current budget.', score: 2 },
+      { text: 'Escalate to HR and the person who made the informal promises — the accountability sits there, not with you.', score: 1 },
+      { text: 'Do not acknowledge the informal promises as they were not sanctioned — focus purely on future development conversations.', score: 0 },
     ]
   },
 
@@ -120,102 +124,102 @@ export const SJT_QUESTIONS = [
 
   {
     id: 'D1', dimension: 'delegation',
-    scenario: 'You are being stretched across two major initiatives and need to delegate a high-visibility client deliverable to a team member who is capable but has not handled this type of work before. The client is important and the margin for error is low. What is your approach?',
+    scenario: 'You have a critical deliverable due Friday. Your most capable team member could complete it in 2 days but is already at 90% capacity. A less experienced team member is at 60% capacity and could complete it in 4 days — tight but feasible. A third option: you complete it yourself in 1.5 days. It is Monday morning. What do you do?',
     options: [
-      { text: "Brief them thoroughly, set clear success criteria, agree on check-in points, and make yourself available — but resist the urge to take over.", score: 3 },
-      { text: "Delegate but retain sign-off authority on all client-facing outputs before they are shared.", score: 2 },
-      { text: "Handle this deliverable yourself given the stakes, and create a development opportunity from the next lower-risk client project.", score: 1 },
-      { text: "Pair them with a more experienced colleague to co-lead it — maintaining quality while creating a real development experience.", score: 2 },
+      { text: 'Complete it yourself — the deadline risk is too high to delegate under these conditions and your time is justified here.', score: 1 },
+      { text: 'Assign it to the capable team member — manage their capacity by deprioritising something else on their plate.', score: 3 },
+      { text: 'Assign it to the less experienced team member — the development opportunity is valuable and the timeline is feasible if you provide close support.', score: 2 },
+      { text: 'Split the work — you handle the structure and difficult sections, the less experienced team member handles the execution components.', score: 2 },
     ]
   },
   {
     id: 'D2', dimension: 'delegation',
-    scenario: 'You delegated a project to a capable team member. Halfway through, you review their progress and notice they have taken the work in a different direction than you envisioned — not wrong, but different. The client has not seen it yet. What do you do?',
+    scenario: 'You delegated a client proposal to a senior team member 2 weeks ago. You check in today — 3 days before the deadline — and find the work is only 40% complete, the approach is different from what you briefed, and the team member seems confident it will be fine. The client is a strategic priority account. What do you do?',
     options: [
-      { text: "Explore their reasoning before deciding anything — their direction may have merit you have not yet considered.", score: 3 },
-      { text: "Redirect them toward your original vision — consistency with your approach builds better habits for future work.", score: 1 },
-      { text: "Assess objectively whether their approach meets the brief and only intervene if it creates a risk to the outcome.", score: 3 },
-      { text: "Let it proceed and manage client expectations — the team member needs to experience both the ownership and the consequences.", score: 1 },
+      { text: 'Step in immediately and take over the proposal — the risk to the client relationship is too high.', score: 1 },
+      { text: 'Have an urgent honest conversation — understand their plan for completion, assess whether their approach has merit, then decide on intervention level.', score: 3 },
+      { text: 'Assign a second team member to support and accelerate — do not take it away but add resource to de-risk the deadline.', score: 2 },
+      { text: 'Trust the team member — they said it will be fine and undermining their ownership now creates a worse long-term dynamic.', score: 0 },
     ]
   },
   {
     id: 'D3', dimension: 'delegation',
-    scenario: 'A strong team member repeatedly comes to you for sign-off on decisions that are well within their authority. You sense they are seeking reassurance rather than genuinely needing approval. This is slowing down output. How do you address it?',
+    scenario: 'A team member consistently delivers excellent work but always exceeds the agreed timeline by 20-30%. Their quality is the highest on the team. Your stakeholders have started to notice and comment on the delays. The team member says they need the extra time to meet their own quality bar. What is the real problem you need to solve?',
     options: [
-      { text: "Have a direct conversation about their decision authority and coach them toward greater autonomy with a clear framework for when escalation is appropriate.", score: 3 },
-      { text: "Continue to provide sign-off while gradually increasing the complexity of decisions you expect them to make independently.", score: 2 },
-      { text: "Create a documented decision matrix with them that defines which decisions require escalation — making the boundary explicit.", score: 2 },
-      { text: "Decline to sign off on routine decisions and direct them back to make the call themselves — a firm boundary often builds confidence faster.", score: 2 },
+      { text: 'A quality calibration problem — help them understand that 85% quality on time is more valuable than 100% quality late.', score: 2 },
+      { text: 'A workload and estimation problem — work with them to build more realistic timelines upfront rather than adjusting quality expectations.', score: 3 },
+      { text: 'A stakeholder management problem — manage expectations with stakeholders better so the delays are pre-communicated and absorbed.', score: 1 },
+      { text: 'A delegation fit problem — this person should be working on fewer, higher-stakes projects where the extra time investment is justified.', score: 2 },
     ]
   },
   {
     id: 'D4', dimension: 'delegation',
-    scenario: 'You are about to go on three weeks of annual leave. Your team is mid-project. You have a capable senior team member but they have never formally covered for you before. Your manager is available but prefers not to be involved in day-to-day decisions. What do you do?',
+    scenario: 'You have been promoted and must now delegate your previous specialist role to someone on your team. The most technically qualified person has low confidence and frequently defers to you. The second-best candidate is confident but sometimes cuts corners. The third option is to hire externally. The role is critical to team output. What do you decide?',
     options: [
-      { text: "Formally appoint the senior team member as acting lead, brief them thoroughly, and agree clear escalation criteria with your manager.", score: 3 },
-      { text: "Remain contactable during leave and ask the team to contact you for anything significant — three weeks is too critical to fully disconnect.", score: 1 },
-      { text: "Pre-make as many decisions as possible before leaving and document them so the team can proceed without you.", score: 2 },
-      { text: "Brief both your manager and the senior team member and let them decide between them how to manage — shared ownership reduces risk.", score: 1 },
+      { text: 'Develop the qualified but low-confidence team member into the role — they have the right foundation and confidence is buildable with structured support.', score: 3 },
+      { text: 'Give it to the confident team member and put guardrails around quality — confidence and motivation matter more than raw technical score.', score: 2 },
+      { text: 'Hire externally — neither internal candidate is optimal and this role is too critical to use as a development exercise.', score: 1 },
+      { text: 'Split the responsibility temporarily across both internal candidates while you assess — keep your options open.', score: 1 },
     ]
   },
   {
     id: 'D5', dimension: 'delegation',
-    scenario: 'A team member you delegated a task to has made an error that has caused a minor client complaint. The client is unhappy but not escalating. The team member is mortified and apologetic. How do you handle it?',
+    scenario: 'You delegated ownership of a team process to a team member 3 months ago. The process has measurably improved — errors down 40%, speed up 25%. The team member has now started making changes to adjacent processes without asking you. Some changes are good. One created a downstream problem for another team. What do you do?',
     options: [
-      { text: "Own the situation with the client yourself, debrief with the team member privately to understand what happened, and agree on how to prevent recurrence.", score: 3 },
-      { text: "Have the team member contact the client directly to apologise — accountability is part of ownership and the experience is valuable.", score: 2 },
-      { text: "Retake the work from the team member for the remainder of this project — client trust needs to be restored before re-delegating.", score: 1 },
-      { text: "Address it jointly with the team member — present a united front to the client and debrief thoroughly afterward.", score: 2 },
+      { text: 'Praise the initiative, address the specific downstream issue, and clarify the boundaries of their authority going forward.', score: 3 },
+      { text: 'Withdraw some of the autonomy — unsanctioned changes to adjacent processes show they are not ready for expanded scope.', score: 1 },
+      { text: 'Do nothing yet — the net impact is positive and clarifying boundaries now may stifle their initiative.', score: 1 },
+      { text: 'Use it as a team discussion to collectively define the principles for when changes require sign-off versus can be made autonomously.', score: 2 },
     ]
   },
   {
     id: 'D6', dimension: 'delegation',
-    scenario: 'Your team has grown significantly. You are spending too much time in execution and not enough in strategy. You need to delegate more broadly but several team members are not yet fully ready for expanded responsibility. What is your approach?',
+    scenario: 'You have 7 direct reports. Analysis shows you spend 60% of your time reviewing and approving their work before it goes out. Your manager says you need to be more strategic. When you ask your team why they always bring work for approval, they say "because you always find something to change." What do you change first?',
     options: [
-      { text: "Identify the two or three most ready individuals, delegate meaningful stretches of work to them immediately, and build a 90-day capability plan for the others.", score: 3 },
-      { text: "Hire a senior team member to take on the operational load — capability gaps in the current team should not compromise strategic output.", score: 1 },
-      { text: "Run a structured skills assessment first so delegation decisions are based on evidence rather than perception.", score: 2 },
-      { text: "Delegate broadly and accept a short-term dip in quality — managed stretch is the fastest way to build team capability.", score: 2 },
+      { text: 'Your approval behaviour — you have trained the team to seek approval by consistently changing their work. The bottleneck is you.', score: 3 },
+      { text: 'The team\'s confidence — implement structured feedback sessions to raise their self-assessment capability before changing approval flows.', score: 2 },
+      { text: 'The process — create a documented quality standard so team members can self-assess against it before bringing work to you.', score: 2 },
+      { text: 'The expectation — make clear that you expect them to submit work directly to stakeholders and copy you, reversing the approval flow.', score: 1 },
     ]
   },
   {
     id: 'D7', dimension: 'delegation',
-    scenario: 'A junior team member proactively volunteers to lead a client presentation that is beyond their current experience level. The client is mid-tier and the stakes are moderate. Their enthusiasm is genuine. What do you decide?',
+    scenario: 'A high-potential team member asks for a significant stretch assignment — leading a cross-functional project that is one level above their current grade. You believe they are 70% ready. The project has moderate stakes and a 3-month timeline. Your peer manager says the person is not ready and would be "set up to fail." What do you decide?',
     options: [
-      { text: "Support them to do it — provide coaching, review their preparation, and attend as a silent presence to step in only if necessary.", score: 3 },
-      { text: "Give them a meaningful role in the presentation — lead on their section, but you present the overall narrative.", score: 2 },
-      { text: "Decline for now — client relationships are built on credibility and an underprepared junior risks undermining that.", score: 1 },
-      { text: "Let them lead it entirely without your attendance — full accountability is the most powerful developmental experience.", score: 1 },
+      { text: 'Give them the assignment with structured support — 70% ready is sufficient for a stretch role and your peer\'s risk aversion should not override your assessment.', score: 3 },
+      { text: 'Decline for now — your peer\'s perspective adds evidence that the readiness gap may be larger than you assessed.', score: 1 },
+      { text: 'Give them the assignment but position your peer as a shadow advisor — bring them into the support structure rather than leaving them as an opposing voice.', score: 2 },
+      { text: 'Create a smaller proof-of-concept project first — let the team member demonstrate readiness on a lower-stakes assignment before the cross-functional lead role.', score: 2 },
     ]
   },
   {
     id: 'D8', dimension: 'delegation',
-    scenario: 'You have delegated a strategic analysis to your most capable analyst. Their output is technically excellent but the narrative and executive framing are weak — it will not land well with senior stakeholders. The presentation is in two days. What do you do?',
+    scenario: 'You manage a team of 12 across two locations. The co-located group (8 people) is visibly more engaged and receives more of your informal coaching time simply due to proximity. The remote group (4 people) is performing adequately but two have flagged feeling disconnected in their last check-ins. You have 6 hours per week of available 1:1 time. How do you restructure your delegation and coaching approach?',
     options: [
-      { text: "Work with them to strengthen the narrative together — this is a coaching moment and the output will be better for their involvement.", score: 3 },
-      { text: "Rework the framing yourself overnight — the presentation quality must be right and there is not enough time to coach.", score: 2 },
-      { text: "Give them specific feedback on what needs to change and set a deadline for a revised version tomorrow morning.", score: 2 },
-      { text: "Present the technical analysis yourself and ask them to support in the room — play to each person's strengths under time pressure.", score: 1 },
+      { text: 'Allocate proportionally more 1:1 time to the remote group temporarily — correct the structural imbalance you have created.', score: 3 },
+      { text: 'Appoint an informal team lead in the remote location to bridge the gap — you cannot replicate physical proximity with calendar time alone.', score: 2 },
+      { text: 'Move some of your 1:1s with the co-located group to group sessions, freeing up time for more remote 1:1s.', score: 2 },
+      { text: 'Address it in a full-team session — acknowledge the imbalance openly and invite the team to help design a solution.', score: 1 },
     ]
   },
   {
     id: 'D9', dimension: 'delegation',
-    scenario: 'A team member who previously underperformed has significantly improved over the last quarter. They are now asking for more responsibility and a higher-profile project. You are not yet fully confident in their consistency. What do you do?',
+    scenario: 'A team member returns a piece of delegated work and tells you they cannot complete it — it is outside their skill set and they should have flagged it earlier but felt pressured not to. You have 48 hours until the deadline. The team member is visibly distressed. What is your immediate priority?',
     options: [
-      { text: "Give them a meaningful but bounded stretch project — enough to demonstrate continued growth without overexposing the team or clients.", score: 3 },
-      { text: "Ask them to demonstrate consistent performance for another quarter before expanding their scope — trust is built over time.", score: 2 },
-      { text: "Involve them in a high-profile project in a supporting role first — visible without full ownership until confidence is established.", score: 2 },
-      { text: "Give them the high-profile project fully — the best way to test whether the improvement is real is under genuine pressure.", score: 1 },
+      { text: 'Solve the deadline problem first — identify who can complete the work in 48 hours and reassign immediately.', score: 2 },
+      { text: 'Address the team member\'s distress first — a conversation that makes them feel safe will prevent this recurring more than any other action.', score: 2 },
+      { text: 'Do both simultaneously — brief a replacement on the task while having a quick but genuine check-in with the distressed team member.', score: 3 },
+      { text: 'Escalate the deadline to the stakeholder immediately — buy time before solving the resourcing problem.', score: 1 },
     ]
   },
   {
     id: 'D10', dimension: 'delegation',
-    scenario: 'Your team consistently waits for your direction before taking action, even on routine matters. You are becoming a bottleneck. When you ask why, they say they prefer to have your buy-in to avoid making mistakes. What is the root cause you address first?',
+    scenario: 'You are being considered for a VP role. Your current team of 5 would expand to 18 across 3 functions. You currently do a lot of the strategic thinking yourself and delegate execution. At VP level you will need to delegate strategy too. Two of your current team members could take on more strategic work. Your manager says your biggest development gap is "letting go of strategy." What do you prioritise in the next 90 days?',
     options: [
-      { text: "Your own behaviour — consider whether you have inadvertently signalled that decisions need your approval by over-reviewing their work in the past.", score: 3 },
-      { text: "Team confidence — implement a structured empowerment programme with clear decision rights and regular positive reinforcement for independent action.", score: 2 },
-      { text: "Process clarity — the team likely lacks clear enough guidelines on decision boundaries. Documenting these should resolve the bottleneck.", score: 2 },
-      { text: "Team mindset — this is a cultural issue that requires frank conversations about accountability expectations with each individual.", score: 1 },
+      { text: 'Deliberately delegate one significant strategic workstream to each of the two capable team members — create the evidence of strategic delegation.', score: 3 },
+      { text: 'Work with a coach or mentor to address the underlying behaviour that drives your tendency to retain strategy.', score: 2 },
+      { text: 'Ask your manager for specific examples of where you failed to delegate strategy — you need concrete data before you can change the behaviour.', score: 2 },
+      { text: 'Focus on developing the two capable team members\' strategic skills first — you cannot delegate what they are not ready to receive.', score: 1 },
     ]
   },
 
@@ -223,102 +227,102 @@ export const SJT_QUESTIONS = [
 
   {
     id: 'M1', dimension: 'motivation',
-    scenario: 'Your team has just come through a gruelling six-month project that delivered strong results. Morale is high but exhaustion is visible. A new priority project has just been assigned with a tight deadline. How do you manage the transition?',
+    scenario: 'Your team has just delivered a project 2 weeks early and 8% under budget. The client gave exceptional feedback. Senior leadership sent a company-wide congratulations email. Two days later, your top contributor privately tells you they feel invisible — they did 40% of the work but the recognition email did not mention anyone by name. How do you respond?',
     options: [
-      { text: "Formally close out the last project with recognition, give the team a short recovery window, then re-energise around the new challenge with clear context.", score: 3 },
-      { text: "Move directly into the new project — momentum is an asset and a gap risks losing the team's rhythm.", score: 1 },
-      { text: "Negotiate the new deadline with your stakeholders — the team's capacity and wellbeing must factor into realistic planning.", score: 2 },
-      { text: "Let the team self-organise the transition — they have earned the right to determine their own pace into the next project.", score: 1 },
+      { text: 'Acknowledge their contribution directly and specifically in your next team meeting — name the work and its impact publicly.', score: 2 },
+      { text: 'Escalate to the person who sent the company-wide email and ask them to send a follow-up that acknowledges individual contributors.', score: 1 },
+      { text: 'Have a private conversation that validates their specific contribution and asks how they prefer to be recognised in future — then act on it.', score: 3 },
+      { text: 'Frame it as a team achievement — great outcomes belong to teams and it is important they internalise that.', score: 0 },
     ]
   },
   {
     id: 'M2', dimension: 'motivation',
-    scenario: 'One of your best performers has become noticeably disengaged over the past month. Their output remains acceptable but their energy and initiative have dropped. They have not raised anything with you directly. In your one-to-one, how do you open the conversation?',
+    scenario: 'Three of your eight team members are clearly disengaged — arriving late to meetings, contributing minimally, and doing just enough. The other five are high performers. The disengaged three are not violating any policies. Your manager says to "manage them out." You believe the disengagement has a cause. Before taking any action, what do you need to know?',
     options: [
-      { text: "Share your observation directly but warmly — \"I've noticed a shift in your energy lately and I want to understand what's going on for you.\"", score: 3 },
-      { text: "Ask broadly how they are finding things at the moment and let them lead — they will raise it if they are ready.", score: 2 },
-      { text: "Focus the one-to-one on their development goals — reconnecting them with their ambitions may naturally address the disengagement.", score: 2 },
-      { text: "Address performance first — a gentle but clear message that the drop in engagement is visible may prompt them to open up.", score: 1 },
+      { text: 'Whether the disengagement started at the same time — a common trigger suggests a systemic cause rather than individual attitude.', score: 3 },
+      { text: 'Whether their performance metrics meet the minimum bar — if they do, managing them out is premature regardless of engagement levels.', score: 2 },
+      { text: 'What the five high performers think — peer perception of the disengaged three is important data in deciding how to intervene.', score: 1 },
+      { text: 'Whether your own management behaviour changed around the time the disengagement began — you may be part of the cause.', score: 2 },
     ]
   },
   {
     id: 'M3', dimension: 'motivation',
-    scenario: 'Your team has achieved an exceptional result — well above target. Senior leadership has acknowledged it at the company level. One team member contributed significantly more than others due to a colleague being on leave. How do you recognise the team?',
+    scenario: 'Your most ambitious team member has told you they want to be a director within 18 months. Based on your honest assessment, they are 3-4 years away. They are performing well but lack the political acumen, executive presence, and cross-functional credibility required at director level. They are also your best individual contributor. How do you approach the next career conversation?',
     options: [
-      { text: "Celebrate the team achievement collectively and then separately and privately acknowledge the individual who went above and beyond.", score: 3 },
-      { text: "Publicly recognise the exceptional contribution of the individual alongside the team — accuracy in recognition builds trust.", score: 2 },
-      { text: "Focus entirely on the team achievement — singling out individuals risks creating division and diminishes the collective win.", score: 1 },
-      { text: "Ensure the individual's extra contribution is formally recorded and reflected in their performance evaluation rather than public recognition.", score: 2 },
+      { text: 'Be honest about the 3-4 year realistic timeline — a false 18-month expectation will damage trust more than the truth.', score: 3 },
+      { text: 'Focus the conversation on what they need to develop rather than the timeline — define the gap without specifying how long it will take.', score: 2 },
+      { text: 'Support the 18-month aspiration and create a stretch plan — ambitious timelines with the right support sometimes work, and they are your best contributor.', score: 1 },
+      { text: 'Consult with your HR partner before the conversation — a director promotion timeline involves stakeholders beyond you.', score: 1 },
     ]
   },
   {
     id: 'M4', dimension: 'motivation',
-    scenario: 'A team member tells you in a one-to-one that they are seriously considering leaving for a competitor who has offered them a more senior title and a 20% salary increase. They say they enjoy working with you but feel their growth has plateaued. What do you do?',
+    scenario: 'You manage a team of analysts. One has just discovered that a peer doing identical work at a competitor earns 28% more. They have brought salary data to your 1:1 and asked you to match it. The data appears credible. You know your organisation is 15-20% below market. You do not control compensation. What do you say in this meeting?',
     options: [
-      { text: "Have an honest conversation about their ambitions, explore what you can genuinely offer, and be transparent about what is and is not within your power to change.", score: 3 },
-      { text: "Advocate strongly with HR and leadership for a counter-offer — losing this person would be a significant team loss.", score: 2 },
-      { text: "Focus on what you can control immediately — restructure their role to include a visible leadership component that addresses the growth concern.", score: 2 },
-      { text: "Respect their decision process and avoid counter-offering — if the role is a better opportunity, retaining them short-term may only delay an inevitable exit.", score: 1 },
+      { text: 'Validate the data, acknowledge the gap honestly, commit to escalating it internally, and be transparent about what you can and cannot control.', score: 3 },
+      { text: 'Tell them the decision is above your authority and direct them to HR — you should not be having compensation conversations without HR present.', score: 0 },
+      { text: 'Challenge the comparability of the data — different companies, different roles, different total comp packages make direct comparison difficult.', score: 1 },
+      { text: 'Focus on the non-monetary aspects of their role — growth opportunity, culture, stability — to reframe the conversation.', score: 1 },
     ]
   },
   {
     id: 'M5', dimension: 'motivation',
-    scenario: 'Your team is nine months into a twelve-month transformation programme. Fatigue is setting in and two team members have privately expressed doubt about whether the change will actually deliver the promised benefits. Milestones are being met but energy is low. What is your response?',
+    scenario: 'You inherited a team 4 months ago. The previous manager was described as "inspiring but chaotic." The team loved the energy but missed deadlines regularly. You have introduced structure and delivery has improved — on-time delivery up from 58% to 89%. But the last two team surveys show satisfaction dropped from 81% to 63%. Three team members have told you informally they "miss the old vibe." What do you do?',
     options: [
-      { text: "Create a visible \"progress story\" — connect current milestones to early wins and the eventual impact, making the journey tangible rather than abstract.", score: 3 },
-      { text: "Acknowledge the doubt openly with the team — honest conversation about challenges is more motivating than forced positivity.", score: 2 },
-      { text: "Escalate the morale concern to programme leadership — if the team lacks confidence in the programme, that is systemic and above your level.", score: 1 },
-      { text: "Inject a short-term win — identify a quick, visible improvement the team can deliver in the next four weeks to rebuild confidence.", score: 2 },
+      { text: 'Hold the course — 89% on-time delivery is the right outcome and satisfaction will recover as the team adapts to a high-performing structure.', score: 1 },
+      { text: 'Explore specifically what "vibe" means to the team — the drop may signal something addressable that is separate from structure.', score: 3 },
+      { text: 'Introduce structured social and creative elements into team time — performance and culture are not mutually exclusive.', score: 2 },
+      { text: 'Acknowledge the change directly in a team session — name that the shift from the previous manager\'s style has been significant and invite dialogue.', score: 2 },
     ]
   },
   {
     id: 'M6', dimension: 'motivation',
-    scenario: 'You manage a team where three individuals are clearly highly ambitious and motivated by progression, while four others are solid performers who prioritise stability and work-life balance. A senior leader asks you to "raise the bar" for the whole team. How do you approach this?',
+    scenario: 'A team member who was previously your highest performer has been in a visible personal crisis for 6 weeks — performance is down 35%, they have missed two deadlines, and they have been tearful in two 1:1s. They have declined your offer of EAP support. Their workload is being absorbed by the rest of the team who are beginning to show strain. It has been 6 weeks. What do you do now?',
     options: [
-      { text: "Differentiate your approach — raise expectations for the high-ambition group through stretch roles while supporting the stable performers to deepen their expertise.", score: 3 },
-      { text: "Set a consistent higher standard for the team as a whole — clarity and fairness require the same expectations for everyone.", score: 1 },
-      { text: "Have individual conversations with each team member about what \"raising the bar\" means specifically for their role and goals.", score: 2 },
-      { text: "Challenge the directive with your senior leader — applying uniform pressure risks losing your stable high-quality performers.", score: 2 },
+      { text: 'Implement a formal performance plan — 6 weeks is enough time and the rest of the team cannot absorb the workload indefinitely.', score: 0 },
+      { text: 'Have a direct conversation: acknowledge the support they have declined, name the impact on the team, and explore what they actually need right now.', score: 3 },
+      { text: 'Consult HR about your obligations and options — you need to know what formal steps are available before your next conversation.', score: 2 },
+      { text: 'Redistribute their workload formally and reduce their responsibilities temporarily — remove the pressure without making it punitive.', score: 2 },
     ]
   },
   {
     id: 'M7', dimension: 'motivation',
-    scenario: 'Your organisation has announced a restructure that will result in two team members\' roles being made redundant — though neither has been officially notified yet. Rumours are already circulating and the atmosphere is tense. You cannot share the details yet. How do you lead the team during this period?',
+    scenario: 'Your organisation has introduced a forced ranking system. You must designate 10% of your team as "below expectations" regardless of their actual performance. Your entire team is performing well — no one genuinely belongs in that category. The policy is non-negotiable. Two team members are marginally lower than the rest. How do you handle the forced ranking conversation with the two designated as "below expectations"?',
     options: [
-      { text: "Acknowledge the uncertainty honestly without sharing confidential details, maintain regular communication, and ensure individuals feel seen and supported.", score: 3 },
-      { text: "Hold firm — sharing anything before official communication could create legal risk and further panic.", score: 1 },
-      { text: "Focus the team on their work and create short-term momentum — distraction through purposeful activity reduces anxiety.", score: 2 },
-      { text: "Advocate urgently with HR to accelerate the formal communication — the current uncertainty is more damaging than a difficult truth.", score: 2 },
+      { text: 'Be completely transparent — tell them the ranking is a result of the forced distribution system, not a genuine reflection of their performance.', score: 3 },
+      { text: 'Use the conversation to set higher performance targets — even high-performing teams have development areas to address.', score: 1 },
+      { text: 'Soften the language in the conversation and focus on development — protect their motivation while technically fulfilling the policy requirement.', score: 2 },
+      { text: 'Escalate to HR before the conversations — a system that requires you to misrepresent performance has ethical implications you should not navigate alone.', score: 2 },
     ]
   },
   {
     id: 'M8', dimension: 'motivation',
-    scenario: 'A team member who is technically excellent shows no interest in progression, leadership, or taking on broader responsibilities. They are content in their current role and deliver consistently. Your organisation values upward mobility. How do you manage their development?',
+    scenario: 'You are running a team of 10 through a 9-month digital transformation. At month 5, an external benchmarking report shows your team\'s change adoption score is 34th percentile — below your internal target of 60th. Your sponsor is concerned. Your team is working hard but the ambiguity of the transformation is causing anxiety. What is the most effective intervention at this stage?',
     options: [
-      { text: "Respect their choice and focus their development on deepening technical excellence — not all career paths require upward mobility.", score: 3 },
-      { text: "Explore whether their contentment reflects genuine preference or a lack of confidence in their ability to step up.", score: 2 },
-      { text: "Be transparent that the organisation's expectations include growth — help them understand what that means in their context.", score: 2 },
-      { text: "Channel their expertise into a mentoring or knowledge-sharing role — this creates leadership impact without a formal leadership title.", score: 2 },
+      { text: 'Increase the frequency of team communications and share progress data transparently — ambiguity is the primary driver of low adoption scores.', score: 2 },
+      { text: 'Identify the 2-3 individuals with the lowest adoption scores and focus intensive support on them — they are disproportionately pulling the average down.', score: 1 },
+      { text: 'Diagnose what is specifically driving the low score before intervening — the 34th percentile tells you something is wrong but not what.', score: 3 },
+      { text: 'Reset expectations with your sponsor — 34th percentile at month 5 of a 9-month transformation may be within normal range before adoption accelerates.', score: 2 },
     ]
   },
   {
     id: 'M9', dimension: 'motivation',
-    scenario: 'After a 360-degree feedback process, you discover that your team finds your management style too directive. They feel micromanaged and say it limits their creativity. You believe the structure you provide is what keeps the team high-performing. How do you respond?',
+    scenario: 'Two of your best team members have been headhunted by the same competitor. One has told you. The other has not but you have heard through a third party. Neither has resigned yet. The competitor is offering 30% salary increases. You cannot match the salary. What do you do with the information you have?',
     options: [
-      { text: "Take the feedback seriously — explore specific examples with trusted team members and experiment with giving more autonomy in lower-risk areas first.", score: 3 },
-      { text: "Share your perspective with the team openly — strong performance often requires structure and you want to find a shared understanding.", score: 2 },
-      { text: "Review the feedback in context — consider whether it reflects a genuine issue or whether some team members simply prefer less accountability.", score: 1 },
-      { text: "Adjust your style immediately and comprehensively — when a team speaks collectively, the right response is to act.", score: 1 },
+      { text: 'Speak to the one who told you — acknowledge their transparency, be honest about what you can and cannot offer, and explore what would make them stay.', score: 2 },
+      { text: 'Speak to both — address the person who told you formally and the other informally, making clear you want to understand their thinking.', score: 3 },
+      { text: 'Do nothing until resignations are submitted — acting on unconfirmed information about the second person risks damaging trust.', score: 1 },
+      { text: 'Use the situation to make a case to leadership for a market salary review — the individual cases are symptoms of a structural problem.', score: 2 },
     ]
   },
   {
     id: 'M10', dimension: 'motivation',
-    scenario: 'A team member who regularly volunteers for extra work, takes on peer mentoring, and leads team initiatives is showing early signs of burnout — they have mentioned feeling overwhelmed but insist they are fine and want to keep going. What do you do?',
+    scenario: 'Your team has been told they must return to the office 4 days per week, reversing a 3-day remote policy they have had for 2 years. The team is unhappy. Two people have said they will resign. You personally disagree with the policy but it is final. You have a team meeting in 1 hour to communicate it. What is your approach?',
     options: [
-      { text: "Have a caring but firm conversation — acknowledge what you are observing, validate their commitment, and work together to reduce their load before it becomes a crisis.", score: 3 },
-      { text: "Respect their self-assessment — they know themselves best and insisting otherwise may feel patronising.", score: 0 },
-      { text: "Remove some of their additional responsibilities temporarily without making it a formal conversation — action speaks louder than words.", score: 1 },
-      { text: "Involve occupational health or HR for professional support — burnout risk requires formal safeguarding, not just a manager conversation.", score: 2 },
+      { text: 'Present the policy with full support — your personal view is irrelevant and divided leadership signals undermine implementation.', score: 1 },
+      { text: 'Present the policy clearly, acknowledge that you understand this is difficult, and open the floor for questions — do not pretend to feel something you do not.', score: 3 },
+      { text: 'Present the policy and immediately pivot to what you can influence — flexible hours, desk arrangements, remote Fridays as an exception.', score: 2 },
+      { text: 'Tell the team you personally advocated against the policy but were overruled — they deserve to know you tried.', score: 1 },
     ]
   },
 
@@ -326,102 +330,102 @@ export const SJT_QUESTIONS = [
 
   {
     id: 'DE1', dimension: 'decision',
-    scenario: 'You must make a significant resourcing decision by end of day. You have 60% of the information you need. The remaining data will take three days to gather. Delaying will mean missing a market window. What do you do?',
+    scenario: 'You have $200,000 discretionary budget for Q4. Option A: invest in an automation tool that saves 2.5 hours per person per week across 15 people (projected ROI: 14 months). Option B: bring in 2 contractors for 3 months to clear a backlog worth an estimated $180,000 in delayed revenue. Option C: invest in team training that your team has been requesting for 18 months. You must commit by Friday. What do you choose?',
     options: [
-      { text: "Make the decision with the available data, document your assumptions clearly, and build in a 30-day review to course-correct if needed.", score: 3 },
-      { text: "Delay the decision — a significant resourcing choice made on 60% information creates more risk than missing the market window.", score: 1 },
-      { text: "Make the minimum viable commitment now that keeps options open, and finalise the full decision once complete data is available.", score: 3 },
-      { text: "Escalate to your manager — decisions of this significance with incomplete data require senior endorsement.", score: 1 },
+      { text: 'Option B — the $180,000 delayed revenue recovery has the clearest and most immediate financial return.', score: 2 },
+      { text: 'Option A — long-term efficiency gains compound in value and 14-month ROI is strong for infrastructure investment.', score: 2 },
+      { text: 'Option C — 18 months of requesting signals this is a significant retention and engagement risk that financial metrics do not capture.', score: 1 },
+      { text: 'Split B and C — clear the backlog (highest immediate return) and make a partial training investment (highest retention signal) rather than an all-or-nothing choice.', score: 3 },
     ]
   },
   {
     id: 'DE2', dimension: 'decision',
-    scenario: 'Your team is evenly divided on the best technical approach to a problem. Both camps have strong arguments. You have a preference but acknowledge the other approach has merit. A decision needs to be made this week. How do you proceed?',
+    scenario: 'Your team is 3 weeks from launch. QA has identified 47 bugs — 12 critical, 23 major, 12 minor. Engineering says fixing all critical bugs requires 4 weeks. Marketing has a $400,000 campaign locked in for the launch date. You can launch with critical bugs if you implement workarounds that affect 8% of user journeys. What do you recommend?',
     options: [
-      { text: "Make the call yourself — present your reasoning clearly, acknowledge the alternative view, and commit the team to one direction.", score: 3 },
-      { text: "Run a structured decision framework with the team — document the criteria, weight them together, and let the analysis guide the outcome.", score: 2 },
-      { text: "Pilot both approaches in parallel on a small scale for two weeks before committing — the data will resolve the disagreement.", score: 2 },
-      { text: "Hold a final debate and put it to a team vote — shared ownership of the decision will improve implementation.", score: 1 },
+      { text: 'Delay the launch — shipping known critical bugs is a reputational and potentially legal risk that outweighs the campaign cost.', score: 2 },
+      { text: 'Launch with the workarounds for 8% of journeys — the business cannot absorb a $400,000 campaign loss and 8% is a manageable degraded experience.', score: 1 },
+      { text: 'Escalate immediately to the executive team with a clear risk/cost analysis of both options — this decision is above your authority level.', score: 2 },
+      { text: 'Push for a 2-week delay and renegotiate the campaign — fix the highest-risk critical bugs and launch with a smaller subset of workarounds, reducing the 8% impact.', score: 3 },
     ]
   },
   {
     id: 'DE3', dimension: 'decision',
-    scenario: 'A decision you made six months ago has not delivered the expected results. The team followed your direction faithfully. You are now under pressure from senior leadership to explain the underperformance. How do you respond?',
+    scenario: 'You are 6 months into a strategic initiative that was your idea and that you championed to the board. New data suggests the market assumption the initiative was based on was incorrect — the addressable market is 40% smaller than projected. The initiative has consumed $1.2M so far. It would take another $800,000 to complete. If completed in the smaller market the projected return is break-even at best. What do you recommend?',
     options: [
-      { text: "Take clear accountability for the decision, present what you have learned, and set out a clear corrective plan.", score: 3 },
-      { text: "Contextualise the decision — present the information available at the time and explain how market conditions changed.", score: 2 },
-      { text: "Be transparent about both your accountability and the external factors — honest complexity is more credible than either deflection or excessive self-blame.", score: 3 },
-      { text: "Focus the conversation on the corrective actions rather than relitigating the original decision — forward momentum is what leadership wants to see.", score: 2 },
+      { text: 'Recommend stopping the initiative — sunk costs should not drive future investment and break-even in a smaller market is not strategic.', score: 3 },
+      { text: 'Recommend completing it — stopping now wastes the $1.2M already invested and break-even still returns the remaining $800,000.', score: 0 },
+      { text: 'Recommend a 60-day pivot assessment — explore whether the initiative can be redirected toward a different market application before committing to stop or continue.', score: 2 },
+      { text: 'Bring in an external advisor to validate the new market data before making a recommendation — your objectivity is compromised as the initiative champion.', score: 2 },
     ]
   },
   {
     id: 'DE4', dimension: 'decision',
-    scenario: 'Senior leadership is pressuring you to approve a cost-cutting measure that you believe will damage team capability and client service quality in the medium term. The pressure is significant and the measure is popular at board level. What is your position?',
+    scenario: 'You need to hire a senior role in 6 weeks. After interviews, two candidates remain. Candidate A: technically exceptional, cultural fit concerns raised by 3 of 5 interviewers, 20% cheaper. Candidate B: technically strong (not exceptional), strong cultural fit, asks 20% above budget. Your hiring manager prefers Candidate A. Your team\'s feedback is split 3-2 in favour of Candidate B. What do you decide?',
     options: [
-      { text: "Build a structured business case with data that quantifies the medium-term risk and present it formally before the decision is finalised.", score: 3 },
-      { text: "Implement the measure as directed but document your concerns formally — you have a duty to comply but also to protect yourself professionally.", score: 2 },
-      { text: "Negotiate for a modified version of the measure that achieves the cost target with less capability damage — look for the third option.", score: 3 },
-      { text: "Push back directly and firmly in leadership meetings — if you have credibility, a strong dissenting voice can change outcomes.", score: 2 },
+      { text: 'Hire Candidate A — technical excellence is harder to develop than cultural fit, and the budget saving is material.', score: 1 },
+      { text: 'Hire Candidate B — cultural fit concerns from 3 of 5 interviewers is a significant signal that should not be overridden by technical score.', score: 2 },
+      { text: 'Go back to market — neither candidate is a clear hire and a rushed decision on a senior role is more costly than a 6-week delay.', score: 2 },
+      { text: 'Hire Candidate B, negotiate on the salary — the cultural fit signal is more predictive of long-term success and the gap may be closeable.', score: 3 },
     ]
   },
   {
     id: 'DE5', dimension: 'decision',
-    scenario: 'You need to choose between two candidates for a critical team role. Candidate A has more experience and will hit the ground running. Candidate B is less experienced but shows exceptional learning agility and cultural fit. The role is critical now but will also evolve significantly in 18 months. Who do you hire?',
+    scenario: 'You discover at 4pm on a Friday that a report sent to a regulator earlier that week contained a material error — a figure was overstated by 23%. The error was made by a team member who has already left for the weekend. Correcting it may trigger a regulatory inquiry. Not correcting it may be worse if discovered later. Your legal team is unavailable until Monday. What do you do?',
     options: [
-      { text: "Hire Candidate B — learning agility and cultural fit predict long-term performance better than current experience for an evolving role.", score: 2 },
-      { text: "Hire Candidate A — the immediate need is too critical to take on the development risk of a less experienced hire.", score: 2 },
-      { text: "Define the 18-month role requirements more precisely before deciding — the right answer depends on how much the role will change and how fast.", score: 3 },
-      { text: "Create a short paid trial project for both candidates — observed performance under real conditions is more reliable than interviews.", score: 1 },
+      { text: 'Wait until Monday and involve legal before taking any action — acting without legal advice on a regulatory matter creates more risk.', score: 0 },
+      { text: 'Contact your legal team via emergency channels tonight — regulatory errors have time-sensitive remediation windows that cannot wait until Monday.', score: 3 },
+      { text: 'Contact the regulator directly to notify them of the error — proactive disclosure always reduces regulatory risk regardless of legal involvement.', score: 1 },
+      { text: 'Document everything thoroughly tonight and prepare a full correction package so you are ready to act first thing Monday with legal support.', score: 2 },
     ]
   },
   {
     id: 'DE6', dimension: 'decision',
-    scenario: 'A team member proposes an innovative approach to a client problem that could differentiate your offer significantly. The approach is unproven, carries moderate delivery risk, and would require a four-week investment before knowing if it works. The client has not asked for it. What do you decide?',
+    scenario: 'You manage a product team. User research shows two features — Feature X (requested by 78% of users, low engineering complexity, low strategic value) and Feature Y (requested by 12% of users, high complexity, high strategic value) — are both on your backlog. You have one sprint of capacity. Your CEO informally mentioned Feature X last week. Your product strategy document prioritises Feature Y. What do you build?',
     options: [
-      { text: "Run a contained two-week proof of concept internally before deciding whether to invest further or present to the client.", score: 3 },
-      { text: "Approve the full four-week investment — genuine innovation requires genuine resource commitment, not half-measures.", score: 1 },
-      { text: "Present the concept to the client and let them decide whether the risk-reward tradeoff is worth it from their perspective.", score: 2 },
-      { text: "Park it for now — solving what the client has asked for reliably is more important than unsolicited innovation.", score: 1 },
+      { text: 'Feature X — 78% user demand plus CEO interest is a clear signal from two independent sources.', score: 1 },
+      { text: 'Feature Y — your product strategy exists for a reason and informal CEO comments should not override a documented strategic framework.', score: 2 },
+      { text: 'Feature Y — but proactively align with the CEO on why Feature X is deprioritised before the sprint starts.', score: 3 },
+      { text: 'Feature X — and use the momentum to build credibility with the CEO before making the case for strategic features in future sprints.', score: 1 },
     ]
   },
   {
     id: 'DE7', dimension: 'decision',
-    scenario: 'You have two equally urgent priorities and insufficient resource to do both well simultaneously. Doing both at reduced quality risks both failing. Choosing one means the other is delayed by at least six weeks. Both stakeholders believe their priority is non-negotiable. What do you do?',
+    scenario: 'Your team\'s data shows that Channel A (your core channel, 5 years of investment) is declining at 8% per year. Channel B (emerging, 18 months of data) is growing at 34% per year but is currently 12% of Channel A\'s volume. Migrating fully to Channel B would take 18 months and $600,000. Staying with Channel A maintains current revenue for approximately 4 more years before decline becomes critical. What do you recommend to leadership?',
     options: [
-      { text: "Convene both stakeholders together, present the resource reality transparently, and facilitate a shared prioritisation decision.", score: 3 },
-      { text: "Make the prioritisation decision yourself based on strategic value and communicate it clearly to both stakeholders.", score: 2 },
-      { text: "Escalate to your manager to make the call — cross-stakeholder prioritisation is above individual manager authority.", score: 1 },
-      { text: "Attempt both at reduced scope — delivering something to both stakeholders is better than fully disappointing one.", score: 1 },
+      { text: 'Begin migration to Channel B now — 34% growth versus 8% decline makes the long-term trajectory clear and waiting makes migration harder.', score: 2 },
+      { text: 'Invest in both — use Channel A revenue to fund Channel B growth for 12 months before committing to full migration.', score: 3 },
+      { text: 'Wait 12 more months of Channel B data before recommending migration — 18 months of growth data is insufficient to commit $600,000.', score: 2 },
+      { text: 'Commission an independent market analysis — a decision of this scale requires external validation of your internal data.', score: 1 },
     ]
   },
   {
     id: 'DE8', dimension: 'decision',
-    scenario: 'You discover a flaw in a process your team has been following for 18 months. The flaw has not caused a visible problem yet but creates potential compliance risk. Fixing it will require a two-week pause in output and will be costly. What do you do?',
+    scenario: 'Your highest-performing team member asks to move to a 4-day week for personal reasons. Their output would likely drop 15% (you estimate). They are currently contributing at 130% of a normal team member. Even at 85% of their current output, they would still outperform the team average. HR policy does not explicitly allow or prohibit 4-day arrangements. Your manager has said "use your judgement." What do you decide?',
     options: [
-      { text: "Escalate immediately to compliance and legal, quantify the risk exposure, and implement a fix — the potential cost of non-compliance outweighs the disruption.", score: 3 },
-      { text: "Conduct a rapid risk assessment first — understand the actual exposure before triggering a costly two-week pause.", score: 2 },
-      { text: "Implement a compensating control immediately to mitigate the risk while you plan a proper process fix over the next quarter.", score: 2 },
-      { text: "Fix it quietly within the team — escalating a compliance risk you discovered yourself may raise questions about your oversight.", score: 0 },
+      { text: 'Approve it — at 85% of their current output they still outperform the team average and forcing full-time hours risks losing them entirely.', score: 3 },
+      { text: 'Decline — approving an off-policy arrangement for one team member creates precedent and fairness issues with the rest of the team.', score: 1 },
+      { text: 'Approve it as a 3-month trial and evaluate the actual output impact before making it permanent.', score: 2 },
+      { text: 'Escalate to HR to create a formal policy before approving — your judgement call should be supported by a framework that applies fairly to everyone.', score: 2 },
     ]
   },
   {
     id: 'DE9', dimension: 'decision',
-    scenario: 'You are asked to make a recommendation on whether to pursue a new market that has strong growth potential but where your organisation has no existing capability or relationships. The investment required is significant. You have four weeks to advise. How do you structure your recommendation?',
+    scenario: 'You have two team members who could be promoted. You have budget for one promotion this cycle. Team member A has been waiting 2 years and is close to leaving — promotion would almost certainly retain them. Team member B has been waiting 18 months but is less likely to leave. By objective performance metrics, they are almost equal — B scores marginally higher on output quality, A scores higher on leadership behaviours. Who do you promote?',
     options: [
-      { text: "Design a structured assessment covering market size, competitive dynamics, capability gap, build vs buy options, and risk-adjusted returns before advising.", score: 3 },
-      { text: "Recommend a small pilot investment first — a time-limited market test generates real data more reliably than desk research.", score: 2 },
-      { text: "Recommend against unless a clear capability acquisition path exists — organic capability building in a new market is rarely the right strategic move.", score: 1 },
-      { text: "Bring in an external specialist to advise alongside you — decisions of this scale and complexity benefit from independent expertise.", score: 2 },
+      { text: 'Promote A — retention risk is a legitimate factor in promotion decisions and losing A would cost more than the promotion.', score: 2 },
+      { text: 'Promote B — promotions must be based on performance merit. Using retention risk as a deciding factor creates perverse incentives.', score: 2 },
+      { text: 'Promote A — leadership behaviours are more predictive of senior-level success than output quality at the point of promotion.', score: 3 },
+      { text: 'Delay both and make a stronger case for two promotions next cycle — a forced choice between two near-equal candidates is a false constraint.', score: 1 },
     ]
   },
   {
     id: 'DE10', dimension: 'decision',
-    scenario: 'You made a decision to restructure your team\'s workflow three months ago. Two team members have told you privately it is not working as intended. Your manager has publicly praised the change. What do you do?',
+    scenario: 'Your team has been using an internal tool that you built 2 years ago. A vendor now offers a SaaS solution that does 80% of what your tool does, costs $45,000 per year, and would save your team approximately 6 hours per week in aggregate. Rebuilding your internal tool to match the SaaS capability would take 3 months of engineering time. Switching to the SaaS tool means sunsetting work your team built and is proud of. What do you recommend?',
     options: [
-      { text: "Gather objective data on whether the workflow is actually underperforming, then make an evidence-based decision about whether to iterate or stay the course.", score: 3 },
-      { text: "Acknowledge privately to the two team members that you are listening, and make iterative adjustments without formally announcing a reversal.", score: 2 },
-      { text: "Have a direct conversation with your manager — if the change is not working, adjusting it is better than preserving a public position.", score: 2 },
-      { text: "Give it more time — three months is too early to conclude a workflow change is not working, and the team may still be adjusting.", score: 1 },
+      { text: 'Switch to the SaaS tool — 6 hours per week at team blended rate quickly exceeds $45,000 annually and build-vs-buy calculations rarely favour rebuilding.', score: 3 },
+      { text: 'Rebuild the internal tool — the 20% capability gap may be critical and SaaS vendor dependency creates long-term risk.', score: 1 },
+      { text: 'Run a 90-day SaaS pilot alongside your internal tool before committing — validate the 80% coverage assumption before sunsetting anything.', score: 2 },
+      { text: 'Involve the team in the decision — they built the internal tool and their buy-in to a switch will determine adoption success.', score: 2 },
     ]
   },
 
@@ -429,102 +433,102 @@ export const SJT_QUESTIONS = [
 
   {
     id: 'CO1', dimension: 'communication',
-    scenario: 'You need to deliver significant constructive feedback to a high performer who is unaware that their interpersonal style is creating friction with other departments. They are confident and not accustomed to critical feedback. How do you approach the conversation?',
+    scenario: 'You have prepared a 20-slide strategy deck for a board presentation. At 8am the day of the presentation, your CEO tells you the board wants "10 minutes, not 40, and just the headline and the ask." You have been preparing the full deck for 3 weeks. It is now 9am and the presentation is at 2pm. What do you do?',
     options: [
-      { text: "Be direct and specific — describe the observed behaviours and their documented impact without softening to the point of obscuring the message.", score: 3 },
-      { text: "Lead with their strengths, then introduce the concern as an area for growth — framing it developmentally reduces defensiveness.", score: 2 },
-      { text: "Share the feedback from others without attributing it to specific individuals — protect your sources while ensuring the message is heard.", score: 1 },
-      { text: "Ask them first how they feel their cross-departmental relationships are going — their self-awareness will shape how you deliver the feedback.", score: 2 },
+      { text: 'Build the 10-minute version from scratch — repurposing 20 slides into a tight 10-minute narrative is almost always worse than starting clean.', score: 3 },
+      { text: 'Cut the deck to the 5 most important slides — reduce rather than rebuild to protect the structure you have already stress-tested.', score: 2 },
+      { text: 'Present the full deck but fast — you cannot adequately compress 3 weeks of thinking into 5 hours and the board can interrupt if needed.', score: 0 },
+      { text: 'Ask the CEO for 15 minutes — 10 minutes for a strategy presentation is unrealistic and a brief negotiation is better than a bad presentation.', score: 2 },
     ]
   },
   {
     id: 'CO2', dimension: 'communication',
-    scenario: 'You are tasked with communicating a major and unpopular organisational change to your team. You have been given a prepared message from corporate communications. You believe the messaging understates the real impact. How do you communicate it?',
+    scenario: 'You are delivering difficult feedback to a team member who has received critical performance feedback before and responded defensively. This time the feedback is more serious — if performance does not improve, their role is at risk. You have 45 minutes scheduled. How do you open the conversation?',
     options: [
-      { text: "Supplement the corporate message with honest context about what this means practically for your team — without undermining leadership.", score: 3 },
-      { text: "Deliver the corporate message as provided — editorialising official communication creates mixed messages and erodes trust in leadership.", score: 1 },
-      { text: "Push back to communications and leadership before the message goes out — if the framing is inadequate, the right time to fix it is now.", score: 2 },
-      { text: "Deliver the message, then hold a separate open Q&A where you answer honestly — the formal communication and the real conversation can coexist.", score: 2 },
+      { text: 'Start with the seriousness of the situation immediately — "I want to be straight with you. This conversation is more serious than our previous ones."', score: 3 },
+      { text: 'Start with appreciation for their positive contributions before introducing the concern — reduce defensiveness before delivering difficult news.', score: 1 },
+      { text: 'Ask them how they feel their performance has been — if they can self-identify the issues, the conversation lands better.', score: 2 },
+      { text: 'Have HR present from the start — if role risk is involved, this is a formal conversation and should be treated as one.', score: 2 },
     ]
   },
   {
     id: 'CO3', dimension: 'communication',
-    scenario: 'In a senior leadership presentation, you are asked a question you cannot answer confidently. You have a partial answer but are not certain it is accurate. The room is watching. What do you do?',
+    scenario: 'You send an email to your team announcing a new process. Three team members reply with concerns. One replies with a strongly worded objection. One privately messages you saying the new process "will not work." The remaining four say nothing. How do you interpret the silence of the four and what do you do next?',
     options: [
-      { text: "Share what you know confidently, clearly flag the parts you are uncertain about, and commit to a specific follow-up by a named date.", score: 3 },
-      { text: "Give your best answer without flagging uncertainty — senior audiences expect confidence and will probe if they want more.", score: 0 },
-      { text: "Defer entirely — \"I want to give you an accurate answer on this. Let me come back to you by Thursday.\"", score: 2 },
-      { text: "Redirect the question — \"That's a great point. [Colleague], you've been closer to that data. What's your read?\"", score: 1 },
+      { text: 'Assume silence is broad agreement — only 3 objected out of 7 and one objection was strong enough to represent multiple views if shared.', score: 0 },
+      { text: 'Treat silence as ambiguous and follow up individually with the four who did not respond — silent non-objection is not the same as endorsement.', score: 3 },
+      { text: 'Hold a team discussion to surface any remaining concerns before implementing — email is the wrong channel for process change of this significance.', score: 2 },
+      { text: 'Address the three who responded and implement — managing the vocal minority is the priority, not chasing the silent majority.', score: 1 },
     ]
   },
   {
     id: 'CO4', dimension: 'communication',
-    scenario: 'A team member gives you direct feedback that your recent communication has been inconsistent — they have heard different things from you in different contexts and it is creating confusion. You did not intend to send mixed messages. How do you respond?',
+    scenario: 'Your manager gives you feedback in a group leadership meeting that you "need to be more concise in your updates." You believe your updates are appropriately detailed given the complexity of your work. Two peers privately agree with you after the meeting. One peer says your manager "has a point." What is the right response?',
     options: [
-      { text: "Thank them sincerely, ask for specific examples to understand where the inconsistency occurred, and commit to clearer communication going forward.", score: 3 },
-      { text: "Explain your reasoning — the different messages may reflect genuinely evolving thinking, which is legitimate to share transparently.", score: 2 },
-      { text: "Acknowledge it with the whole team — if one person experienced inconsistency, others likely did too and a group reset is more efficient.", score: 2 },
-      { text: "Investigate first — inconsistency may be a perception issue rather than a reality, and you want to understand before changing your approach.", score: 1 },
+      { text: 'Accept the feedback publicly and adjust — manager perception is reality in a leadership context regardless of whether you agree.', score: 1 },
+      { text: 'Request a private conversation with your manager to understand specifically what "more concise" looks like in their view.', score: 3 },
+      { text: 'Seek broader feedback before acting — two peers agreeing with you and one agreeing with your manager is ambiguous data.', score: 2 },
+      { text: 'Adjust your updates for the next month and see if the feedback changes — demonstrate responsiveness without needing to agree or disagree.', score: 2 },
     ]
   },
   {
     id: 'CO5', dimension: 'communication',
-    scenario: 'Information critical to your team\'s work is consistently arriving late from another department, causing delays. The other department manager claims they are sharing information as soon as it is available. The pattern has continued for four months. How do you address it?',
+    scenario: 'You are presenting project results to a senior stakeholder. Midway through your presentation, they interrupt you and say "just tell me: are we on track or not?" You are 8 slides from the context needed to give an honest answer. The full picture is nuanced — you are on track on budget, ahead on one workstream, and 2 weeks behind on another. What do you say?',
     options: [
-      { text: "Request a structured meeting with the other manager to map the information flow end-to-end and identify exactly where the bottleneck sits.", score: 3 },
-      { text: "Escalate the pattern to your shared manager with data — four months of documented delays is a systemic issue, not a one-off.", score: 2 },
-      { text: "Build a workaround within your team that reduces your dependency on their timeline — control what you can control.", score: 2 },
-      { text: "Raise it directly and firmly with the other manager — pattern behaviour requires a direct conversation, not a mapping exercise.", score: 1 },
+      { text: '"Mostly yes — we are on budget and ahead in one area. I want to flag we are 2 weeks behind in one workstream before you hear it elsewhere."', score: 3 },
+      { text: '"Yes" — the overall project is on track and the 2-week delay in one workstream does not change that headline.', score: 1 },
+      { text: '"It depends on what dimension matters most to you — can I give you the 60-second version?" Then deliver the nuanced picture quickly.', score: 2 },
+      { text: '"Let me finish the context and then I can answer that properly — the nuance matters here."', score: 1 },
     ]
   },
   {
     id: 'CO6', dimension: 'communication',
-    scenario: 'During a one-to-one, a team member becomes visibly emotional while discussing a personal situation that is affecting their work. They were not expecting to become emotional and appear embarrassed. How do you respond in the moment?',
+    scenario: 'A team member gives an important client presentation and makes 3 factual errors — none caught in the room, but you noticed. The client seemed satisfied. After the meeting the team member asks how they did. What do you say?',
     options: [
-      { text: "Acknowledge their emotion calmly and give them a moment — \"Take your time. This is a safe space.\" Let them lead what happens next.", score: 3 },
-      { text: "Offer to reschedule — \"We don't have to do this today. Let's pick this up when you're ready.\"", score: 2 },
-      { text: "Refocus gently on the work impact — you are a manager, not a counsellor, and keeping the conversation professional protects both of you.", score: 1 },
-      { text: "Suggest they speak with the employee assistance programme — professional support is more appropriate than a manager conversation for personal matters.", score: 1 },
+      { text: 'Give positive feedback in the moment and address the errors in a private follow-up conversation later — protect their confidence in front of the client experience.', score: 2 },
+      { text: 'Address the errors immediately and specifically — "Great energy. Three things I want to make sure we correct before this goes any further."', score: 3 },
+      { text: 'Tell them it went well — the client was happy and the errors were not caught, so raising them now serves no purpose.', score: 0 },
+      { text: 'Ask them how they felt it went first — their self-assessment may surface the errors without you needing to introduce them.', score: 2 },
     ]
   },
   {
     id: 'CO7', dimension: 'communication',
-    scenario: 'Your team consistently produces work that technically meets the brief but lacks the insight and initiative you expect. When you give feedback, they improve for that piece but revert on the next. The pattern suggests the feedback is not landing. What do you change?',
+    scenario: 'You discover through an informal conversation that a peer manager has been telling their team that your team "dropped the ball" on a shared project — blaming your team for a delay that was actually caused by a shared dependency failure. The narrative has reached senior leadership. What do you do?',
     options: [
-      { text: "Change how you give feedback — shift from corrective to coaching. Ask questions that help them identify the gap themselves rather than telling them.", score: 3 },
-      { text: "Make your expectations more explicit upfront — the reverting pattern suggests the standard is not clear enough at the briefing stage.", score: 2 },
-      { text: "Address it as a team standard rather than individual feedback — create a shared quality framework that the team holds each other to.", score: 2 },
-      { text: "Accept that this is the team's output ceiling — ensure briefs are tight enough to compensate for the initiative gap rather than trying to change the culture.", score: 0 },
+      { text: 'Address it directly with your peer first — give them the opportunity to correct the narrative before escalating.', score: 3 },
+      { text: 'Correct the narrative with senior leadership proactively — the record needs to be set straight before the version becomes established truth.', score: 2 },
+      { text: 'Document the facts and wait — acting on informal information risks overreacting to a mischaracterisation.', score: 1 },
+      { text: 'Bring both teams together to do a shared retrospective — establish the facts collectively rather than through competing narratives.', score: 2 },
     ]
   },
   {
     id: 'CO8', dimension: 'communication',
-    scenario: 'You are in a leadership team meeting where a peer presents a plan you believe has a significant flaw that the group is about to approve without challenge. Raising it will slow the decision and may embarrass your peer publicly. What do you do?',
+    scenario: 'You are in a leadership team of 6. In meetings, two members dominate. Two are consistently quiet. One contributes selectively. You notice the two quiet members have strong views in 1:1s that never make it into group discussions. The team\'s decisions are being driven by the vocal minority. As a peer — not the team leader — what do you do?',
     options: [
-      { text: "Raise the concern in the meeting clearly but constructively — \"I want to make sure we've considered X before we finalise this.\"", score: 3 },
-      { text: "Speak to your peer privately immediately after the meeting before the plan is implemented — protecting the relationship while flagging the issue.", score: 1 },
-      { text: "Ask a clarifying question that surfaces the issue without making it a direct challenge — allow the group to identify the flaw organically.", score: 2 },
-      { text: "Let the decision proceed — raising concerns about a peer's plan without prior private conversation is a breach of professional courtesy.", score: 0 },
+      { text: 'Raise it with the team leader privately — they are responsible for group dynamics and need to know this is happening.', score: 2 },
+      { text: 'In the next meeting, actively create space: "I would like to hear from [name] on this before we decide."', score: 3 },
+      { text: 'Do nothing — it is not your role to manage peer dynamics and intervening may create more tension than it resolves.', score: 0 },
+      { text: 'Suggest the team leader introduces a structured input process — round-robins or pre-reads that give quieter members a vehicle for contribution.', score: 2 },
     ]
   },
   {
     id: 'CO9', dimension: 'communication',
-    scenario: 'A new team member from a different cultural background communicates very indirectly. They rarely say no, which you initially interpreted as agreement — but you have since noticed that their indirect cues signal discomfort or disagreement. How do you adapt?',
+    scenario: 'Your organisation sends a company-wide communication that contains information that directly contradicts what you told your team 2 weeks ago. Your team notices immediately and three members message you asking what is going on. You were not informed of the change before the communication went out. What do you say to your team in the next hour?',
     options: [
-      { text: "Have a private conversation to understand their communication preferences and agree on a shared approach that works for both of you.", score: 3 },
-      { text: "Adapt your own communication style to create more space for indirect signals — check in more frequently and read non-verbal cues more actively.", score: 2 },
-      { text: "Create structured feedback opportunities — written updates or anonymous channels may be more comfortable for them than direct verbal disagreement.", score: 2 },
-      { text: "Coach them gently toward more direct communication — in your organisation's culture, indirect signals are frequently missed and may disadvantage them.", score: 2 },
+      { text: 'Acknowledge the contradiction honestly: "I was working from information that has since changed. I should have had advance notice of this update and I did not. Here is what I know now."', score: 3 },
+      { text: 'Tell them you are looking into it and will get back to them within the day — do not communicate until you have a full picture.', score: 2 },
+      { text: 'Explain that the organisation updated its position and align yourself fully with the new communication — your earlier message is now superseded.', score: 1 },
+      { text: 'Escalate to your manager immediately and tell your team you are seeking clarification — do not say anything substantive until you know what happened.', score: 2 },
     ]
   },
   {
     id: 'CO10', dimension: 'communication',
-    scenario: 'You have just been given a significant personal development piece of feedback from your own manager — they believe you are not visible enough at senior levels and that this is limiting your progression. You disagree and believe the issue is structural, not behavioural. How do you respond?',
+    scenario: 'You have just delivered a town hall to your 40-person department. Afterwards, your most respected senior team member privately tells you that the town hall felt "rehearsed and distant" and that people left with more anxiety than they arrived with. You thought it went well. Your manager also thought it went well. What do you do with this feedback?',
     options: [
-      { text: "Engage with the feedback genuinely — even if you disagree, there is likely a kernel of truth. Explore specific examples with your manager before forming a conclusion.", score: 3 },
-      { text: "Share your alternative perspective respectfully — \"I hear that. I see it differently and here's why. Can we explore this together?\"", score: 3 },
-      { text: "Accept the feedback and take action — senior leader perception is a reality you have to manage regardless of whether it is structurally fair.", score: 2 },
-      { text: "Seek a second opinion from a trusted mentor before deciding how to respond — one person's view is not sufficient basis for a behavioural change.", score: 1 },
+      { text: 'Seek broader anonymous feedback from the team before deciding how to weight this input — one perspective, even a respected one, may not be representative.', score: 2 },
+      { text: 'Take it seriously — a trusted senior team member with direct access to how people are feeling is more reliable signal than your own assessment or your manager\'s.', score: 3 },
+      { text: 'Thank them for the feedback and reflect on it privately before deciding on any changes — avoid overreacting to a single data point.', score: 2 },
+      { text: 'Discuss it with your manager — they observed the same event and have more context on whether the concern is isolated or indicative.', score: 1 },
     ]
   },
 ]
@@ -570,29 +574,29 @@ export function scoreLeadership(answers) {
 export function getDimQualitative(dimId, pct) {
   const narratives = {
     conflict: {
-      high: 'You navigate conflict with skill and maturity — able to hold space for different perspectives while steering toward constructive resolution. Your instinct is to understand before acting, and to separate people from problems. This creates psychological safety and enables teams to work through tension without it becoming damaging.',
-      mid:  'You manage conflict reasonably in most situations, though you may sometimes avoid difficult conversations longer than is helpful, or default to structural solutions when a direct human conversation is what is needed. With greater consistency in early intervention you would be a stronger conflict navigator.',
-      low:  'Conflict resolution is an area for meaningful development. There is a tendency to either avoid or escalate, rather than working through tension with the people involved. Building structured skills in facilitation, active listening, and constructive challenge will strengthen your leadership considerably.'
+      high: 'You navigate conflict with sophistication and precision — you diagnose before intervening, distinguish symptoms from causes, and resist the pressure to resolve too quickly. Your instinct to understand the system behind a conflict rather than just the presenting issue is what separates effective conflict leadership from reactive management. You create the conditions in which people can disagree productively.',
+      mid:  'You handle conflict competently in most situations but may move to resolution before fully diagnosing the root cause, or apply consistent approaches where differentiation would serve better. Your next development edge is learning when to hold the tension in a conflict longer — not every conflict needs to be resolved immediately, and some need to be escalated before they can be resolved.',
+      low:  'Conflict situations present a meaningful development opportunity. There is a tendency to either avoid the discomfort of direct engagement or to escalate before attempting resolution at your level. Building the skills to stay in difficult conversations — to name what is happening, understand multiple perspectives, and facilitate resolution — will significantly strengthen your leadership effectiveness.'
     },
     delegation: {
-      high: 'You delegate with confidence and intention — matching responsibility to capability, providing appropriate scaffolding, and resisting the urge to over-control. Your team members grow under your leadership because you genuinely trust them with meaningful work. You also know when to step back in, and when not to.',
-      mid:  'You delegate in many situations but may retain control when stakes are high or when a team member\'s approach differs from your own. You are developing the confidence to let people find their own way to the right outcome — this is where your next growth in delegation effectiveness will come from.',
-      low:  'Delegation is an area requiring development. There is a pattern of retaining work that could be building team capability, or intervening before team members have had the chance to navigate challenges themselves. Building trust in your team and clarity about decision authority will unlock significant capacity.'
+      high: 'You delegate with strategic intent — you match responsibility to readiness, invest in building the capability needed before it is required, and resist the pull to retain work that others should own. Critically, you have learned that how you respond to imperfect execution determines whether delegation works long-term. Your team grows under your leadership because you genuinely extend trust.',
+      mid:  'You delegate regularly but the quality of your delegation varies. Under pressure or with high-stakes work, there is a tendency to retain control or to intervene before team members have had the chance to find their own way. The shift from good to great delegation is often about changing your internal relationship with risk — learning to tolerate imperfect execution as the cost of building a genuinely capable team.',
+      low:  'Delegation is a critical development area. There is a pattern of over-involvement in execution that limits both your strategic capacity and your team\'s growth. The underlying driver is often a well-intentioned desire for quality — but the impact is a team that waits for direction rather than developing judgment. Building structured delegation habits and tolerance for different approaches will be high-impact development work.'
     },
     motivation: {
-      high: 'You are attuned to what drives individuals and you use that knowledge to create energy, purpose, and commitment. You know that motivation is personal and your approach reflects that — you adapt to the person in front of you, not a formula. Your team members feel seen, challenged appropriately, and valued.',
-      mid:  'You motivate your team effectively in stable conditions but may rely on the same approaches across different individuals and contexts. Deepening your understanding of what drives each team member personally, and adapting your style accordingly, would strengthen your motivational impact considerably.',
-      low:  'Team motivation is an area for development. There may be a tendency to focus on task delivery over the human conditions that sustain performance. Understanding what energises each team member individually, and actively creating those conditions, will unlock engagement you are currently not fully accessing.'
+      high: 'You motivate with genuine attunement — you understand what drives each individual and you adapt accordingly rather than applying a single engagement model. You notice early signals of disengagement and intervene constructively. You are honest even when honesty is uncomfortable, and your team trusts you because of it. This psychological safety is what sustains motivation through difficult periods.',
+      mid:  'You create positive conditions for motivation in most circumstances but may apply consistent approaches where differentiation is needed, or avoid difficult motivational conversations that require honest and sometimes unwelcome input. Deepening your understanding of each team member\'s individual drivers — and being willing to have the harder conversations when engagement drops — will meaningfully increase your impact.',
+      low:  'Team motivation is a significant development priority. There may be a tendency to prioritise delivery metrics over the human conditions that sustain performance, or to avoid conversations that require honest feedback about career realities or performance concerns. Learning to see motivation as a strategic leadership responsibility — not just a soft skill — will unlock engagement you are currently not fully accessing.'
     },
     decision: {
-      high: 'You make decisions with clarity, courage, and accountability. You are comfortable acting on incomplete information when the situation demands it, and you take genuine ownership of outcomes — both when decisions work and when they do not. This decisiveness, combined with your willingness to course-correct, builds credibility.',
-      mid:  'You make sound decisions in familiar territory and are developing confidence in higher-stakes or more ambiguous situations. There is a tendency to over-seek consensus or to delay when acting with imperfect information would be appropriate. Calibrating your threshold for action will be key to your next level of leadership.',
-      low:  'Decision making under ambiguity is an area for development. There may be a preference for certainty before acting, or a tendency to defer decisions upward that are within your authority. Building a framework for structured decision making under uncertainty — and practising it — will strengthen this dimension significantly.'
+      high: 'You make decisions with a rare combination of analytical rigour and practical judgement. You know when to gather more data and when acting on imperfect information is the right call. You own your decisions — including when they are wrong — and you course-correct without defensiveness. This decisiveness combined with intellectual honesty builds the credibility that makes people want to follow your lead.',
+      mid:  'You make sound decisions in familiar territory but show variability under novel conditions, high ambiguity, or when decisions have political dimensions. There is sometimes a tendency to over-process, seek too much consensus, or defer when your own judgement is sufficient. Calibrating your confidence in your own analytical capability — and being willing to make the call and own it — is where your next level of decision-making effectiveness lies.',
+      low:  'Decision making under ambiguity and pressure is a meaningful development area. There may be a preference for certainty before acting, or a tendency to defer decisions to avoid the discomfort of being wrong. Building a structured approach to decision making under uncertainty — including knowing when you have enough information to act — and then practising owning the outcome will be foundational to your leadership growth.'
     },
     communication: {
-      high: 'You communicate with precision, empathy, and impact. You adapt your style to the audience and the context — direct when directness is needed, thoughtful when the situation calls for care. You listen actively and create the conditions in which honest dialogue can happen. Your presence in difficult conversations is a genuine leadership asset.',
-      mid:  'You communicate effectively in most contexts but may find certain communication challenges more difficult — delivering uncomfortable feedback, holding firm under pressure, or adapting to very different communication styles. Developing range and consistency across these harder conversations will significantly raise your communication effectiveness.',
-      low:  'Communication is an area requiring development. There may be a preference for avoiding difficult conversations, over-softening messages, or communicating in ways that create ambiguity rather than clarity. Developing a more direct and adaptive communication style — particularly in high-stakes contexts — will be a high-impact development priority.'
+      high: 'You communicate with precision and adaptability — you read your audience, calibrate your message, and choose your channel with intent. You deliver difficult messages without softening them into meaninglessness, and you create the conditions in which honest dialogue happens. Your ability to be direct without being blunt, and empathetic without being evasive, is a genuine leadership differentiator.',
+      mid:  'You communicate effectively in straightforward contexts but show less consistency when communication is difficult — delivering uncomfortable feedback, maintaining a clear position under pressure, or adapting to very different communication styles. Your next development edge is building range in the harder communication moments — the ones where the temptation is to soften, defer, or avoid.',
+      low:  'Communication effectiveness is a meaningful development priority. There may be a pattern of avoiding direct messages, framing feedback in ways that reduce its impact, or communicating in ways that leave important things unsaid. Developing a more deliberate and adaptive communication style — particularly in high-stakes or uncomfortable contexts — will be one of the highest-impact development investments you can make.'
     }
   }
   const n = narratives[dimId]
@@ -602,11 +606,11 @@ export function getDimQualitative(dimId, pct) {
 
 export function getOverallNarrative(fitLabel, leadershipStyle, pct) {
   if (fitLabel === 'Strong Fit') {
-    return 'This assessment indicates strong leadership capability across the evaluated dimensions. A ' + leadershipStyle.toLowerCase() + ' leadership orientation is evident — combined with sound judgement, genuine empathy, and the ability to hold complexity without defaulting to simple answers. The response patterns suggest a leader who is credible under pressure, trusted by their team, and capable of navigating the ambiguous, people-centred challenges that define effective people management.'
+    return 'This assessment indicates strong leadership capability across evaluated dimensions. A ' + leadershipStyle.toLowerCase() + ' leadership orientation comes through clearly — combined with the analytical rigour, contextual judgement, and interpersonal sophistication that characterises effective senior leadership. The response patterns suggest a leader who performs under complexity, owns outcomes, and invests genuinely in the people they lead.'
   } else if (fitLabel === 'Moderate Fit') {
-    return 'This assessment indicates solid leadership foundations with clear areas of strength and identifiable development priorities. A ' + leadershipStyle.toLowerCase() + ' orientation is a genuine asset, and the response patterns suggest good instincts in many leadership situations. Continued stretch, structured feedback, and deliberate practice in the development dimensions identified will accelerate the journey toward consistently high-impact leadership.'
+    return 'This assessment indicates solid leadership foundations with clear strengths and identifiable development priorities. A ' + leadershipStyle.toLowerCase() + ' orientation is a genuine asset, and the response patterns show good instincts across most leadership situations. The development priorities identified are specific and actionable — with the right investment and intentional practice, the path to consistently high-impact leadership is well within reach.'
   } else {
-    return 'This assessment suggests that leadership capability is at an earlier stage of development. There are genuine strengths to build on, and the instincts shown in several dimensions provide a real foundation. The development priorities identified are learnable — they respond well to coaching, structured experience, and reflective practice. With the right investment, meaningful growth in leadership effectiveness is achievable.'
+    return 'This assessment indicates that leadership capability is at an earlier stage of development. There are genuine strengths visible in several dimensions, and the instincts shown provide a real foundation to build on. The development priorities identified respond well to coaching, structured experience, and deliberate reflection. With the right investment and support, meaningful and measurable growth in leadership effectiveness is achievable.'
   }
 }
 
