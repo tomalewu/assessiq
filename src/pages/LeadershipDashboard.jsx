@@ -378,17 +378,23 @@ function LRoleCard({ role, candidates, onLink, onDelete, onArchive, onManageExpi
             </div>
           )}
 
-          {totalPages > 1 && (
-            <div style={{ padding:'12px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', borderTop:'1px solid var(--line)' }}>
-              <span style={{ fontSize:12, color:'var(--ink3)' }}>
-                Showing {(page-1)*PER_PAGE+1}–{Math.min(page*PER_PAGE,filtered.length)} of {filtered.length}
-              </span>
-              <div style={{ display:'flex', gap:6 }}>
+          <div style={{ padding:'10px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', borderTop:'1px solid var(--line)', flexWrap:'wrap', gap:8 }}>
+            <div style={{ display:'flex', gap:6 }}>
+              <button className="btn btn-s btn-sm" style={{ fontSize:11, background:'#f0fdf4', border:'1px solid #86efac', color:'#166534' }}
+                onClick={()=>exportLeadershipExcel(rc, role.title)}>📊 Excel</button>
+              <button className="btn btn-s btn-sm" style={{ fontSize:11, background:'#ede9fe', border:'1px solid #c4b5fd', color:'#5b21b6' }}
+                onClick={()=>setBulkPDFModal({candidates:rc, roleName:role.title})}>📄 Bulk PDF</button>
+            </div>
+            {totalPages > 1 && (
+              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                <span style={{ fontSize:12, color:'var(--ink3)' }}>
+                  Showing {(page-1)*PER_PAGE+1}–{Math.min(page*PER_PAGE,filtered.length)} of {filtered.length}
+                </span>
                 <button className="btn btn-g btn-sm" disabled={page===1} onClick={()=>setPage(p=>p-1)}>← Prev</button>
                 <button className="btn btn-g btn-sm" disabled={page===totalPages} onClick={()=>setPage(p=>p+1)}>Next →</button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </div>
