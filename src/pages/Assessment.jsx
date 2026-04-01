@@ -665,15 +665,37 @@ function Quiz({ candidate, questions, onDone, difficulty }) {
             )}
             {q.type === 'logic' ? (
               <>
-                <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>Which symbol completes the pattern?</h2>
-                <p style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 20, lineHeight: 1.6 }}>
-                  Study the 3×3 grid. Find the symbol that belongs in the <strong>bottom-right cell (?)</strong>.
-                </p>
-                <div className="agrid" style={{ maxWidth: 210 }}>
-                  {q.grid.flatMap((row, ri) => row.map((cell, ci) => (
-                    <div key={ri + '-' + ci} className={'acell' + (cell === '?' ? ' qm' : '')}>{cell}</div>
-                  )))}
-                </div>
+                {q.question ? (
+                  <>
+                    <h2 style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.55, marginBottom: 20 }}>{q.question}</h2>
+                  </>
+                ) : (
+                  <>
+                    <h2 style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>
+                      {q.grid && q.grid[0] && q.grid[0][0] && q.grid[0][0] !== '0'
+                        ? 'What belongs in the bottom-right cell?'
+                        : 'Which symbol completes the pattern?'}
+                    </h2>
+                    {q.grid && q.grid[0] && q.grid[0][0] !== '0' && (
+                      <>
+                        <p style={{ fontSize: 12, color: 'var(--ink3)', marginBottom: 20, lineHeight: 1.6 }}>
+                          {q.grid[0][0].match(/[0-9]/)
+                            ? 'Find the number that completes the pattern. Each row and column follows a mathematical rule.'
+                            : 'Study the 3x3 grid. Find the symbol that belongs in the bottom-right cell (?).'
+                          }
+                        </p>
+                        <div className="agrid" style={{ maxWidth: 210 }}>
+                          {q.grid.flatMap((row, ri) => row.map((cell, ci) => (
+                            <div key={ri + '-' + ci} className={'acell' + (cell === '?' ? ' qm' : '')}
+                              style={{ fontSize: q.grid[0][0].match(/[0-9]/) ? 15 : 22, fontWeight: q.grid[0][0].match(/[0-9]/) ? 700 : 400 }}>
+                              {cell}
+                            </div>
+                          )))}
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
               </>
             ) : (
               <>
@@ -686,7 +708,7 @@ function Quiz({ candidate, questions, onDone, difficulty }) {
               {q.options.map((opt, i) => (
                 <button key={i} className={'opt' + (sel === opt ? ' sel' : '')} onClick={() => !timedOut && setSel(opt)} disabled={timedOut}>
                   <span className="olabel">{['A','B','C','D'][i]}</span>
-                  <span style={{ fontFamily: q.type === 'logic' ? 'JetBrains Mono' : 'inherit', fontSize: q.type === 'logic' ? 22 : 13 }}>{opt}</span>
+                  <span style={{ fontFamily: (q.type === 'logic' && !q.question) ? 'JetBrains Mono' : 'inherit', fontSize: (q.type === 'logic' && !q.question && opt.length < 5) ? 22 : 13 }}>{opt}</span>
                 </button>
               ))}
             </div>
