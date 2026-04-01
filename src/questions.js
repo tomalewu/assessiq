@@ -174,34 +174,43 @@ async function geminiCall(apiKey, prompt) {
 }
 
 async function generateWithGemini(apiKey, difficulty) {
-  const diff = difficulty === 'hard' ? 'HARD' : difficulty === 'easy' ? 'EASY' : 'MEDIUM'
+  const diff = difficulty === 'hard'
+    ? 'HARD difficulty. Logic: complex Latin square patterns. Numerical: compound interest, work-rate with 3 variables.'
+    : difficulty === 'easy' ? 'EASY difficulty. Simple patterns and basic arithmetic.'
+    : 'MEDIUM difficulty. Moderate 2-step problems.'
 
-  // Ask for only 2 questions per call to stay well under token limit
-  const lp = (n) => 'JSON array of exactly 2 logic grid questions, ' + diff + ' difficulty, symbols ▲●■◆★○□△, last cell ?, no explanation field: [{"id":"L' + n + '","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲"}]'
-  const np = (n) => 'JSON array of exactly 2 numerical questions, ' + diff + ' difficulty, no explanation field: [{"id":"N' + n + '","type":"numerical","question":"text","tableHtml":null,"options":["A","B","C","D"],"answer":"A"}]'
+  // One question per call — smallest possible response, no truncation possible
+  const lp = (n) => 'Return ONLY a single JSON object (no array) for one logic grid question. ' + diff + ' Use symbols from: ▲ ● ■ ◆ ★ ○ □ △. Format: {"id":"L' + n + '","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲"}'
+  const np = (n) => 'Return ONLY a single JSON object (no array) for one numerical reasoning question. ' + diff + ' Format: {"id":"N' + n + '","type":"numerical","question":"If 40% of a number is 120 what is the number?","tableHtml":null,"options":["250","300","350","400"],"answer":"300"}'
 
-  // 5 logic calls + 5 numerical calls = 10+10 questions
-  const results = await Promise.all([
-    geminiCall(apiKey, lp(1)),
-    geminiCall(apiKey, lp(3)),
-    geminiCall(apiKey, lp(5)),
-    geminiCall(apiKey, lp(7)),
-    geminiCall(apiKey, lp(9)),
-    geminiCall(apiKey, np(1)),
-    geminiCall(apiKey, np(3)),
-    geminiCall(apiKey, np(5)),
-    geminiCall(apiKey, np(7)),
-    geminiCall(apiKey, np(9)),
+  const toObj = (text) => {
+    const s = text.indexOf('{'), e = text.lastIndexOf('}')
+    if (s === -1 || e === -1) throw new Error('No JSON object in response')
+    const obj = JSON.parse(text.slice(s, e + 1))
+    if (!obj.type || !obj.options || !obj.answer) throw new Error('Invalid question object')
+    obj.exp = obj.exp || 'Correct answer: ' + obj.answer
+    return obj
+  }
+
+  // 20 parallel calls — one per question — each response is tiny
+  const calls = await Promise.all([
+    geminiCall(apiKey, lp(1)), geminiCall(apiKey, lp(2)), geminiCall(apiKey, lp(3)),
+    geminiCall(apiKey, lp(4)), geminiCall(apiKey, lp(5)), geminiCall(apiKey, lp(6)),
+    geminiCall(apiKey, lp(7)), geminiCall(apiKey, lp(8)), geminiCall(apiKey, lp(9)),
+    geminiCall(apiKey, lp(10)),
+    geminiCall(apiKey, np(1)), geminiCall(apiKey, np(2)), geminiCall(apiKey, np(3)),
+    geminiCall(apiKey, np(4)), geminiCall(apiKey, np(5)), geminiCall(apiKey, np(6)),
+    geminiCall(apiKey, np(7)), geminiCall(apiKey, np(8)), geminiCall(apiKey, np(9)),
+    geminiCall(apiKey, np(10))
   ])
 
-  const logic = results.slice(0,5).flat().filter(q => q.type === 'logic').slice(0,10)
-  const num   = results.slice(5,10).flat().filter(q => q.type === 'numerical').slice(0,10)
-  if (logic.length < 5) throw new Error('Not enough logic: ' + logic.length)
-  if (num.length < 5)   throw new Error('Not enough numerical: ' + num.length)
-  // Add default exp
-  const withExp = [...logic, ...num].map(q => ({...q, exp: q.exp || 'Answer: ' + q.answer}))
-  console.log('Gemini generated:', logic.length, 'logic +', num.length, 'numerical')
-  return JSON.stringify(withExp)
+  const logic = calls.slice(0,10).map((t,i) => { try { return toObj(t) } catch(e) { console.warn('L'+(i+1)+' failed:', e.message); return null } }).filter(Boolean)
+  const num   = calls.slice(10,20).map((t,i) => { try { return toObj(t) } catch(e) { console.warn('N'+(i+1)+' failed:', e.message); return null } }).filter(Boolean)
+
+  if (logic.length < 5) throw new Error('Not enough logic questions: ' + logic.length)
+  if (num.length < 5)   throw new Error('Not enough numerical questions: ' + num.length)
+  console.log('Gemini generated:', logic.length, 'logic +', num.length, 'numerical questions')
+  return JSON.stringify([...logic.slice(0,10), ...num.slice(0,10)])
 }
 
 async function generateWithAnthropic(apiKey, difficulty) {
