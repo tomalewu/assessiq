@@ -159,18 +159,16 @@ async function geminiCall(apiKey, prompt) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.4, maxOutputTokens: 1024, responseMimeType: 'application/json' }
+      generationConfig: { temperature: 0.2, maxOutputTokens: 300, responseMimeType: 'application/json' }
     })
   })
   if (!res.ok) { const err = await res.json(); throw new Error(err.error?.message || 'HTTP ' + res.status) }
   const data = await res.json()
-  const text  = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
   const finish = data.candidates?.[0]?.finishReason || ''
-  if (finish === 'MAX_TOKENS') throw new Error('MAX_TOKENS — response cut off')
+  const text   = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  if (finish === 'MAX_TOKENS') throw new Error('MAX_TOKENS')
   if (!text) throw new Error('Empty response')
-  const s = text.indexOf('['), e = text.lastIndexOf(']')
-  if (s === -1 || e === -1) throw new Error('No JSON array found')
-  return JSON.parse(text.slice(s, e + 1))
+  return text
 }
 
 async function generateWithGemini(apiKey, difficulty) {
@@ -180,8 +178,9 @@ async function generateWithGemini(apiKey, difficulty) {
     : 'MEDIUM difficulty. Moderate 2-step problems.'
 
   // One question per call — smallest possible response, no truncation possible
-  const lp = (n) => 'Return ONLY a single JSON object (no array) for one logic grid question. ' + diff + ' Use symbols from: ▲ ● ■ ◆ ★ ○ □ △. Format: {"id":"L' + n + '","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲"}'
-  const np = (n) => 'Return ONLY a single JSON object (no array) for one numerical reasoning question. ' + diff + ' Format: {"id":"N' + n + '","type":"numerical","question":"If 40% of a number is 120 what is the number?","tableHtml":null,"options":["250","300","350","400"],"answer":"300"}'
+  const sym = ['▲','●','■','◆','★','○','□','△']
+  const lp = (n) => 'One 3x3 logic grid question JSON. ' + diff + '. Symbols:▲●■◆★○□△. Output ONLY JSON: {"id":"L' + n + '","type":"logic","grid":[["▲","●","■"],["◆","★","○"],["□","△","?"]],"options":["▲","■","◆","○"],"answer":"▲"}'
+  const np = (n) => 'One numerical question JSON. ' + diff + '. Output ONLY JSON: {"id":"N' + n + '","type":"numerical","question":"Q?","tableHtml":null,"options":["A","B","C","D"],"answer":"A"}'
 
   const toObj = (text) => {
     const s = text.indexOf('{'), e = text.lastIndexOf('}')
