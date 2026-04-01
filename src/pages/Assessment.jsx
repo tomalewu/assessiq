@@ -100,6 +100,7 @@ function Welcome({ role, onBegin, onAlreadyTaken, onAgeRejected }) {
     try {
       const all = await dbAllCandidates()
       const existing = all.find(c =>
+        c.email && form.email &&
         c.email.toLowerCase() === form.email.toLowerCase() &&
         c.roleId === role.id &&
         c.status === 'completed'
