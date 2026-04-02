@@ -23,8 +23,8 @@ export const SJT_QUESTIONS = [
     id: 'C1', dimension: 'conflict',
     scenario: 'Two senior engineers — both with 8+ years tenure — have escalated a technical disagreement to you. Engineer A wants to refactor the legacy codebase (3-month effort, lower long-term risk). Engineer B wants to ship a workaround now (2-week effort, higher long-term debt). The client delivery deadline is in 6 weeks. Both engineers have credible arguments and your CTO is watching. What do you do?',
     options: [
-      { text: 'Side with Engineer B — the 6-week deadline is the primary constraint and the workaround keeps the client commitment intact.', score: 2 },
-      { text: 'Side with Engineer A — short-term workarounds compound into long-term failure and technical leadership requires protecting against that.', score: 1 },
+      { text: 'Side with Engineer B — the 6-week deadline is the primary constraint and the workaround keeps the client commitment intact.', score: 1 },
+      { text: 'Side with Engineer A — short-term workarounds compound into long-term failure and technical leadership requires protecting against that.', score: 0 },
       { text: 'Escalate to the CTO — a decision with this level of strategic and technical complexity should not rest with you alone.', score: 0 },
       { text: 'Facilitate a structured session with both engineers to define the minimum viable refactor that reduces long-term debt without missing the deadline.', score: 3 },
     ]
@@ -44,9 +44,9 @@ export const SJT_QUESTIONS = [
     scenario: 'Two team members have a personal conflict that is now affecting sprint velocity — down 18% over 3 weeks. One is a junior developer (6 months in, high potential). The other is your tech lead (critical to the project, 4 years tenure). The tech lead has privately told you the junior is "not cut out for this team." The junior has privately told you the tech lead is "creating a hostile environment." You have 4 weeks until your most important release. What do you address first?',
     options: [
       { text: 'Address the tech lead first — senior team members set the cultural standard and their behaviour has disproportionate impact.', score: 3 },
-      { text: 'Bring both together immediately — transparency and direct confrontation of the issue is the fastest path to resolution.', score: 1 },
-      { text: 'Focus on the junior developer first — they are most vulnerable and most likely to leave if the environment does not improve.', score: 1 },
-      { text: 'Restructure the sprint so both individuals have minimal overlap for the next 4 weeks — protect the release first, resolve the relationship second.', score: 2 },
+      { text: 'Bring both together immediately — transparency and direct confrontation of the issue is the fastest path to resolution.', score: 0 },
+      { text: 'Focus on the junior developer first — they are most vulnerable and most likely to leave if the environment does not improve.', score: 0 },
+      { text: 'Restructure the sprint so both individuals have minimal overlap for the next 4 weeks — protect the release first, resolve the relationship second.', score: 1 },
     ]
   },
   {
@@ -63,9 +63,9 @@ export const SJT_QUESTIONS = [
     id: 'C5', dimension: 'conflict',
     scenario: 'Your organisation has just announced a restructure. Two of your team members applied for the same new role. You were on the selection panel and you know who got it, but the announcement has not been made yet. The unsuccessful candidate — your strongest individual contributor — approaches you visibly anxious and asks directly: "Did I get the role?" The announcement is scheduled for tomorrow morning. What do you say?',
     options: [
-      { text: 'Confirm they did not get it — they asked directly and deserve honesty. Soften it by immediately pivoting to their development path.', score: 1 },
+      { text: 'Confirm they did not get it — they asked directly and deserve honesty. Soften it by immediately pivoting to their development path.', score: 0 },
       { text: 'Tell them you cannot share the outcome yet but that the announcement is coming very soon — and that you want to speak with them after.', score: 3 },
-      { text: 'Redirect: "I want to make sure you hear this in the right way — let\'s talk properly tomorrow after the announcement."', score: 2 },
+      { text: 'Redirect: "I want to make sure you hear this in the right way — let\'s talk properly tomorrow after the announcement."', score: 1 },
       { text: 'Tell them the decision was very close and leave it at that — technically not lying and protects the process.', score: 0 },
     ]
   },
@@ -83,10 +83,10 @@ export const SJT_QUESTIONS = [
     id: 'C7', dimension: 'conflict',
     scenario: 'Two department heads who both report to you have been in conflict for 6 months over resource allocation. You have mediated three times with temporary resolutions each time. The conflict is now escalating again and affecting cross-functional delivery. Your own manager has noticed and asked you to "sort it out." A peer suggests you simply split the shared resource permanently. What is your approach this time?',
     options: [
-      { text: 'Implement the permanent resource split immediately — you have mediated three times and the temporary resolutions are not working.', score: 2 },
+      { text: 'Implement the permanent resource split immediately — you have mediated three times and the temporary resolutions are not working.', score: 1 },
       { text: 'Diagnose why the previous resolutions failed before implementing anything — you are solving a symptom, not the cause.', score: 3 },
-      { text: 'Escalate to your own manager with a recommendation — three failed mediations means this is now above your resolution authority.', score: 1 },
-      { text: 'Set a final deadline for both department heads to agree a solution themselves — make clear that the next step is a unilateral decision by you.', score: 2 },
+      { text: 'Escalate to your own manager with a recommendation — three failed mediations means this is now above your resolution authority.', score: 0 },
+      { text: 'Set a final deadline for both department heads to agree a solution themselves — make clear that the next step is a unilateral decision by you.', score: 1 },
     ]
   },
   {
@@ -103,10 +103,10 @@ export const SJT_QUESTIONS = [
     id: 'C9', dimension: 'conflict',
     scenario: 'Your highest-billed client has requested that a specific team member be removed from their account, citing "communication style differences." The team member is technically excellent, has done nothing wrong by your assessment, and the removal would send a damaging signal to the rest of your team. The client represents 22% of your team\'s annual revenue. What is your position?',
     options: [
-      { text: 'Decline the request and explain why — client preferences cannot override your team members\' professional standing without cause.', score: 1 },
-      { text: 'Agree to the request — 22% revenue concentration is too high a risk to defend a preference issue.', score: 1 },
+      { text: 'Decline the request and explain why — client preferences cannot override your team members\' professional standing without cause.', score: 0 },
+      { text: 'Agree to the request — 22% revenue concentration is too high a risk to defend a preference issue.', score: 0 },
       { text: 'Request a meeting with the client to understand the specific concerns before making any decision — the issue may be resolvable without removal.', score: 3 },
-      { text: 'Agree to the request but reframe it as a development opportunity for the team member — new account, new challenge.', score: 2 },
+      { text: 'Agree to the request but reframe it as a development opportunity for the team member — new account, new challenge.', score: 1 },
     ]
   },
   {
@@ -126,10 +126,10 @@ export const SJT_QUESTIONS = [
     id: 'D1', dimension: 'delegation',
     scenario: 'You have a critical deliverable due Friday. Your most capable team member could complete it in 2 days but is already at 90% capacity. A less experienced team member is at 60% capacity and could complete it in 4 days — tight but feasible. A third option: you complete it yourself in 1.5 days. It is Monday morning. What do you do?',
     options: [
-      { text: 'Complete it yourself — the deadline risk is too high to delegate under these conditions and your time is justified here.', score: 1 },
+      { text: 'Complete it yourself — the deadline risk is too high to delegate under these conditions and your time is justified here.', score: 0 },
       { text: 'Assign it to the capable team member — manage their capacity by deprioritising something else on their plate.', score: 3 },
-      { text: 'Assign it to the less experienced team member — the development opportunity is valuable and the timeline is feasible if you provide close support.', score: 2 },
-      { text: 'Split the work — you handle the structure and difficult sections, the less experienced team member handles the execution components.', score: 2 },
+      { text: 'Assign it to the less experienced team member — the development opportunity is valuable and the timeline is feasible if you provide close support.', score: 1 },
+      { text: 'Split the work — you handle the structure and difficult sections, the less experienced team member handles the execution components.', score: 1 },
     ]
   },
   {
@@ -146,10 +146,10 @@ export const SJT_QUESTIONS = [
     id: 'D3', dimension: 'delegation',
     scenario: 'A team member consistently delivers excellent work but always exceeds the agreed timeline by 20-30%. Their quality is the highest on the team. Your stakeholders have started to notice and comment on the delays. The team member says they need the extra time to meet their own quality bar. What is the real problem you need to solve?',
     options: [
-      { text: 'A quality calibration problem — help them understand that 85% quality on time is more valuable than 100% quality late.', score: 2 },
+      { text: 'A quality calibration problem — help them understand that 85% quality on time is more valuable than 100% quality late.', score: 1 },
       { text: 'A workload and estimation problem — work with them to build more realistic timelines upfront rather than adjusting quality expectations.', score: 3 },
-      { text: 'A stakeholder management problem — manage expectations with stakeholders better so the delays are pre-communicated and absorbed.', score: 1 },
-      { text: 'A delegation fit problem — this person should be working on fewer, higher-stakes projects where the extra time investment is justified.', score: 2 },
+      { text: 'A stakeholder management problem — manage expectations with stakeholders better so the delays are pre-communicated and absorbed.', score: 0 },
+      { text: 'A delegation fit problem — this person should be working on fewer, higher-stakes projects where the extra time investment is justified.', score: 1 },
     ]
   },
   {
@@ -167,9 +167,9 @@ export const SJT_QUESTIONS = [
     scenario: 'You delegated ownership of a team process to a team member 3 months ago. The process has measurably improved — errors down 40%, speed up 25%. The team member has now started making changes to adjacent processes without asking you. Some changes are good. One created a downstream problem for another team. What do you do?',
     options: [
       { text: 'Praise the initiative, address the specific downstream issue, and clarify the boundaries of their authority going forward.', score: 3 },
-      { text: 'Withdraw some of the autonomy — unsanctioned changes to adjacent processes show they are not ready for expanded scope.', score: 1 },
-      { text: 'Do nothing yet — the net impact is positive and clarifying boundaries now may stifle their initiative.', score: 1 },
-      { text: 'Use it as a team discussion to collectively define the principles for when changes require sign-off versus can be made autonomously.', score: 2 },
+      { text: 'Withdraw some of the autonomy — unsanctioned changes to adjacent processes show they are not ready for expanded scope.', score: 0 },
+      { text: 'Do nothing yet — the net impact is positive and clarifying boundaries now may stifle their initiative.', score: 0 },
+      { text: 'Use it as a team discussion to collectively define the principles for when changes require sign-off versus can be made autonomously.', score: 1 },
     ]
   },
   {
@@ -187,9 +187,9 @@ export const SJT_QUESTIONS = [
     scenario: 'A high-potential team member asks for a significant stretch assignment — leading a cross-functional project that is one level above their current grade. You believe they are 70% ready. The project has moderate stakes and a 3-month timeline. Your peer manager says the person is not ready and would be "set up to fail." What do you decide?',
     options: [
       { text: 'Give them the assignment with structured support — 70% ready is sufficient for a stretch role and your peer\'s risk aversion should not override your assessment.', score: 3 },
-      { text: 'Decline for now — your peer\'s perspective adds evidence that the readiness gap may be larger than you assessed.', score: 1 },
-      { text: 'Give them the assignment but position your peer as a shadow advisor — bring them into the support structure rather than leaving them as an opposing voice.', score: 2 },
-      { text: 'Create a smaller proof-of-concept project first — let the team member demonstrate readiness on a lower-stakes assignment before the cross-functional lead role.', score: 2 },
+      { text: 'Decline for now — your peer\'s perspective adds evidence that the readiness gap may be larger than you assessed.', score: 0 },
+      { text: 'Give them the assignment but position your peer as a shadow advisor — bring them into the support structure rather than leaving them as an opposing voice.', score: 1 },
+      { text: 'Create a smaller proof-of-concept project first — let the team member demonstrate readiness on a lower-stakes assignment before the cross-functional lead role.', score: 1 },
     ]
   },
   {
@@ -206,10 +206,10 @@ export const SJT_QUESTIONS = [
     id: 'D9', dimension: 'delegation',
     scenario: 'A team member returns a piece of delegated work and tells you they cannot complete it — it is outside their skill set and they should have flagged it earlier but felt pressured not to. You have 48 hours until the deadline. The team member is visibly distressed. What is your immediate priority?',
     options: [
-      { text: 'Solve the deadline problem first — identify who can complete the work in 48 hours and reassign immediately.', score: 2 },
-      { text: 'Address the team member\'s distress first — a conversation that makes them feel safe will prevent this recurring more than any other action.', score: 2 },
+      { text: 'Solve the deadline problem first — identify who can complete the work in 48 hours and reassign immediately.', score: 1 },
+      { text: 'Address the team member\'s distress first — a conversation that makes them feel safe will prevent this recurring more than any other action.', score: 1 },
       { text: 'Do both simultaneously — brief a replacement on the task while having a quick but genuine check-in with the distressed team member.', score: 3 },
-      { text: 'Escalate the deadline to the stakeholder immediately — buy time before solving the resourcing problem.', score: 1 },
+      { text: 'Escalate the deadline to the stakeholder immediately — buy time before solving the resourcing problem.', score: 0 },
     ]
   },
   {
@@ -229,8 +229,8 @@ export const SJT_QUESTIONS = [
     id: 'M1', dimension: 'motivation',
     scenario: 'Your team has just delivered a project 2 weeks early and 8% under budget. The client gave exceptional feedback. Senior leadership sent a company-wide congratulations email. Two days later, your top contributor privately tells you they feel invisible — they did 40% of the work but the recognition email did not mention anyone by name. How do you respond?',
     options: [
-      { text: 'Acknowledge their contribution directly and specifically in your next team meeting — name the work and its impact publicly.', score: 2 },
-      { text: 'Escalate to the person who sent the company-wide email and ask them to send a follow-up that acknowledges individual contributors.', score: 1 },
+      { text: 'Acknowledge their contribution directly and specifically in your next team meeting — name the work and its impact publicly.', score: 1 },
+      { text: 'Escalate to the person who sent the company-wide email and ask them to send a follow-up that acknowledges individual contributors.', score: 0 },
       { text: 'Have a private conversation that validates their specific contribution and asks how they prefer to be recognised in future — then act on it.', score: 3 },
       { text: 'Frame it as a team achievement — great outcomes belong to teams and it is important they internalise that.', score: 0 },
     ]
@@ -250,9 +250,9 @@ export const SJT_QUESTIONS = [
     scenario: 'Your most ambitious team member has told you they want to be a director within 18 months. Based on your honest assessment, they are 3-4 years away. They are performing well but lack the political acumen, executive presence, and cross-functional credibility required at director level. They are also your best individual contributor. How do you approach the next career conversation?',
     options: [
       { text: 'Be honest about the 3-4 year realistic timeline — a false 18-month expectation will damage trust more than the truth.', score: 3 },
-      { text: 'Focus the conversation on what they need to develop rather than the timeline — define the gap without specifying how long it will take.', score: 2 },
-      { text: 'Support the 18-month aspiration and create a stretch plan — ambitious timelines with the right support sometimes work, and they are your best contributor.', score: 1 },
-      { text: 'Consult with your HR partner before the conversation — a director promotion timeline involves stakeholders beyond you.', score: 1 },
+      { text: 'Focus the conversation on what they need to develop rather than the timeline — define the gap without specifying how long it will take.', score: 1 },
+      { text: 'Support the 18-month aspiration and create a stretch plan — ambitious timelines with the right support sometimes work, and they are your best contributor.', score: 0 },
+      { text: 'Consult with your HR partner before the conversation — a director promotion timeline involves stakeholders beyond you.', score: 0 },
     ]
   },
   {
@@ -269,10 +269,10 @@ export const SJT_QUESTIONS = [
     id: 'M5', dimension: 'motivation',
     scenario: 'You inherited a team 4 months ago. The previous manager was described as "inspiring but chaotic." The team loved the energy but missed deadlines regularly. You have introduced structure and delivery has improved — on-time delivery up from 58% to 89%. But the last two team surveys show satisfaction dropped from 81% to 63%. Three team members have told you informally they "miss the old vibe." What do you do?',
     options: [
-      { text: 'Hold the course — 89% on-time delivery is the right outcome and satisfaction will recover as the team adapts to a high-performing structure.', score: 1 },
+      { text: 'Hold the course — 89% on-time delivery is the right outcome and satisfaction will recover as the team adapts to a high-performing structure.', score: 0 },
       { text: 'Explore specifically what "vibe" means to the team — the drop may signal something addressable that is separate from structure.', score: 3 },
-      { text: 'Introduce structured social and creative elements into team time — performance and culture are not mutually exclusive.', score: 2 },
-      { text: 'Acknowledge the change directly in a team session — name that the shift from the previous manager\'s style has been significant and invite dialogue.', score: 2 },
+      { text: 'Introduce structured social and creative elements into team time — performance and culture are not mutually exclusive.', score: 1 },
+      { text: 'Acknowledge the change directly in a team session — name that the shift from the previous manager\'s style has been significant and invite dialogue.', score: 1 },
     ]
   },
   {
@@ -290,9 +290,9 @@ export const SJT_QUESTIONS = [
     scenario: 'Your organisation has introduced a forced ranking system. You must designate 10% of your team as "below expectations" regardless of their actual performance. Your entire team is performing well — no one genuinely belongs in that category. The policy is non-negotiable. Two team members are marginally lower than the rest. How do you handle the forced ranking conversation with the two designated as "below expectations"?',
     options: [
       { text: 'Be completely transparent — tell them the ranking is a result of the forced distribution system, not a genuine reflection of their performance.', score: 3 },
-      { text: 'Use the conversation to set higher performance targets — even high-performing teams have development areas to address.', score: 1 },
-      { text: 'Soften the language in the conversation and focus on development — protect their motivation while technically fulfilling the policy requirement.', score: 2 },
-      { text: 'Escalate to HR before the conversations — a system that requires you to misrepresent performance has ethical implications you should not navigate alone.', score: 2 },
+      { text: 'Use the conversation to set higher performance targets — even high-performing teams have development areas to address.', score: 0 },
+      { text: 'Soften the language in the conversation and focus on development — protect their motivation while technically fulfilling the policy requirement.', score: 1 },
+      { text: 'Escalate to HR before the conversations — a system that requires you to misrepresent performance has ethical implications you should not navigate alone.', score: 1 },
     ]
   },
   {
@@ -309,10 +309,10 @@ export const SJT_QUESTIONS = [
     id: 'M9', dimension: 'motivation',
     scenario: 'Two of your best team members have been headhunted by the same competitor. One has told you. The other has not but you have heard through a third party. Neither has resigned yet. The competitor is offering 30% salary increases. You cannot match the salary. What do you do with the information you have?',
     options: [
-      { text: 'Speak to the one who told you — acknowledge their transparency, be honest about what you can and cannot offer, and explore what would make them stay.', score: 2 },
+      { text: 'Speak to the one who told you — acknowledge their transparency, be honest about what you can and cannot offer, and explore what would make them stay.', score: 1 },
       { text: 'Speak to both — address the person who told you formally and the other informally, making clear you want to understand their thinking.', score: 3 },
-      { text: 'Do nothing until resignations are submitted — acting on unconfirmed information about the second person risks damaging trust.', score: 1 },
-      { text: 'Use the situation to make a case to leadership for a market salary review — the individual cases are symptoms of a structural problem.', score: 2 },
+      { text: 'Do nothing until resignations are submitted — acting on unconfirmed information about the second person risks damaging trust.', score: 0 },
+      { text: 'Use the situation to make a case to leadership for a market salary review — the individual cases are symptoms of a structural problem.', score: 1 },
     ]
   },
   {
@@ -332,9 +332,9 @@ export const SJT_QUESTIONS = [
     id: 'DE1', dimension: 'decision',
     scenario: 'You have $200,000 discretionary budget for Q4. Option A: invest in an automation tool that saves 2.5 hours per person per week across 15 people (projected ROI: 14 months). Option B: bring in 2 contractors for 3 months to clear a backlog worth an estimated $180,000 in delayed revenue. Option C: invest in team training that your team has been requesting for 18 months. You must commit by Friday. What do you choose?',
     options: [
-      { text: 'Option B — the $180,000 delayed revenue recovery has the clearest and most immediate financial return.', score: 2 },
-      { text: 'Option A — long-term efficiency gains compound in value and 14-month ROI is strong for infrastructure investment.', score: 2 },
-      { text: 'Option C — 18 months of requesting signals this is a significant retention and engagement risk that financial metrics do not capture.', score: 1 },
+      { text: 'Option B — the $180,000 delayed revenue recovery has the clearest and most immediate financial return.', score: 1 },
+      { text: 'Option A — long-term efficiency gains compound in value and 14-month ROI is strong for infrastructure investment.', score: 1 },
+      { text: 'Option C — 18 months of requesting signals this is a significant retention and engagement risk that financial metrics do not capture.', score: 0 },
       { text: 'Split B and C — clear the backlog (highest immediate return) and make a partial training investment (highest retention signal) rather than an all-or-nothing choice.', score: 3 },
     ]
   },
@@ -354,8 +354,8 @@ export const SJT_QUESTIONS = [
     options: [
       { text: 'Recommend stopping the initiative — sunk costs should not drive future investment and break-even in a smaller market is not strategic.', score: 3 },
       { text: 'Recommend completing it — stopping now wastes the $1.2M already invested and break-even still returns the remaining $800,000.', score: 0 },
-      { text: 'Recommend a 60-day pivot assessment — explore whether the initiative can be redirected toward a different market application before committing to stop or continue.', score: 2 },
-      { text: 'Bring in an external advisor to validate the new market data before making a recommendation — your objectivity is compromised as the initiative champion.', score: 2 },
+      { text: 'Recommend a 60-day pivot assessment — explore whether the initiative can be redirected toward a different market application before committing to stop or continue.', score: 1 },
+      { text: 'Bring in an external advisor to validate the new market data before making a recommendation — your objectivity is compromised as the initiative champion.', score: 1 },
     ]
   },
   {
@@ -374,8 +374,8 @@ export const SJT_QUESTIONS = [
     options: [
       { text: 'Wait until Monday and involve legal before taking any action — acting without legal advice on a regulatory matter creates more risk.', score: 0 },
       { text: 'Contact your legal team via emergency channels tonight — regulatory errors have time-sensitive remediation windows that cannot wait until Monday.', score: 3 },
-      { text: 'Contact the regulator directly to notify them of the error — proactive disclosure always reduces regulatory risk regardless of legal involvement.', score: 1 },
-      { text: 'Document everything thoroughly tonight and prepare a full correction package so you are ready to act first thing Monday with legal support.', score: 2 },
+      { text: 'Contact the regulator directly to notify them of the error — proactive disclosure always reduces regulatory risk regardless of legal involvement.', score: 0 },
+      { text: 'Document everything thoroughly tonight and prepare a full correction package so you are ready to act first thing Monday with legal support.', score: 1 },
     ]
   },
   {
@@ -392,10 +392,10 @@ export const SJT_QUESTIONS = [
     id: 'DE7', dimension: 'decision',
     scenario: 'Your team\'s data shows that Channel A (your core channel, 5 years of investment) is declining at 8% per year. Channel B (emerging, 18 months of data) is growing at 34% per year but is currently 12% of Channel A\'s volume. Migrating fully to Channel B would take 18 months and $600,000. Staying with Channel A maintains current revenue for approximately 4 more years before decline becomes critical. What do you recommend to leadership?',
     options: [
-      { text: 'Begin migration to Channel B now — 34% growth versus 8% decline makes the long-term trajectory clear and waiting makes migration harder.', score: 2 },
+      { text: 'Begin migration to Channel B now — 34% growth versus 8% decline makes the long-term trajectory clear and waiting makes migration harder.', score: 1 },
       { text: 'Invest in both — use Channel A revenue to fund Channel B growth for 12 months before committing to full migration.', score: 3 },
-      { text: 'Wait 12 more months of Channel B data before recommending migration — 18 months of growth data is insufficient to commit $600,000.', score: 2 },
-      { text: 'Commission an independent market analysis — a decision of this scale requires external validation of your internal data.', score: 1 },
+      { text: 'Wait 12 more months of Channel B data before recommending migration — 18 months of growth data is insufficient to commit $600,000.', score: 1 },
+      { text: 'Commission an independent market analysis — a decision of this scale requires external validation of your internal data.', score: 0 },
     ]
   },
   {
@@ -412,10 +412,10 @@ export const SJT_QUESTIONS = [
     id: 'DE9', dimension: 'decision',
     scenario: 'You have two team members who could be promoted. You have budget for one promotion this cycle. Team member A has been waiting 2 years and is close to leaving — promotion would almost certainly retain them. Team member B has been waiting 18 months but is less likely to leave. By objective performance metrics, they are almost equal — B scores marginally higher on output quality, A scores higher on leadership behaviours. Who do you promote?',
     options: [
-      { text: 'Promote A — retention risk is a legitimate factor in promotion decisions and losing A would cost more than the promotion.', score: 2 },
-      { text: 'Promote B — promotions must be based on performance merit. Using retention risk as a deciding factor creates perverse incentives.', score: 2 },
+      { text: 'Promote A — retention risk is a legitimate factor in promotion decisions and losing A would cost more than the promotion.', score: 1 },
+      { text: 'Promote B — promotions must be based on performance merit. Using retention risk as a deciding factor creates perverse incentives.', score: 1 },
       { text: 'Promote A — leadership behaviours are more predictive of senior-level success than output quality at the point of promotion.', score: 3 },
-      { text: 'Delay both and make a stronger case for two promotions next cycle — a forced choice between two near-equal candidates is a false constraint.', score: 1 },
+      { text: 'Delay both and make a stronger case for two promotions next cycle — a forced choice between two near-equal candidates is a false constraint.', score: 0 },
     ]
   },
   {
@@ -436,9 +436,9 @@ export const SJT_QUESTIONS = [
     scenario: 'You have prepared a 20-slide strategy deck for a board presentation. At 8am the day of the presentation, your CEO tells you the board wants "10 minutes, not 40, and just the headline and the ask." You have been preparing the full deck for 3 weeks. It is now 9am and the presentation is at 2pm. What do you do?',
     options: [
       { text: 'Build the 10-minute version from scratch — repurposing 20 slides into a tight 10-minute narrative is almost always worse than starting clean.', score: 3 },
-      { text: 'Cut the deck to the 5 most important slides — reduce rather than rebuild to protect the structure you have already stress-tested.', score: 2 },
+      { text: 'Cut the deck to the 5 most important slides — reduce rather than rebuild to protect the structure you have already stress-tested.', score: 1 },
       { text: 'Present the full deck but fast — you cannot adequately compress 3 weeks of thinking into 5 hours and the board can interrupt if needed.', score: 0 },
-      { text: 'Ask the CEO for 15 minutes — 10 minutes for a strategy presentation is unrealistic and a brief negotiation is better than a bad presentation.', score: 2 },
+      { text: 'Ask the CEO for 15 minutes — 10 minutes for a strategy presentation is unrealistic and a brief negotiation is better than a bad presentation.', score: 1 },
     ]
   },
   {
@@ -457,8 +457,8 @@ export const SJT_QUESTIONS = [
     options: [
       { text: 'Assume silence is broad agreement — only 3 objected out of 7 and one objection was strong enough to represent multiple views if shared.', score: 0 },
       { text: 'Treat silence as ambiguous and follow up individually with the four who did not respond — silent non-objection is not the same as endorsement.', score: 3 },
-      { text: 'Hold a team discussion to surface any remaining concerns before implementing — email is the wrong channel for process change of this significance.', score: 2 },
-      { text: 'Address the three who responded and implement — managing the vocal minority is the priority, not chasing the silent majority.', score: 1 },
+      { text: 'Hold a team discussion to surface any remaining concerns before implementing — email is the wrong channel for process change of this significance.', score: 1 },
+      { text: 'Address the three who responded and implement — managing the vocal minority is the priority, not chasing the silent majority.', score: 0 },
     ]
   },
   {
@@ -476,9 +476,9 @@ export const SJT_QUESTIONS = [
     scenario: 'You are presenting project results to a senior stakeholder. Midway through your presentation, they interrupt you and say "just tell me: are we on track or not?" You are 8 slides from the context needed to give an honest answer. The full picture is nuanced — you are on track on budget, ahead on one workstream, and 2 weeks behind on another. What do you say?',
     options: [
       { text: '"Mostly yes — we are on budget and ahead in one area. I want to flag we are 2 weeks behind in one workstream before you hear it elsewhere."', score: 3 },
-      { text: '"Yes" — the overall project is on track and the 2-week delay in one workstream does not change that headline.', score: 1 },
-      { text: '"It depends on what dimension matters most to you — can I give you the 60-second version?" Then deliver the nuanced picture quickly.', score: 2 },
-      { text: '"Let me finish the context and then I can answer that properly — the nuance matters here."', score: 1 },
+      { text: '"Yes" — the overall project is on track and the 2-week delay in one workstream does not change that headline.', score: 0 },
+      { text: '"It depends on what dimension matters most to you — can I give you the 60-second version?" Then deliver the nuanced picture quickly.', score: 1 },
+      { text: '"Let me finish the context and then I can answer that properly — the nuance matters here."', score: 0 },
     ]
   },
   {
@@ -496,9 +496,9 @@ export const SJT_QUESTIONS = [
     scenario: 'You discover through an informal conversation that a peer manager has been telling their team that your team "dropped the ball" on a shared project — blaming your team for a delay that was actually caused by a shared dependency failure. The narrative has reached senior leadership. What do you do?',
     options: [
       { text: 'Address it directly with your peer first — give them the opportunity to correct the narrative before escalating.', score: 3 },
-      { text: 'Correct the narrative with senior leadership proactively — the record needs to be set straight before the version becomes established truth.', score: 2 },
-      { text: 'Document the facts and wait — acting on informal information risks overreacting to a mischaracterisation.', score: 1 },
-      { text: 'Bring both teams together to do a shared retrospective — establish the facts collectively rather than through competing narratives.', score: 2 },
+      { text: 'Correct the narrative with senior leadership proactively — the record needs to be set straight before the version becomes established truth.', score: 1 },
+      { text: 'Document the facts and wait — acting on informal information risks overreacting to a mischaracterisation.', score: 0 },
+      { text: 'Bring both teams together to do a shared retrospective — establish the facts collectively rather than through competing narratives.', score: 1 },
     ]
   },
   {
@@ -516,9 +516,9 @@ export const SJT_QUESTIONS = [
     scenario: 'Your organisation sends a company-wide communication that contains information that directly contradicts what you told your team 2 weeks ago. Your team notices immediately and three members message you asking what is going on. You were not informed of the change before the communication went out. What do you say to your team in the next hour?',
     options: [
       { text: 'Acknowledge the contradiction honestly: "I was working from information that has since changed. I should have had advance notice of this update and I did not. Here is what I know now."', score: 3 },
-      { text: 'Tell them you are looking into it and will get back to them within the day — do not communicate until you have a full picture.', score: 2 },
-      { text: 'Explain that the organisation updated its position and align yourself fully with the new communication — your earlier message is now superseded.', score: 1 },
-      { text: 'Escalate to your manager immediately and tell your team you are seeking clarification — do not say anything substantive until you know what happened.', score: 2 },
+      { text: 'Tell them you are looking into it and will get back to them within the day — do not communicate until you have a full picture.', score: 1 },
+      { text: 'Explain that the organisation updated its position and align yourself fully with the new communication — your earlier message is now superseded.', score: 0 },
+      { text: 'Escalate to your manager immediately and tell your team you are seeking clarification — do not say anything substantive until you know what happened.', score: 1 },
     ]
   },
   {
@@ -538,7 +538,8 @@ export function scoreLeadership(answers) {
   const dimScores = {}
   DIMENSIONS.forEach(d => { dimScores[d.id] = { score: 0, max: 0 } })
 
-  SJT_QUESTIONS.forEach(q => {
+  const allQuestions = [...SJT_QUESTIONS, ...EXTRA_QUESTIONS]
+  allQuestions.forEach(q => {
     const selected = answers[q.id]
     if (selected !== undefined && selected !== null) {
       dimScores[q.dimension].score += q.options[selected].score
@@ -550,7 +551,7 @@ export function scoreLeadership(answers) {
   const maxTotal = Object.values(dimScores).reduce((a, d) => a + d.max, 0)
   const pct      = maxTotal > 0 ? Math.round(total / maxTotal * 100) : 0
 
-  const fitLabel = pct >= 72 ? 'Strong Fit' : pct >= 52 ? 'Moderate Fit' : 'Developing'
+  const fitLabel = pct >= 90 ? 'Strong Fit' : pct >= 70 ? 'Moderate Fit' : 'Developing'
   const fitColor = pct >= 72 ? 'var(--ok)' : pct >= 52 ? 'var(--warn)' : 'var(--bad)'
 
   const sorted = DIMENSIONS.map(d => ({
@@ -617,9 +618,10 @@ export function getOverallNarrative(fitLabel, leadershipStyle, pct) {
 export function selectQuestions(n, seed) {
   const perDim = Math.floor(n / DIMENSIONS.length)
   const selected = []
+  const allQuestions = [...SJT_QUESTIONS, ...EXTRA_QUESTIONS]
 
   DIMENSIONS.forEach(dim => {
-    const pool = SJT_QUESTIONS.filter(q => q.dimension === dim.id)
+    const pool = allQuestions.filter(q => q.dimension === dim.id)
     let s = seed + dim.id.charCodeAt(0) * 31
     const shuffled = [...pool]
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -638,3 +640,109 @@ export function selectQuestions(n, seed) {
   }
   return selected.slice(0, n)
 }
+
+// ── 10 Additional Hard Questions (genuinely ambiguous — experts disagree) ──
+// Added to each dimension pool for richer seeded selection
+// Scoring: best=3, next=1, rest=0 — wide gap forces precise judgment
+const EXTRA_QUESTIONS = [
+  {
+    id: 'C11', dimension: 'conflict',
+    scenario: 'You are mediating a conflict between two directors. During the session, Director A reveals information that directly contradicts something Director B told you privately last week. Director B looks uncomfortable. The information is relevant to resolving the conflict. You did not know when you agreed to mediate that you would receive contradictory private information from both parties beforehand. What do you do in the moment?',
+    options: [
+      { text: 'Pause the mediation immediately, acknowledge you have received prior information from both parties privately, and offer to step aside as mediator to protect the integrity of the process.', score: 3 },
+      { text: 'Continue the mediation — the contradictory information is now in the open and both parties can address it directly without you needing to disclose your prior knowledge.', score: 0 },
+      { text: 'Address Director B directly: "This seems to conflict with our earlier conversation — can you help me understand the difference?"', score: 0 },
+      { text: 'Make a note but do not act on it in the session — raise the contradiction with Director B privately afterward before your next mediation step.', score: 0 },
+    ]
+  },
+  {
+    id: 'D11', dimension: 'delegation',
+    scenario: 'You have delegated your most important client relationship to a senior team member while you focus on a strategic initiative. Three months in, the client contacts you directly — bypassing the team member — to say they "miss working with you" and want you back on the account. The team member has done nothing wrong and the client results are strong. What do you do?',
+    options: [
+      { text: 'Maintain the delegation — explain warmly to the client that the team member is their primary contact and that this structure serves them best long-term, then brief the team member on what happened.', score: 3 },
+      { text: 'Re-engage directly with the client — a client relationship of this importance cannot be allowed to deteriorate over a structural preference.', score: 0 },
+      { text: 'Create a co-management model where you stay visible to the client while the team member handles day-to-day — satisfy the client without fully reversing the delegation.', score: 1 },
+      { text: 'Have a three-way conversation with the client and team member together — bring the tension into the open rather than managing it behind the scenes.', score: 0 },
+    ]
+  },
+  {
+    id: 'M11', dimension: 'motivation',
+    scenario: 'A team member comes to you and says they have been offered a role at another organisation — one that is genuinely a better career opportunity than what you can offer them. They are telling you out of loyalty, not to negotiate. They have not decided yet. You would lose a key contributor and replacing them would take 3-4 months. What do you say?',
+    options: [
+      { text: 'Tell them honestly that you think they should take it if it is genuinely the better opportunity — your role is to act in their best interest, not retain them at cost to their career.', score: 3 },
+      { text: 'Make the strongest possible retention case — explore every option available to you before accepting the loss of a key contributor.', score: 0 },
+      { text: 'Ask them what would make the decision difficult — understand what is drawing them to stay before deciding how to respond.', score: 0 },
+      { text: 'Support whatever they decide but ask for 2 weeks before they finalise — buy time to plan the transition without pressuring them.', score: 0 },
+    ]
+  },
+  {
+    id: 'DE11', dimension: 'decision',
+    scenario: 'Your data clearly shows that Product Line A (your heritage business, 65% of revenue) is in structural decline — down 6% per year for 3 years. Product Line B (new, 12% of revenue) is growing 40% per year. A full pivot to B would take 18 months and create significant redundancy in your current team. Staying the course protects people in the short term but accelerates the long-term risk. Your board wants a recommendation next month. What do you present?',
+    options: [
+      { text: 'A phased migration plan — accelerate Product B investment using Product A cash flow, with a defined 3-year sunset for Product A and a people transition plan built in from day one.', score: 3 },
+      { text: 'A full immediate pivot — the data is clear and delaying the transition for people reasons will ultimately cost more jobs than acting decisively now.', score: 1 },
+      { text: 'A dual-track strategy — invest in both for 12 months to generate more Product B data before recommending a full pivot.', score: 0 },
+      { text: 'An independent strategic review — a decision of this magnitude requires external validation before you put your name to a recommendation.', score: 0 },
+    ]
+  },
+  {
+    id: 'CO11', dimension: 'communication',
+    scenario: 'You discover that your manager has been misrepresenting your team\'s work to the executive leadership team — not maliciously, but through consistent oversimplification that has led executives to underestimate the complexity and effort involved. Your team is starting to feel undervalued. Your manager is well-regarded and has been helpful to your career. Confronting them risks the relationship. Staying silent allows the misrepresentation to continue. What do you do?',
+    options: [
+      { text: 'Have a direct and private conversation with your manager — share specifically what you have observed, how it is landing with your team, and what a more accurate representation would look like.', score: 3 },
+      { text: 'Find ways to increase your team\'s visibility directly — present in executive forums, circulate written updates, build relationships at that level without confronting your manager.', score: 0 },
+      { text: 'Raise it with your manager\'s manager — the misrepresentation is structural and your manager may not be able to see it without external feedback.', score: 0 },
+      { text: 'Do nothing yet — your manager\'s intent is not malicious and the relationship benefit outweighs the reputational cost to your team in the short term.', score: 0 },
+    ]
+  },
+  {
+    id: 'C12', dimension: 'conflict',
+    scenario: 'You manage a team where two strong factions have formed around two different technical philosophies. The factions are civil but the division is slowing decision-making — every technical choice becomes a proxy debate. Both approaches have legitimate merit. You are not a technical expert yourself. A decision on the platform direction must be made within 2 weeks. What do you do?',
+    options: [
+      { text: 'Commission a structured evaluation with agreed criteria — get both factions to define the decision framework together before evaluating options. The process alignment is more important than the technical outcome.', score: 3 },
+      { text: 'Bring in an external technical expert to make the call — remove yourself and both factions from the decision entirely.', score: 1 },
+      { text: 'Make the call yourself based on the business case presented by each faction — you are the decision-maker and waiting for consensus is the problem.', score: 0 },
+      { text: 'Pick the approach championed by your most technically credible team member and explain your reasoning — anchor the decision in someone the team respects.', score: 0 },
+    ]
+  },
+  {
+    id: 'D12', dimension: 'delegation',
+    scenario: 'You have been asked by your CEO to personally lead a high-profile task force in addition to your current role. You believe one of your direct reports could lead it just as effectively — and the experience would accelerate their development significantly. Taking it yourself would be easier and lower risk. Delegating it would require political navigation with the CEO who asked for you specifically. What do you do?',
+    options: [
+      { text: 'Have a direct conversation with the CEO — explain why you believe your direct report is the right person to lead this, frame it as a deliberate talent investment, and get their buy-in before delegating.', score: 3 },
+      { text: 'Accept the assignment yourself — the CEO asked for you specifically and redirecting it without their input undermines the relationship.', score: 0 },
+      { text: 'Accept and then quietly involve your direct report as a co-lead without formally changing the mandate — they get the development, you maintain the relationship.', score: 0 },
+      { text: 'Delegate it directly and inform the CEO after — the development opportunity is too significant to lose to political caution.', score: 0 },
+    ]
+  },
+  {
+    id: 'M12', dimension: 'motivation',
+    scenario: 'Your organisation has just gone through a hiring freeze. Your highest performer has now been doing two jobs for 6 months — their own plus covering a vacancy you cannot fill. They have not complained but you can see the strain. Their performance is still strong. You have no budget for a bonus or promotion. No hire is coming in the next quarter. What do you do?',
+    options: [
+      { text: 'Have an honest conversation that names the situation, acknowledges what they are carrying, and co-creates non-financial recognition and workload relief — even if imperfect. Silence is the worst response.', score: 3 },
+      { text: 'Formally document their additional contribution and escalate strongly to HR for an off-cycle compensation review — do not accept the constraint without pushing back.', score: 1 },
+      { text: 'Reduce the scope of the vacant role\'s coverage — better for them to do less at high quality than more at increasing personal cost.', score: 1 },
+      { text: 'Do nothing differently — they are performing well and intervening may signal that you have noticed a problem they have not raised themselves.', score: 0 },
+    ]
+  },
+  {
+    id: 'DE12', dimension: 'decision',
+    scenario: 'You have strong data showing that your team\'s biggest performance driver is psychological safety — teams with high safety scores outperform by 34%. Your most productive team has the lowest safety score. Their output metrics are exceptional but three members have quietly flagged the environment to you. The team lead is your most results-oriented manager. What do you decide to do and in what order?',
+    options: [
+      { text: 'Have a direct conversation with the team lead — share the safety data, the specific feedback, and the long-term performance evidence. Then give them a defined timeline to demonstrate change.', score: 3 },
+      { text: 'Do nothing yet — the output metrics are exceptional and acting on qualitative feedback when quantitative results are strong sets a difficult precedent.', score: 0 },
+      { text: 'Run a team health intervention through HR — an external process protects you from the team lead\'s likely resistance.', score: 0 },
+      { text: 'Speak with the three team members who flagged the issue first — build a fuller picture before confronting the team lead.', score: 0 },
+    ]
+  },
+  {
+    id: 'CO12', dimension: 'communication',
+    scenario: 'You are presenting a business case to your board. Midway through, a board member challenges a core assumption with data that appears credible and that you were not aware of. The data, if correct, materially weakens your case. You have 10 more slides. The room is watching how you handle this. What do you do?',
+    options: [
+      { text: 'Stop and engage directly with the challenge: "That is important data I had not seen. Can you share the source? If it holds, it changes my recommendation and I want to get this right rather than right now."', score: 3 },
+      { text: 'Acknowledge the challenge, note it, and continue your presentation — address it in the Q&A where you have more control over the framing.', score: 0 },
+      { text: 'Defend your assumption immediately with the data you have — backing down in the room signals a weak case and weaker judgment.', score: 0 },
+      { text: 'Pause the presentation and ask for a 10-minute break to review the data privately before continuing.', score: 1 },
+    ]
+  },
+]
