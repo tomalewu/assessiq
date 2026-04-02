@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { SJT_QUESTIONS, DIMENSIONS, scoreLeadership, getDimQualitative, getOverallNarrative, selectQuestions } from '../leadership'
-import { dbAddCandidate, dbSaveCandidate, dbLoadSettings } from '../db'
+import { dbAddCandidate, dbSaveCandidate, dbAllCandidates, dbLoadSettings } from '../db'
 
 function genId(p) { return p + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,7) }
 
@@ -397,6 +397,8 @@ export default function LeadershipAssessment() {
   const [candidate, setCand]      = useState(null)
   const [questions, setQuestions] = useState(null)
   const [results, setResults]     = useState(null)
+  const [checking, setChecking]   = useState(false)
+  const [alreadyTaken, setAlreadyTaken] = useState(null)
 
   let role = null
   try {
@@ -435,13 +437,25 @@ export default function LeadershipAssessment() {
     </div>
   )
 
-  const handleBegin = (form) => {
+  const handleBegin = async (form) => {
+    setChecking(true)
+    try {
+      const all = await dbAllCandidates()
+      const existing = all.find(c =>
+        c.email && form.email &&
+        c.email.toLowerCase() === form.email.toLowerCase() &&
+        c.roleId === role.id &&
+        c.assessmentType === 'leadership' &&
+        c.status === 'completed'
+      )
+      if (existing) { setAlreadyTaken(existing); setChecking(false); return }
+    } catch(e) { console.warn('duplicate check failed', e) }
+    setChecking(false)
     const tempId = genId('lc')
     const seed   = makeSeed(tempId)
     const qs     = selectQuestions(20, seed)
     const candData = { roleId:role.id, roleName:role.title, assessmentType:'leadership',
       name:form.name, email:form.email, phone:form.phone }
-    // dbAddCandidate generates its own ID — use the returned object
     const savedCand = dbAddCandidate(candData)
     setCand(savedCand)
     setQuestions(qs)
@@ -469,5 +483,32 @@ export default function LeadershipAssessment() {
 
   if (stage === 'quiz' && questions) return <LQuiz candidate={candidate} questions={questions} onDone={handleDone} />
   if (stage === 'results' && results) return <LResults candidate={candidate} results={results} role={role} />
+  if (checking) return (
+    <div className="shell">
+      <nav className="nav"><div className="logo"><div className="logo-mark">A</div>AssessIQ</div></nav>
+      <div className="center"><span className="sp sp-lg"/></div>
+    </div>
+  )
+
+  if (alreadyTaken) return (
+    <div className="shell">
+      <nav className="nav"><div className="logo"><div className="logo-mark">A</div>AssessIQ</div></nav>
+      <div className="center">
+        <div style={{ textAlign:'center', maxWidth:400 }}>
+          <div style={{ fontSize:48, marginBottom:16 }}>✅</div>
+          <h2 style={{ fontSize:22, fontWeight:800, marginBottom:8 }}>Assessment Already Completed</h2>
+          <p style={{ color:'var(--ink3)', fontSize:14, lineHeight:1.7, marginBottom:8 }}>
+            You have already completed the leadership assessment for <strong>{role.title}</strong>.
+          </p>
+          <p style={{ color:'var(--ink3)', fontSize:13, lineHeight:1.7 }}>
+            Your results have been submitted and are being reviewed by the recruitment team.
+            Each candidate may only complete this assessment once.
+          </p>
+          <button className="btn btn-p" style={{ marginTop:24 }} onClick={() => nav('/')}>Return Home</button>
+        </div>
+      </div>
+    </div>
+  )
+
   return <LWelcome role={role} onBegin={handleBegin} />
 }
