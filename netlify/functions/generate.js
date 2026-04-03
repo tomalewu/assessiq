@@ -21,8 +21,9 @@ async function callClaude(systemPrompt, userPrompt, maxTokens) {
     })
   })
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error(err.error?.message || 'Claude API error: ' + res.status)
+    const errBody = await res.text()
+    console.error('Claude API error:', res.status, errBody)
+    throw new Error('Claude API ' + res.status + ': ' + errBody.slice(0, 200))
   }
   const data = await res.json()
   return data.content?.[0]?.text || ''
@@ -147,11 +148,11 @@ exports.handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Unknown action. Use generate or parse_cv.' }) }
 
   } catch (err) {
-    console.error('Function error:', err.message)
+    console.error('Function error:', err.message, err.stack)
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: err.message })
+      body: JSON.stringify({ error: err.message, stack: err.stack })
     }
   }
 }
