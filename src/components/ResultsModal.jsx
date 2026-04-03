@@ -244,6 +244,53 @@ export default function ResultsModal({ candidate, result, profile, onClose, benc
                   <strong style={{ color: '#fff' }}>{candidate.name}</strong> {profile.insight}
                 </p>
               </div>
+
+              {/* CV Parsed Data — MTO only */}
+              {candidate.cvParsed && (
+                <div className="card card-xl" style={{ padding: 22 }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--ink3)', marginBottom: 16 }}>CV Summary</div>
+                  {candidate.cvParsed.currentRole && (
+                    <div style={{ fontSize: 13, marginBottom: 6 }}>
+                      <span style={{ color:'var(--ink3)' }}>Current Role: </span>
+                      <strong>{candidate.cvParsed.currentRole}</strong>
+                      {candidate.cvParsed.currentCompany && <span style={{ color:'var(--ink3)' }}> at {candidate.cvParsed.currentCompany}</span>}
+                    </div>
+                  )}
+                  {candidate.cvParsed.totalExperience && (
+                    <div style={{ fontSize: 13, marginBottom: 6 }}>
+                      <span style={{ color:'var(--ink3)' }}>Experience: </span>
+                      <strong>{candidate.cvParsed.totalExperience} years</strong>
+                    </div>
+                  )}
+                  {candidate.cvParsed.education && candidate.cvParsed.education.length > 0 && (
+                    <div style={{ fontSize: 13, marginBottom: 10 }}>
+                      <span style={{ color:'var(--ink3)' }}>Education: </span>
+                      {candidate.cvParsed.education.map((e, i) => (
+                        <span key={i}><strong>{e.degree}</strong>{e.institution ? ' — ' + e.institution : ''}{i < candidate.cvParsed.education.length - 1 ? '; ' : ''}</span>
+                      ))}
+                    </div>
+                  )}
+                  {candidate.cvParsed.skills && candidate.cvParsed.skills.length > 0 && (
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:5, marginTop:8 }}>
+                      {candidate.cvParsed.skills.slice(0, 10).map((s, i) => (
+                        <span key={i} style={{ background:'var(--accent-dim)', color:'var(--accent)', fontSize:11, fontWeight:600, padding:'2px 8px', borderRadius:999 }}>{s}</span>
+                      ))}
+                    </div>
+                  )}
+                  {candidate.cvUrl && (
+                    <a href={candidate.cvUrl} target="_blank" rel="noreferrer"
+                      style={{ display:'inline-block', marginTop:14, fontSize:12, color:'var(--accent)', fontWeight:600 }}>
+                      📄 Download Full CV
+                    </a>
+                  )}
+                </div>
+              )}
+              {!candidate.cvParsed && candidate.cvUrl && (
+                <div className="card card-xl" style={{ padding: 22, textAlign:'center' }}>
+                  <div style={{ fontSize: 13, color:'var(--ink3)', marginBottom:12 }}>CV uploaded — parsing not available</div>
+                  <a href={candidate.cvUrl} target="_blank" rel="noreferrer" className="btn btn-s btn-sm">📄 Download CV</a>
+                </div>
+              )}
             </div>
           </div>
         </div>
