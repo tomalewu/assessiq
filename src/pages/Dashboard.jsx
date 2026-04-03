@@ -164,6 +164,91 @@ function BulkPDFModal({ candidates, roles, origin, onClose }) {
   )
 }
 
+// ── CV Parsed Data Panel ─────────────────────────────────────────────
+function CVParsedPanel({ parsed }) {
+  if (!parsed) return (
+    <div style={{ padding:'14px 18px', background:'var(--paper2)', borderRadius:10, fontSize:13, color:'var(--ink3)' }}>
+      CV parsing not available for this candidate.
+    </div>
+  )
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+      {/* Identity */}
+      <div style={{ background:'var(--paper2)', borderRadius:10, padding:'14px 18px' }}>
+        <div style={{ fontWeight:700, fontSize:13, marginBottom:10, color:'var(--ink)' }}>Identity</div>
+        {[
+          ['Name', parsed.name],
+          ['Email', parsed.email],
+          ['Phone', parsed.phone],
+          ['Date of Birth', parsed.dob],
+          ['Current Role', parsed.currentRole],
+          ['Current Company', parsed.currentCompany],
+          ['Total Experience', parsed.totalExperience ? parsed.totalExperience + ' years' : null],
+        ].filter(([,v]) => v).map(([label, value]) => (
+          <div key={label} style={{ display:'flex', gap:8, marginBottom:6, fontSize:13 }}>
+            <span style={{ color:'var(--ink3)', minWidth:130 }}>{label}:</span>
+            <span style={{ fontWeight:600 }}>{value}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Education */}
+      {parsed.education && parsed.education.length > 0 && (
+        <div style={{ background:'var(--paper2)', borderRadius:10, padding:'14px 18px' }}>
+          <div style={{ fontWeight:700, fontSize:13, marginBottom:10, color:'var(--ink)' }}>Education</div>
+          {parsed.education.map((edu, i) => (
+            <div key={i} style={{ marginBottom:8, fontSize:13 }}>
+              <span style={{ fontWeight:600 }}>{edu.degree}</span>
+              {edu.institution && <span style={{ color:'var(--ink3)' }}> — {edu.institution}</span>}
+              {edu.year && <span style={{ color:'var(--ink3)' }}> ({edu.year})</span>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Experience */}
+      {parsed.experience && parsed.experience.length > 0 && (
+        <div style={{ background:'var(--paper2)', borderRadius:10, padding:'14px 18px' }}>
+          <div style={{ fontWeight:700, fontSize:13, marginBottom:10, color:'var(--ink)' }}>Work Experience</div>
+          {parsed.experience.map((exp, i) => (
+            <div key={i} style={{ marginBottom:12, paddingBottom:12, borderBottom: i < parsed.experience.length-1 ? '1px solid var(--line)' : 'none' }}>
+              <div style={{ fontWeight:700, fontSize:13 }}>{exp.title}</div>
+              <div style={{ fontSize:12, color:'var(--ink3)', marginBottom:4 }}>{exp.company} {exp.duration ? '· ' + exp.duration : ''}</div>
+              {exp.summary && <div style={{ fontSize:12, color:'var(--ink2)', lineHeight:1.6 }}>{exp.summary}</div>}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Skills */}
+      {parsed.skills && parsed.skills.length > 0 && (
+        <div style={{ background:'var(--paper2)', borderRadius:10, padding:'14px 18px' }}>
+          <div style={{ fontWeight:700, fontSize:13, marginBottom:10, color:'var(--ink)' }}>Skills</div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+            {parsed.skills.map((skill, i) => (
+              <span key={i} style={{ background:'var(--accent-dim)', color:'var(--accent)', fontSize:11,
+                fontWeight:600, padding:'3px 10px', borderRadius:999 }}>{skill}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Languages */}
+      {parsed.languages && parsed.languages.length > 0 && (
+        <div style={{ background:'var(--paper2)', borderRadius:10, padding:'14px 18px' }}>
+          <div style={{ fontWeight:700, fontSize:13, marginBottom:8, color:'var(--ink)' }}>Languages</div>
+          <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+            {parsed.languages.map((lang, i) => (
+              <span key={i} style={{ background:'var(--ok-dim)', color:'var(--ok)', fontSize:11,
+                fontWeight:600, padding:'3px 10px', borderRadius:999 }}>{lang}</span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Connection Status ─────────────────────────────────────────────────
 function ConnectionDot({ online }) {
   return (
@@ -469,7 +554,11 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
           {/* Role summary footer */}
           <div style={{ padding:'10px 20px', borderTop:'1px solid var(--line)', display:'flex', justifyContent:'space-between', fontSize:12, color:'var(--ink3)' }}>
             <span>{filtered.length} candidate{filtered.length!==1?'s':''}{search?' matching':''}  ·  {rdone.length} completed  ·  {passed.length} passed</span>
-            <button className="btn btn-s btn-sm" style={{ fontSize:11 }} onClick={()=>exportCSV(rc,[role])}>📥 Export CSV</button>
+            <div style={{ display:'flex', gap:6 }}>
+              <button className="btn btn-s btn-sm" style={{ fontSize:11 }} onClick={()=>exportCSV(rc,[role])}>📥 CSV</button>
+              <button className="btn btn-s btn-sm" style={{ fontSize:11, background:'#f0fdf4', border:'1px solid #86efac', color:'#166534' }} onClick={()=>exportExcel(rc,[role])}>📊 Excel</button>
+              <button className="btn btn-s btn-sm" style={{ fontSize:11, background:'#ede9fe', border:'1px solid #c4b5fd', color:'#5b21b6' }} onClick={()=>setBulkPDFModal({candidates:rc,roles})}>📄 Bulk PDF</button>
+            </div>
           </div>
         </div>
       )}

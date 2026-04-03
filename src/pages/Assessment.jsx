@@ -974,6 +974,30 @@ function CVUpload({ candidate, role }) {
   const [progress, setProgress]   = useState(0)
   const [error, setError]         = useState('')
 
+  const parseCVSilently = async (fileObj) => {
+    try {
+      // Convert file to base64
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload  = () => resolve(reader.result.split(',')[1])
+        reader.onerror = () => reject(new Error('File read failed'))
+        reader.readAsDataURL(fileObj)
+      })
+      const mimeType = fileObj.type || 'application/pdf'
+      const res = await fetch('/.netlify/functions/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'parse_cv', cvBase64: base64, mimeType })
+      })
+      if (!res.ok) throw new Error('Parse function returned ' + res.status)
+      const data = await res.json()
+      return data.parsed || null
+    } catch(e) {
+      console.warn('CV parse failed (non-critical):', e.message)
+      return null
+    }
+  }
+
   const submit = async () => {
     if (!file) { setError('Please select your CV file (PDF, DOC, or DOCX)'); return }
     if (file.size > 10 * 1024 * 1024) { setError('File too large. Maximum size is 10MB.'); return }
@@ -998,15 +1022,20 @@ function CVUpload({ candidate, role }) {
       const path    = 'cvs/' + candidate.id + '_' + safeName
       const storageRef = ref(storage, path)
 
-      await new Promise((resolve, reject) => {
-        const task = uploadBytesResumable(storageRef, file)
-        task.on('state_changed',
-          snap => setProgress(20 + Math.round(snap.bytesTransferred / snap.totalBytes * 70)),
-          err  => reject(err),
-          ()   => resolve()
-        )
-      })
-      setProgress(95)
+      // Upload CV and parse simultaneously
+      const [, parsedCV] = await Promise.all([
+        new Promise((resolve, reject) => {
+          const task = uploadBytesResumable(storageRef, file)
+          task.on('state_changed',
+            snap => setProgress(20 + Math.round(snap.bytesTransferred / snap.totalBytes * 60)),
+            err  => reject(err),
+            ()   => resolve()
+          )
+        }),
+        parseCVSilently(file)
+      ])
+
+      setProgress(85)
       const cvUrl = await getDownloadURL(storageRef)
       setProgress(100)
 
@@ -1014,7 +1043,9 @@ function CVUpload({ candidate, role }) {
       dbSaveCandidate(candidate.id, {
         cvUrl,
         cvFileName: file.name,
-        cvSubmittedAt: new Date().toISOString()
+        cvSubmittedAt: new Date().toISOString(),
+        // Parsed CV data saved silently — visible to recruiter in dashboard
+        cvParsed: parsedCV || null
       })
       setSubmitted(true)
     } catch(e) {
