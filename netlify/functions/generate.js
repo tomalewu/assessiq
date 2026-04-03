@@ -47,6 +47,7 @@ async function generateQuestions(difficulty) {
   ])
 
   const parseArr = (text) => {
+    console.log('Parsing response of length:', text.length, 'Preview:', text.slice(0, 200))
     // Strip markdown code blocks if present
     let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim()
     // Find the JSON array
@@ -86,7 +87,9 @@ async function generateQuestions(difficulty) {
 
   // Pad with bank questions if AI returned fewer than 10
   // Return 5 AI logic + 5 AI numerical (remaining 10 filled by bank in questions.js)
-  return [...logic.slice(0, 5), ...num.slice(0, 5)]
+  const combined = [...logic.slice(0, 5), ...num.slice(0, 5)]
+  console.log('Returning', combined.length, 'questions. Logic:', logic.length, 'Num:', num.length)
+  return combined
 }
 
 // ── CV Parsing ────────────────────────────────────────────────────────
