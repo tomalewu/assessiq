@@ -679,11 +679,40 @@ export function makeNumQuestions(n, difficulty, seed) {
   return shuffled.slice(0, n).map((q, i) => ({ id: 'N' + i, type: 'numerical', ...q }))
 }
 
+async function generateViaAPI(difficulty) {
+  try {
+    const res = await fetch('/.netlify/functions/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'generate', difficulty })
+    })
+    if (!res.ok) throw new Error('Function returned ' + res.status)
+    const data = await res.json()
+    if (!data.questions || data.questions.length < 16) throw new Error('Not enough questions returned')
+    console.log('AssessIQ: AI generated', data.questions.length, 'questions for', difficulty, 'difficulty')
+    return data.questions
+  } catch (err) {
+    console.warn('AssessIQ: AI generation failed, using question bank.', err.message)
+    return null
+  }
+}
+
 export async function loadQuestions(settings, candidateId) {
   const s          = settings || {}
   const difficulty = s.difficulty || 'medium'
   const seed       = makeSeed(candidateId || '')
-  console.log('AssessIQ: Loading', difficulty, 'questions — 300 question pool')
+
+  // Try AI generation for medium and hard difficulty
+  if (difficulty === 'medium' || difficulty === 'hard') {
+    const aiQuestions = await generateViaAPI(difficulty)
+    if (aiQuestions) {
+      // Seeded shuffle so order is unique per candidate
+      return seededShuffle(aiQuestions, seed)
+    }
+  }
+
+  // Fallback: question bank (always works)
+  console.log('AssessIQ: Using question bank for', difficulty, 'difficulty')
   const logic = makeLogicQuestions(10, difficulty, seed)
   const num   = makeNumQuestions(10, difficulty, seed)
   return seededShuffle([...logic, ...num], seed + 12345)
