@@ -688,7 +688,7 @@ async function generateViaAPI(difficulty) {
     })
     if (!res.ok) throw new Error('Function returned ' + res.status)
     const data = await res.json()
-    if (!data.questions || data.questions.length < 16) throw new Error('Not enough questions returned')
+    if (!data.questions || data.questions.length < 8) throw new Error('Not enough questions returned')
     console.log('AssessIQ: AI generated', data.questions.length, 'questions for', difficulty, 'difficulty')
     return data.questions
   } catch (err) {
