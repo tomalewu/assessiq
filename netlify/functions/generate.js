@@ -37,28 +37,56 @@ async function generateQuestions(difficulty) {
 
   const systemPrompt = 'You are an expert psychometric assessment designer. Return ONLY valid JSON, no explanation, no markdown, no backticks.'
 
-  const logicPrompt = 'Generate 10 unique logic matrix questions. Difficulty: ' + diffDesc + '\n\nReturn a JSON array of exactly 10 objects. Each object must have these exact fields:\n{\n  "id": "L0",\n  "type": "logic",\n  "grid": [["3","6","2"],["5","10","4"],["7","14","?"]],\n  "options": ["5","6","7","8"],\n  "answer": "6",\n  "exp": "Col2 = Col1 x 2. Col3 = Col1 - 1. Row 3: 7-1 = 6."\n}\n\nRules:\n- grid is always 3x3 strings\n- last cell is always "?"\n- options has exactly 4 strings, one matching answer\n- answer must be correct based on the pattern\n- exp explains the rule clearly\n- IDs are L0 through L9\n- All values are strings even if numbers\n- Make each question use a DIFFERENT rule\n\nReturn ONLY the JSON array, nothing else.'
+  const logicPrompt = 'Generate 5 logic number matrix questions. Difficulty: ' + diffDesc + '. Return JSON array of 5 objects: [{"id":"L0","type":"logic","grid":[["2","4","6"],["3","6","9"],["4","8","?"]],"options":["10","11","12","14"],"answer":"12","exp":"Col3=Col1x3. Row3: 4x3=12."},...]. Rules: grid=3x3 strings last cell=?, options=4 strings, all numbers as strings. Return ONLY the JSON array.'
 
-  const numPrompt = 'Generate 10 unique numerical reasoning questions. Difficulty: ' + diffDesc + '\n\nReturn a JSON array of exactly 10 objects. Each object must have these exact fields:\n{\n  "id": "N0",\n  "type": "numerical",\n  "question": "A company invests $50,000 at 8% compound interest. Value after 3 years?",\n  "tableHtml": null,\n  "options": ["$62,000","$62,986","$63,122","$64,000"],\n  "answer": "$62,986",\n  "exp": "50000 x 1.08^3 = $62,986."\n}\n\nRules:\n- tableHtml is null unless you want a table (then valid HTML string)\n- options has exactly 4 strings, one matching answer\n- answer must be mathematically correct\n- Make each question test a DIFFERENT concept\n- IDs are N0 through N9\n\nReturn ONLY the JSON array, nothing else.'
+  const numPrompt = 'Generate 5 numerical reasoning questions. Difficulty: ' + diffDesc + '. Return JSON array of 5 objects: [{"id":"N0","type":"numerical","question":"If 35% of X is 91 what is X?","tableHtml":null,"options":["240","260","280","300"],"answer":"260","exp":"91/0.35=260."},...]. Rules: options=4 strings, answer correct, tableHtml=null. Return ONLY the JSON array.'
 
   const [logicText, numText] = await Promise.all([
-    callClaude(systemPrompt, logicPrompt, 2000),
-    callClaude(systemPrompt, numPrompt, 2000)
+    callClaude(systemPrompt, logicPrompt, 3000),
+    callClaude(systemPrompt, numPrompt, 3000)
   ])
 
   const parseArr = (text) => {
-    const s = text.indexOf('['), e = text.lastIndexOf(']')
-    if (s === -1 || e === -1) throw new Error('No JSON array in response')
-    return JSON.parse(text.slice(s, e + 1))
+    // Strip markdown code blocks if present
+    let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim()
+    // Find the JSON array
+    const s = clean.indexOf('[')
+    const e = clean.lastIndexOf(']')
+    if (s === -1 || e === -1) throw new Error('No JSON array found in: ' + clean.slice(0, 100))
+    const jsonStr = clean.slice(s, e + 1)
+    try {
+      return JSON.parse(jsonStr)
+    } catch(parseErr) {
+      // Try to recover partial JSON by finding complete objects
+      console.error('JSON parse error, attempting recovery. Text length:', jsonStr.length)
+      const objects = []
+      let depth = 0, start = -1
+      for (let i = 0; i < jsonStr.length; i++) {
+        if (jsonStr[i] === '{') { if (depth === 0) start = i; depth++ }
+        else if (jsonStr[i] === '}') {
+          depth--
+          if (depth === 0 && start !== -1) {
+            try { objects.push(JSON.parse(jsonStr.slice(start, i + 1))) } catch(e) {}
+          }
+        }
+      }
+      if (objects.length >= 5) {
+        console.log('Recovered', objects.length, 'objects from partial JSON')
+        return objects
+      }
+      throw new Error('JSON parse failed and recovery insufficient: ' + parseErr.message)
+    }
   }
 
   const logic = parseArr(logicText)
   const num   = parseArr(numText)
 
-  if (logic.length < 8) throw new Error('Not enough logic questions: ' + logic.length)
-  if (num.length < 8)   throw new Error('Not enough numerical questions: ' + num.length)
+  if (logic.length < 4) throw new Error('Not enough logic questions: ' + logic.length)
+  if (num.length < 4)   throw new Error('Not enough numerical questions: ' + num.length)
 
-  return [...logic.slice(0, 10), ...num.slice(0, 10)]
+  // Pad with bank questions if AI returned fewer than 10
+  // Return 5 AI logic + 5 AI numerical (remaining 10 filled by bank in questions.js)
+  return [...logic.slice(0, 5), ...num.slice(0, 5)]
 }
 
 // ── CV Parsing ────────────────────────────────────────────────────────
