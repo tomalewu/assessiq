@@ -705,16 +705,13 @@ export async function loadQuestions(settings, candidateId) {
   // Try AI generation for medium and hard difficulty
   if (difficulty === 'medium' || difficulty === 'hard') {
     const aiQuestions = await generateViaAPI(difficulty)
-    if (aiQuestions && aiQuestions.length >= 8) {
-      // AI returned enough — use them all shuffled
-      return seededShuffle(aiQuestions, seed)
-    }
     if (aiQuestions && aiQuestions.length >= 4) {
-      // AI returned partial (5 logic + 5 num) — blend with bank for remaining 10
+      // Always blend AI questions with bank to get full 20
+      // AI gives 10 (5 logic + 5 num) + bank gives 10 more = 20 total unique questions
       const bankLogic = makeLogicQuestions(5, difficulty, seed + 111)
       const bankNum   = makeNumQuestions(5, difficulty, seed + 222)
       const blended   = [...aiQuestions, ...bankLogic, ...bankNum]
-      console.log('AssessIQ: Blended', aiQuestions.length, 'AI questions with bank questions')
+      console.log('AssessIQ: AI generated', aiQuestions.length, 'questions blended with', bankLogic.length + bankNum.length, 'bank questions = 20 total')
       return seededShuffle(blended, seed).slice(0, 20)
     }
   }
