@@ -999,7 +999,7 @@ function CVUpload({ candidate, role }) {
   }
 
   const submit = async () => {
-    if (!file) { setError('Please select your CV file (PDF, DOC, or DOCX)'); return }
+    if (!file) { setError('Please select your CV in PDF format.'); return }
     if (file.size > 10 * 1024 * 1024) { setError('File too large. Maximum size is 10MB.'); return }
     setUploading(true)
     setError('')
@@ -1078,7 +1078,7 @@ function CVUpload({ candidate, role }) {
 
       <div className="fg" style={{ marginBottom:14 }}>
         <label className="fl">CV File (PDF, DOC, DOCX — max 10MB)</label>
-        <input type="file" accept=".pdf,.doc,.docx"
+        <input type="file" accept=".pdf"
           onChange={e => { setFile(e.target.files[0]); setError('') }}
           style={{ padding:'10px 12px', border:'1.5px dashed var(--line)', borderRadius:'var(--r-sm)',
             width:'100%', fontSize:13, cursor:'pointer', background:'var(--paper2)', outline:'none' }}/>
