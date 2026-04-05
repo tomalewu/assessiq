@@ -8,7 +8,7 @@ export default function Users() {
   const me   = getCurrentUser()
   const [users, setUsers]       = useState([])
   const [loading, setLoading]   = useState(true)
-  const [modal, setModal]       = useState(null)
+  const [modal, setModal]       = useState(null)  // null | 'add' | {user}
   const [form, setForm]         = useState({ name: '', email: '', password: '', role: 'recruiter' })
   const [saving, setSaving]     = useState(false)
   const [err, setErr]           = useState('')
@@ -88,30 +88,35 @@ export default function Users() {
           </p>
         </div>
 
+        {/* Permission summary */}
         <div className="card card-xl" style={{ padding: 24, marginBottom: 24 }}>
           <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 16 }}>Permission Summary</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             {[
-              ['Create roles & links', true, true],
-              ['View results & export CSV', true, true],
-              ['Add notes to candidates', true, true],
-              ['Delete own roles', true, true],
-              ['Delete Admin roles', true, false],
-              ['Delete candidate results', true, false],
-              ['Change settings & API keys', true, false],
-              ['Manage users', true, false],
-            ].map(([feature, admin, recruiter]) => (
+              ['View results & profiles',    true,  true,  true],
+              ['Export Excel & reports',     true,  true,  true],
+              ['Open report URLs',           true,  true,  true],
+              ['Create roles & links',       true,  true,  false],
+              ['Add notes to candidates',    true,  true,  false],
+              ['Delete own roles',           true,  true,  false],
+              ['Delete Admin roles',         true,  false, false],
+              ['Delete candidate results',   true,  false, false],
+              ['Change settings & API keys', true,  false, false],
+              ['Manage users',               true,  false, false],
+            ].map(([feature, admin, recruiter, viewer]) => (
               <div key={feature} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--paper2)', borderRadius: 8, fontSize: 13 }}>
                 <span>{feature}</span>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 6 }}>
                   <span className={'badge ' + (admin ? 'bg' : 'br')} style={{ fontSize: 10 }}>Admin</span>
                   <span className={'badge ' + (recruiter ? 'bg' : 'br')} style={{ fontSize: 10 }}>Recruiter</span>
+                  <span className={'badge ' + (viewer ? 'bg' : 'br')} style={{ fontSize: 10, background: viewer ? '#ede9fe' : '', color: viewer ? '#5b21b6' : '' }}>Viewer</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
+        {/* Users table */}
         <div className="shdr">
           <div>
             <div className="stitle">Users</div>
@@ -131,6 +136,7 @@ export default function Users() {
               <tr><th>Name</th><th>Email</th><th>Role</th><th>Created</th><th></th></tr>
             </thead>
             <tbody>
+              {/* Super admin row */}
               <tr>
                 <td>
                   <div style={{ fontWeight: 600 }}>Super Admin</div>
@@ -146,9 +152,9 @@ export default function Users() {
                   <td><div style={{ fontWeight: 600 }}>{u.name}</div></td>
                   <td style={{ fontSize: 13, color: 'var(--ink2)' }}>{u.email}</td>
                   <td>
-                    <span className={'badge ' + (u.role === 'admin' ? 'bg' : 'bb')}>
+                    <span className={'badge ' + (u.role === 'admin' ? 'bg' : u.role === 'viewer' ? 'ba' : 'bb')}>
                       <span className="dot" />
-                      {u.role === 'admin' ? 'Admin' : 'Recruiter'}
+                      {u.role === 'admin' ? 'Admin' : u.role === 'viewer' ? 'Viewer' : 'Recruiter'}
                     </span>
                   </td>
                   <td style={{ fontSize: 12, color: 'var(--ink3)' }}>
@@ -173,12 +179,13 @@ export default function Users() {
         </div>
       </div>
 
+      {/* Add/Edit Modal */}
       {modal && (
         <div className="overlay" onClick={() => setModal(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <h3>{modal === 'add' ? 'Add New User' : 'Edit User'}</h3>
             <div className="msub">
-              {modal === 'add' ? 'Create a new admin or recruiter account.' : 'Update this user details and permissions.'}
+              {modal === 'add' ? 'Create a new admin, recruiter or viewer account.' : 'Update this user\'s details and permissions.'}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
               <div className="fg">
@@ -199,12 +206,12 @@ export default function Users() {
               <div className="fg">
                 <label className="fl">Role</label>
                 <div style={{ display: 'flex', gap: 10 }}>
-                  {['recruiter', 'admin'].map(role => (
+                  {['recruiter', 'admin', 'viewer'].map(role => (
                     <div key={role} onClick={() => setForm(p => ({ ...p, role }))}
                       style={{ flex: 1, padding: '12px 16px', borderRadius: 9, border: '1.5px solid ' + (form.role === role ? 'var(--accent)' : 'var(--line)'), background: form.role === role ? 'var(--accent-dim)' : 'var(--paper)', cursor: 'pointer', transition: 'all .15s' }}>
                       <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 4, textTransform: 'capitalize' }}>{role}</div>
                       <div style={{ fontSize: 11, color: 'var(--ink3)', lineHeight: 1.5 }}>
-                        {role === 'recruiter' ? 'Can create roles, view & export results' : 'Full access including settings & users'}
+                        {role === 'recruiter' ? 'Can create roles, view and export results' : role === 'admin' ? 'Full access including settings and users' : 'View and export only — cannot create or delete'}
                       </div>
                     </div>
                   ))}
@@ -223,6 +230,7 @@ export default function Users() {
         </div>
       )}
 
+      {/* Delete confirm */}
       {deleteConfirm && (
         <div className="overlay" onClick={() => setDeleteConfirm(null)}>
           <div className="modal" onClick={e => e.stopPropagation()}>

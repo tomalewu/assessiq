@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getCurrentUser, setCurrentUser, isAdmin } from '../App'
+import { getCurrentUser, setCurrentUser, isAdmin, canEdit } from '../App'
 import { dbRoles, dbAllCandidates, dbAddRole, dbUpdateRole, dbDeleteRole, dbDeleteCandidate, dbSaveCandidate } from '../db'
 import { DIMENSIONS, getDimQualitative, getOverallNarrative } from '../leadership'
 
@@ -255,7 +255,7 @@ function LeadershipProfileModal({ candidate, onClose }) {
   )
 }
 
-function LRoleCard({ role, candidates, onLink, onDelete, onArchive, onManageExpiry, onViewResult, onNote, onDeleteCand, userIsAdmin, me }) {
+function LRoleCard({ role, candidates, onLink, onDelete, onArchive, onManageExpiry, onViewResult, onNote, onDeleteCand, userIsAdmin, userCanEdit, me }) {
   const [expanded, setExpanded] = useState(false)
   const [search, setSearch]     = useState('')
   const [page, setPage]         = useState(1)
@@ -312,7 +312,7 @@ function LRoleCard({ role, candidates, onLink, onDelete, onArchive, onManageExpi
         <div style={{ display:'flex', gap:6, alignItems:'center', flexShrink:0 }}>
           <button className="btn btn-s btn-sm" style={{ fontSize:11 }}
             onClick={e=>{e.stopPropagation();onLink(role)}}>🔗 Link</button>
-          {(userIsAdmin || role.createdBy===me?.id) && <>
+          {userCanEdit && (userIsAdmin || role.createdBy===me?.id) && <>
             <button className="btn btn-g btn-sm" style={{ fontSize:11, padding:'5px 8px', color:'var(--warn)' }}
               title={role.archived?'Unarchive':'Archive'}
               onClick={e=>{e.stopPropagation();onArchive(role)}}>
@@ -365,9 +365,9 @@ function LRoleCard({ role, candidates, onLink, onDelete, onArchive, onManageExpi
                           {c.status==='completed' && <button className="btn btn-g btn-sm" style={{ fontSize:11, padding:'3px 7px', color:'var(--accent)' }}
                             title="View full report"
                             onClick={()=>window.open(window.location.origin+'/report/leadership/'+c.id,'_blank')}>📄</button>}
-                          <button className="btn btn-g btn-sm" style={{ fontSize:11, padding:'3px 7px' }}
-                            onClick={()=>onNote(c)}>📝</button>
-                          {userIsAdmin && <button className="btn btn-g btn-sm" style={{ fontSize:11, padding:'3px 7px', color:'var(--bad)' }}
+                          {userCanEdit && <button className="btn btn-g btn-sm" style={{ fontSize:11, padding:'3px 7px' }}
+                            onClick={()=>onNote(c)}>📝</button>}
+                          {userCanEdit && userIsAdmin && <button className="btn btn-g btn-sm" style={{ fontSize:11, padding:'3px 7px', color:'var(--bad)' }}
                             onClick={()=>onDeleteCand(c)}>🗑</button>}
                         </div>
                       </td>
@@ -405,6 +405,8 @@ export default function LeadershipDashboard() {
   const nav         = useNavigate()
   const me          = getCurrentUser()
   const userIsAdmin = isAdmin()
+  const userCanEdit = me?.role === 'admin' || me?.role === 'recruiter' || me?.isSuper
+  const userIsViewer = me?.role === 'viewer'
   const logout      = () => { setCurrentUser(null); nav('/') }
 
   const [roles, setRoles]                 = useState([])
@@ -584,7 +586,7 @@ export default function LeadershipDashboard() {
                 <button className={'btn btn-sm '+(showArchived?'btn-s':'btn-g')} onClick={()=>setShowArchived(v=>!v)}>
                   {showArchived?'← Active':'🗄 Archived'}
                 </button>
-                {!showArchived && <button className="btn btn-p btn-sm" onClick={()=>setNewRoleModal(true)}>
+                {!showArchived && userCanEdit && <button className="btn btn-p btn-sm" onClick={()=>setNewRoleModal(true)}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                     <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                   </svg>
@@ -607,7 +609,9 @@ export default function LeadershipDashboard() {
                   onViewResult={setViewModal}
                   onNote={c=>{setNoteModal(c);setNoteText(c.notes||'')}}
                   onDeleteCand={c=>setDeleteConfirm({type:'candidate',id:c.id,name:c.name})}
-                  userIsAdmin={userIsAdmin} me={me}/>
+                  userIsAdmin={userIsAdmin}
+                  userCanEdit={userCanEdit}
+            userCanEdit={userCanEdit} me={me}/>
               ))
             )}
           </>

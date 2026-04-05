@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getCurrentUser, setCurrentUser, isAdmin } from '../App'
+import { getCurrentUser, setCurrentUser, isAdmin, canEdit } from '../App'
 import { dbAddRole, dbUpdateRole, dbDeleteRole, dbRoles,
          dbAllCandidates, dbDeleteCandidate, dbSaveCandidate, dbAddCandidate } from '../db'
 import { buildProfile } from '../scoring'
@@ -317,7 +317,7 @@ function BulkInviteModal({ role, onClose }) {
 }
 
 // ── Role Card with expandable candidates ──────────────────────────────
-function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onManageExpiry, onEditThreshold, onViewResult, onNote, onDeleteCand, userIsAdmin, me }) {
+function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onManageExpiry, onEditThreshold, onViewResult, onNote, onDeleteCand, userIsAdmin, userCanEdit, me }) {
   const [expanded, setExpanded]   = useState(false)
   const [search, setSearch]       = useState('')
   const [page, setPage]           = useState(1)
@@ -403,14 +403,14 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
             onClick={e=>{e.stopPropagation();onLink(role)}}>🔗 Link</button>
           <button className="btn btn-s btn-sm" style={{ fontSize:11 }}
             onClick={e=>{e.stopPropagation();onBulk(role)}}>📧</button>
-          {(userIsAdmin || role.createdBy===me?.id) && (
+          {userCanEdit && (userIsAdmin || role.createdBy===me?.id) && (
             <button className="btn btn-g btn-sm" style={{ fontSize:11,padding:'5px 8px',color:'var(--warn)' }}
               title={role.archived?'Unarchive role':'Archive role'}
               onClick={e=>{e.stopPropagation();onArchive(role)}}>
               {role.archived?'📤':'🗄'}
             </button>
           )}
-          {(userIsAdmin || role.createdBy===me?.id) && (
+          {userCanEdit && (userIsAdmin || role.createdBy===me?.id) && (
             <button className="btn btn-g btn-sm" style={{ fontSize:11,padding:'5px 8px',color:'var(--ok)' }}
               title={role.expiryDate ? 'Edit or remove expiry date' : 'Set expiry date'}
               onClick={e=>{e.stopPropagation();onManageExpiry(role)}}>
@@ -520,7 +520,7 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
                           <div style={{ display:'flex',gap:4 }}>
                             <button className="btn btn-g btn-sm" style={{ fontSize:11,padding:'3px 7px' }}
                               onClick={()=>onNote(c)}>📝</button>
-                            {userIsAdmin && <button className="btn btn-g btn-sm" style={{ fontSize:11,padding:'3px 7px',color:'var(--bad)' }}
+                            {userCanEdit && userIsAdmin && <button className="btn btn-g btn-sm" style={{ fontSize:11,padding:'3px 7px',color:'var(--bad)' }}
                               onClick={()=>onDeleteCand(c)}>🗑</button>}
                           </div>
                         </td>
@@ -570,6 +570,8 @@ export default function Dashboard() {
   const nav         = useNavigate()
   const me          = getCurrentUser()
   const userIsAdmin = isAdmin()
+  const userCanEdit = me?.role === 'admin' || me?.role === 'recruiter' || me?.isSuper
+  const userIsViewer = me?.role === 'viewer'
   const logout      = () => { setCurrentUser(null); nav('/') }
 
   const [roles, setRoles]                 = useState([])
@@ -809,7 +811,7 @@ export default function Dashboard() {
                       title={showArchived ? 'Show active roles' : 'Show archived roles'}>
                       {showArchived ? '← Active' : '🗄 Archived'}
                     </button>
-                    {!showArchived && <button className="btn btn-p btn-sm" onClick={()=>setNewRoleModal(true)}>
+                    {!showArchived && userCanEdit && <button className="btn btn-p btn-sm" onClick={()=>setNewRoleModal(true)}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                       </svg>
@@ -837,6 +839,7 @@ export default function Dashboard() {
                       onNote={c=>{setNoteModal(c);setNoteText(c.notes||'')}}
                       onDeleteCand={c=>setDeleteConfirm({type:'candidate',id:c.id,name:c.name})}
                       userIsAdmin={userIsAdmin}
+                      userCanEdit={userCanEdit}
                       me={me}
                     />
                   ))
