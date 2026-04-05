@@ -23,7 +23,9 @@ export function setCurrentUser(u) {
 }
 export function isAdmin()     { const u = getCurrentUser(); return u && u.role === 'admin' }
 export function isRecruiter() { const u = getCurrentUser(); return u && u.role === 'recruiter' }
+export function isViewer()    { const u = getCurrentUser(); return u && u.role === 'viewer' }
 export function isLoggedIn()  { return !!getCurrentUser() }
+export function canEdit()     { const u = getCurrentUser(); return u && (u.role === 'admin' || u.role === 'recruiter' || u.isSuper) }
 
 function RequireAuth({ children }) {
   return isLoggedIn() ? children : <Navigate to="/admin/login" replace />
