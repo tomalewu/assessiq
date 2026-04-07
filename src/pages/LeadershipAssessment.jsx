@@ -304,6 +304,125 @@ function downloadLeadershipPDF(candidate, results, role) {
   URL.revokeObjectURL(url)
 }
 
+// ── OPQ Section ──────────────────────────────────────────────────────
+function OPQSection({ candidate, responses, setResponses, onDone }) {
+  const [currentIdx, setCurrentIdx] = useState(0)
+  const total = OPQ_STATEMENTS.length
+  const current = OPQ_STATEMENTS[currentIdx]
+  const progress = Math.round((currentIdx / total) * 100)
+
+  const labels = [
+    { val: 1, label: 'Strongly Disagree' },
+    { val: 2, label: 'Disagree' },
+    { val: 3, label: 'Neutral' },
+    { val: 4, label: 'Agree' },
+    { val: 5, label: 'Strongly Agree' },
+  ]
+
+  const select = (val) => {
+    const newR = { ...responses, [current.id]: val }
+    setResponses(newR)
+    if (currentIdx < total - 1) {
+      setTimeout(() => setCurrentIdx(i => i + 1), 300)
+    }
+  }
+
+  const canFinish = OPQ_STATEMENTS.every(s => responses[s.id] !== undefined)
+  const dimInfo = OPQ_DIMENSIONS.find(d => d.id === current.dimension)
+
+  return (
+    <div className="shell">
+      <nav className="nav">
+        <div className="logo"><div className="logo-mark">A</div>AssessIQ</div>
+        <div className="nav-r" style={{ fontSize:13, color:'var(--ink3)' }}>
+          {dimInfo && <span>{dimInfo.icon} {dimInfo.label}</span>}
+          <span style={{ fontWeight:700, color:'var(--accent)' }}>{currentIdx + 1}/{total}</span>
+        </div>
+      </nav>
+
+      {/* Progress */}
+      <div style={{ height:3, background:'var(--line)', position:'fixed', top:56, left:0, right:0, zIndex:10 }}>
+        <div style={{ height:'100%', width:progress+'%', background:'var(--accent)', transition:'width .4s ease' }}/>
+      </div>
+
+      <div className="page" style={{ maxWidth:640, paddingTop:32 }}>
+        {/* Header */}
+        <div style={{ textAlign:'center', marginBottom:32 }}>
+          <div style={{ fontSize:11, fontWeight:700, color:'var(--ink3)', textTransform:'uppercase', letterSpacing:'.08em', marginBottom:8 }}>
+            Personality Assessment — Statement {currentIdx + 1} of {total}
+          </div>
+          <p style={{ fontSize:12, color:'var(--ink3)', lineHeight:1.6, maxWidth:480, margin:'0 auto' }}>
+            Rate how accurately each statement describes you in a professional context. There are no right or wrong answers.
+          </p>
+        </div>
+
+        {/* Statement Card */}
+        <div className="card card-xl" style={{ padding:36, marginBottom:28, textAlign:'center', minHeight:160, display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <div style={{ fontSize:16, fontWeight:600, lineHeight:1.7, color:'var(--ink)', maxWidth:480 }}>
+            {current.statement}
+          </div>
+        </div>
+
+        {/* Scale */}
+        <div style={{ display:'flex', gap:8, justifyContent:'center', flexWrap:'wrap' }}>
+          {labels.map(({ val, label }) => {
+            const selected = responses[current.id] === val
+            const colors = {
+              1: { bg:'#fee2e2', border:'#ef4444', text:'#dc2626' },
+              2: { bg:'#fff7ed', border:'#f97316', text:'#ea580c' },
+              3: { bg:'#f3f4f6', border:'#9ca3af', text:'#6b7280' },
+              4: { bg:'#eff6ff', border:'#3b82f6', text:'#2563eb' },
+              5: { bg:'#f0fdf4', border:'#22c55e', text:'#16a34a' },
+            }
+            const c = colors[val]
+            return (
+              <button key={val} onClick={() => select(val)}
+                style={{ padding:'12px 16px', borderRadius:12, border:'2px solid ' + (selected ? c.border : 'var(--line)'),
+                  background: selected ? c.bg : 'var(--paper)', color: selected ? c.text : 'var(--ink2)',
+                  fontWeight: selected ? 700 : 500, fontSize:12, cursor:'pointer', transition:'all .15s',
+                  minWidth:110, textAlign:'center', lineHeight:1.3 }}>
+                {label}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Navigation */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:32 }}>
+          <button className="btn btn-g btn-sm" onClick={() => setCurrentIdx(i => Math.max(0, i-1))}
+            disabled={currentIdx === 0} style={{ opacity: currentIdx === 0 ? 0 : 1 }}>
+            ← Previous
+          </button>
+          <div style={{ display:'flex', gap:6 }}>
+            {OPQ_STATEMENTS.map((s, i) => (
+              <div key={i} onClick={() => setCurrentIdx(i)}
+                style={{ width:8, height:8, borderRadius:999, cursor:'pointer', transition:'all .2s',
+                  background: responses[s.id] !== undefined ? 'var(--accent)' : i === currentIdx ? 'var(--ink3)' : 'var(--line)' }}/>
+            ))}
+          </div>
+          {currentIdx < total - 1 ? (
+            <button className="btn btn-p btn-sm" onClick={() => setCurrentIdx(i => i + 1)}
+              disabled={responses[current.id] === undefined}>
+              Next →
+            </button>
+          ) : (
+            <button className="btn btn-p btn-sm" onClick={onDone} disabled={!canFinish}
+              style={{ opacity: canFinish ? 1 : 0.5 }}>
+              Complete Assessment ✓
+            </button>
+          )}
+        </div>
+
+        {!canFinish && currentIdx === total - 1 && (
+          <p style={{ textAlign:'center', fontSize:12, color:'var(--warn)', marginTop:12 }}>
+            Please respond to all statements before completing.
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Results Screen ────────────────────────────────────────────────────
 function LResults({ candidate, results, role }) {
   const { dimScores, fitLabel, fitColor, leadershipStyle, pct } = results
@@ -399,6 +518,8 @@ export default function LeadershipAssessment() {
   const [results, setResults]     = useState(null)
   const [checking, setChecking]   = useState(false)
   const [alreadyTaken, setAlreadyTaken] = useState(null)
+  const [opqResponses, setOpqResponses] = useState({})
+  const [aiSJTLoading, setAiSJTLoading] = useState(false)
 
   let role = null
   try {
@@ -420,6 +541,21 @@ export default function LeadershipAssessment() {
   )
 
   // Check expiry
+  if (aiSJTLoading) return (
+    <div className="shell">
+      <nav className="nav"><div className="logo"><div className="logo-mark">A</div>AssessIQ</div></nav>
+      <div className="center">
+        <div style={{ textAlign:'center', maxWidth:360 }}>
+          <span className="sp sp-lg" style={{ marginBottom:20 }}/>
+          <h2 style={{ fontSize:18, fontWeight:700, marginBottom:8 }}>Preparing Your Assessment</h2>
+          <p style={{ color:'var(--ink3)', fontSize:13, lineHeight:1.7 }}>
+            Generating personalised questions for this role. This takes about 10 seconds.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+
   if (role.expiryDate && new Date(role.expiryDate) < new Date()) return (
     <div className="shell">
       <nav className="nav"><div className="logo"><div className="logo-mark">A</div>AssessIQ</div></nav>
@@ -453,11 +589,32 @@ export default function LeadershipAssessment() {
     setChecking(false)
     const tempId = genId('lc')
     const seed   = makeSeed(tempId)
-    const qs     = selectQuestions(20, seed)
     const candData = { roleId:role.id, roleName:role.title, assessmentType:'leadership',
       name:form.name, email:form.email, phone:form.phone }
     const savedCand = dbAddCandidate(candData)
     setCand(savedCand)
+
+    // Try to get AI-generated role-specific questions
+    setAiSJTLoading(true)
+    let qs = selectQuestions(15, seed)  // fallback bank questions
+    try {
+      const res = await fetch('/.netlify/functions/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'generate_leadership_sjt', roleTitle: role.title, department: role.dept || '' })
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.questions && data.questions.length >= 10) {
+          qs = data.questions.slice(0, 15)
+          console.log('AssessIQ: AI generated', qs.length, 'role-specific SJT questions for', role.title)
+        }
+      }
+    } catch(e) {
+      console.warn('AssessIQ: AI SJT generation failed, using question bank:', e.message)
+    }
+    setAiSJTLoading(false)
+
     setQuestions(qs)
     setStage('quiz')
   }
@@ -479,9 +636,66 @@ export default function LeadershipAssessment() {
     dbSaveCandidate(candidate.id, toSave)
     setResults(r)
     setStage('results')
+
+    // Score OPQ responses and save
+    const opqProfile = scoreOPQ(opqResponses)
+    dbSaveCandidate(candidate.id, { opqResponses, opqProfile })
+
+    // Run AI analysis in background — saves to Firebase when done, does not block UI
+    fetch('/.netlify/functions/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'analyse_leadership',
+        candidateData: {
+          name: candidate.name,
+          answers,
+          dimScores: r.dimScores,
+          fitLabel: r.fitLabel,
+          leadershipStyle: r.leadershipStyle,
+          leadershipPct: r.pct,
+          questions: questions || [],
+          opqProfile,
+          role: candidate.roleName
+        }
+      })
+    }).then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.analysis) {
+          dbSaveCandidate(candidate.id, { aiAnalysis: data.analysis })
+          console.log('AssessIQ: AI analysis saved for', candidate.name)
+        }
+      })
+      .catch(e => console.warn('AssessIQ: AI analysis failed (non-critical):', e.message))
   }
 
-  if (stage === 'quiz' && questions) return <LQuiz candidate={candidate} questions={questions} onDone={handleDone} />
+  if (stage === 'quiz' && questions) return <LQuiz candidate={candidate} questions={questions}
+    onDone={(answers, elapsed, tabSwitches, flagged) => {
+      // Save SJT answers first then move to OPQ
+      const r = scoreLeadership(answers)
+      const toSave = { tabSwitches: tabSwitches||0, flagged: flagged||false,
+        status: 'opq_pending',
+        completedAt: new Date().toISOString(),
+        timeTaken: elapsed,
+        fitLabel: r.fitLabel,
+        leadershipStyle: r.leadershipStyle,
+        leadershipPct: r.pct,
+        leadershipTotal: r.total,
+        leadershipMax: r.maxTotal,
+        dimScores: r.dimScores,
+        answers
+      }
+      dbSaveCandidate(candidate.id, toSave)
+      setResults({ ...r, answers, elapsed, tabSwitches, flagged })
+      setStage('opq')
+    }}
+  />
+  if (stage === 'opq') return <OPQSection
+    candidate={candidate}
+    responses={opqResponses}
+    setResponses={setOpqResponses}
+    onDone={() => handleDone(results.answers, results.elapsed, results.tabSwitches, results.flagged)}
+  />
   if (stage === 'results' && results) return <LResults candidate={candidate} results={results} role={role} />
   if (checking) return (
     <div className="shell">

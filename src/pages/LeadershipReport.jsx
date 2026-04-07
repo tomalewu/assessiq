@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { dbAllCandidates } from '../db'
 import { DIMENSIONS, getDimQualitative, getOverallNarrative } from '../leadership'
+import { OPQ_DIMENSIONS } from '../opq'
 
 export default function LeadershipReport() {
   const { candidateId } = useParams()
@@ -117,6 +118,137 @@ export default function LeadershipReport() {
           <div className="card card-xl" style={{ padding:24, marginBottom:20 }}>
             <div style={{ fontWeight:700, fontSize:15, marginBottom:10 }}>Recruiter Notes</div>
             <p style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.75 }}>{candidate.notes}</p>
+          </div>
+        )}
+
+        {/* OPQ Personality Profile */}
+        {candidate.opqProfile && (
+          <div className="card card-xl" style={{ padding:24, marginBottom:20 }}>
+            <div style={{ fontWeight:700, fontSize:15, marginBottom:4 }}>Personality Profile</div>
+            <div style={{ fontSize:12, color:'var(--ink3)', marginBottom:20 }}>Based on occupational personality assessment</div>
+            {OPQ_DIMENSIONS.map(dim => {
+              const score = candidate.opqProfile[dim.id]
+              if (!score) return null
+              const color = score.pct >= 75 ? 'var(--ok)' : score.pct >= 60 ? 'var(--accent)' : score.pct >= 40 ? 'var(--warn)' : 'var(--bad)'
+              return (
+                <div key={dim.id} style={{ marginBottom:14 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:5 }}>
+                    <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                      <span style={{ fontSize:16 }}>{dim.icon}</span>
+                      <span style={{ fontWeight:600, fontSize:13 }}>{dim.label}</span>
+                    </div>
+                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                      <span style={{ fontSize:11, fontWeight:700, color, background:color+'22', padding:'2px 8px', borderRadius:999 }}>{score.label}</span>
+                      <span style={{ fontSize:11, color:'var(--ink3)' }}>{score.pct}%</span>
+                    </div>
+                  </div>
+                  <div style={{ height:6, background:'var(--paper3)', borderRadius:3, overflow:'hidden' }}>
+                    <div style={{ height:'100%', width:score.pct+'%', background:color, borderRadius:3 }}/>
+                  </div>
+                  <div style={{ fontSize:11, color:'var(--ink3)', marginTop:3 }}>{dim.desc}</div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* AI Analysis Section */}
+        {candidate.aiAnalysis && (
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            <div style={{ fontWeight:800, fontSize:17, paddingTop:8, display:'flex', alignItems:'center', gap:10 }}>
+              AI-Powered Assessment
+              <span style={{ fontSize:11, fontWeight:500, color:'var(--ink3)', background:'var(--accent-dim)', color:'var(--accent)', padding:'3px 10px', borderRadius:999 }}>Claude AI</span>
+            </div>
+
+            <div className="card card-xl" style={{ padding:24 }}>
+              <div style={{ fontWeight:700, fontSize:12, color:'var(--accent)', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:12 }}>Executive Summary</div>
+              <p style={{ fontSize:14, lineHeight:1.85, color:'var(--ink2)', margin:0 }}>{candidate.aiAnalysis.executiveSummary}</p>
+            </div>
+
+            <div className="card card-xl" style={{ padding:24 }}>
+              <div style={{ fontWeight:700, fontSize:12, color:'var(--accent)', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:12 }}>Leadership Profile</div>
+              <p style={{ fontSize:13, lineHeight:1.85, color:'var(--ink2)', margin:0, whiteSpace:'pre-line' }}>{candidate.aiAnalysis.leadershipProfile}</p>
+            </div>
+
+            {candidate.aiAnalysis.dimensionInsights && (
+              <div className="card card-xl" style={{ padding:24 }}>
+                <div style={{ fontWeight:700, fontSize:12, color:'var(--accent)', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:16 }}>Dimension Analysis</div>
+                {[
+                  { id:'conflict',      label:'Conflict Resolution',     icon:'🤝' },
+                  { id:'delegation',    label:'Delegation & Empowerment', icon:'📋' },
+                  { id:'motivation',    label:'Team Motivation',          icon:'🔥' },
+                  { id:'decision',      label:'Decision Making',          icon:'⚡' },
+                  { id:'communication', label:'Communication',            icon:'💬' },
+                ].map(dim => candidate.aiAnalysis.dimensionInsights[dim.id] && (
+                  <div key={dim.id} style={{ marginBottom:16, paddingBottom:16, borderBottom:'1px solid var(--line)' }}>
+                    <div style={{ fontWeight:700, fontSize:13, marginBottom:6 }}>{dim.icon} {dim.label}</div>
+                    <p style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.75, margin:0 }}>{candidate.aiAnalysis.dimensionInsights[dim.id]}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+              {candidate.aiAnalysis.keyStrengths && (
+                <div className="card card-xl" style={{ padding:24 }}>
+                  <div style={{ fontWeight:700, fontSize:12, color:'var(--ok)', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:12 }}>Key Strengths</div>
+                  {candidate.aiAnalysis.keyStrengths.map((s, i) => (
+                    <div key={i} style={{ display:'flex', gap:8, marginBottom:10, fontSize:13 }}>
+                      <span style={{ color:'var(--ok)', flexShrink:0 }}>✓</span>
+                      <span style={{ color:'var(--ink2)', lineHeight:1.6 }}>{s}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {candidate.aiAnalysis.developmentAreas && (
+                <div className="card card-xl" style={{ padding:24 }}>
+                  <div style={{ fontWeight:700, fontSize:12, color:'var(--warn)', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:12 }}>Development Areas</div>
+                  {candidate.aiAnalysis.developmentAreas.map((d, i) => (
+                    <div key={i} style={{ display:'flex', gap:8, marginBottom:10, fontSize:13 }}>
+                      <span style={{ color:'var(--warn)', flexShrink:0 }}>△</span>
+                      <span style={{ color:'var(--ink2)', lineHeight:1.6 }}>{d}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {candidate.aiAnalysis.leadershipRisks && (
+              <div className="card card-xl" style={{ padding:24, background:'var(--bad-dim)', border:'1px solid #fca5a544' }}>
+                <div style={{ fontWeight:700, fontSize:12, color:'var(--bad)', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:10 }}>Leadership Risk Indicators</div>
+                <p style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.75, margin:0 }}>{candidate.aiAnalysis.leadershipRisks}</p>
+              </div>
+            )}
+
+            {candidate.aiAnalysis.recruiterRecommendation && (
+              <div className="card card-xl" style={{ padding:24, background:'var(--ink)', border:'none' }}>
+                <div style={{ fontWeight:700, fontSize:12, color:'rgba(255,255,255,.45)', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:12 }}>Recruiter Recommendation</div>
+                <p style={{ fontSize:14, color:'rgba(255,255,255,.92)', lineHeight:1.85, margin:0, fontStyle:'italic' }}>{candidate.aiAnalysis.recruiterRecommendation}</p>
+              </div>
+            )}
+
+            {candidate.aiAnalysis.interviewQuestions && (
+              <div className="card card-xl" style={{ padding:24 }}>
+                <div style={{ fontWeight:700, fontSize:12, color:'var(--accent)', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:16 }}>Suggested Interview Questions</div>
+                {candidate.aiAnalysis.interviewQuestions.map((q, i) => (
+                  <div key={i} style={{ display:'flex', gap:12, marginBottom:16, paddingBottom:16,
+                    borderBottom: i < candidate.aiAnalysis.interviewQuestions.length-1 ? '1px solid var(--line)' : 'none' }}>
+                    <div style={{ width:26, height:26, borderRadius:999, background:'var(--accent-dim)',
+                      color:'var(--accent)', fontWeight:800, fontSize:12, display:'flex', alignItems:'center',
+                      justifyContent:'center', flexShrink:0 }}>{i+1}</div>
+                    <p style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.75, margin:0 }}>{q}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!candidate.aiAnalysis && candidate.status === 'completed' && (
+          <div className="card card-xl" style={{ padding:32, textAlign:'center' }}>
+            <div style={{ fontSize:32, marginBottom:12 }}>⏳</div>
+            <div style={{ fontSize:14, fontWeight:700, marginBottom:6 }}>AI Analysis Pending</div>
+            <div style={{ fontSize:12, color:'var(--ink3)' }}>The personalised AI analysis is being generated. Refresh this page in a few seconds.</div>
           </div>
         )}
 
