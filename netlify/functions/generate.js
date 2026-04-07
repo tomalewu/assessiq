@@ -146,31 +146,17 @@ async function parseCV(cvBase64, mimeType) {
 async function generateLeadershipSJT(roleTitle, department, difficulty) {
   const systemPrompt = 'You are an expert psychometric assessment designer specialising in leadership SJT questions. Return ONLY valid JSON, no explanation, no markdown.'
 
-  const prompt = `Generate 15 situational judgement questions for candidates applying for the role of "${roleTitle}" in the ${department || 'Corporate'} department.
+  const prompt = `Generate 10 leadership SJT questions for a ${roleTitle} in ${department || 'Corporate'} department.
 
-Each question must:
-- Present a realistic leadership scenario specific to this role and department
-- Have exactly 4 response options — ALL must be plausible and professionally defensible
-- Use NO obviously wrong answers — a strong leader could justify any option
-- Include specific details (numbers, timelines, percentages, headcounts) to prevent guessing
-- Have one option that reflects optimal leadership judgment for this context
-- Vary across these dimensions: conflict_resolution, delegation, motivation, decision_making, communication
+Return JSON array of 10 objects. Each object:
+{"id":"Q1","dimension":"conflict","scenario":"Specific scenario for ${roleTitle}...","options":[{"text":"Option A","score":1},{"text":"Option B","score":3},{"text":"Option C","score":2},{"text":"Option D","score":0}]}
 
-Return a JSON array of exactly 15 objects:
-[{
-  "id": "Q1",
-  "dimension": "conflict",
-  "scenario": "You are the ${roleTitle} and...[specific scenario with context]",
-  "options": [
-    {"text": "Option A — plausible but suboptimal", "score": 1},
-    {"text": "Option B — optimal response", "score": 3},
-    {"text": "Option C — reasonable but misses key element", "score": 2},
-    {"text": "Option D — defensible but reactive", "score": 0}
-  ]
-}]
-
-Dimension values must be one of: conflict, delegation, motivation, decision, communication
-Scores must be 0, 1, 2, or 3. Only one option should score 3.
+Rules:
+- Scenarios must be specific to ${roleTitle} role with real numbers/timelines
+- All 4 options must be professionally plausible (no obviously wrong answers)
+- Exactly one option scores 3, others score 0-2
+- dimension must be one of: conflict, delegation, motivation, decision, communication
+- Use 2 questions per dimension
 Return ONLY the JSON array.`
 
   const text = await callClaude(systemPrompt, prompt, 4000)
