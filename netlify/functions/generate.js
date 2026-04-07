@@ -179,89 +179,88 @@ Return ONLY the JSON array.`
 
 // ── Leadership AI Analysis ───────────────────────────────────────────
 async function analyseLeadership(candidateData) {
-  const { name, answers, dimScores, fitLabel, leadershipStyle, leadershipPct, questions, role } = candidateData
+  const { name, answers, dimScores, fitLabel, leadershipStyle, leadershipPct, questions, role, opqProfile } = candidateData
 
-  // Build answer summary for Claude — what the candidate actually chose
-  const answerSummary = questions.map(q => {
+  // Build SJT answer summary
+  const answerSummary = (questions || []).map(q => {
     const selected = answers[q.id]
     if (selected === undefined || selected === null) return null
     const chosenOption = q.options[selected]
-    return {
-      dimension: q.dimension,
-      scenario: q.scenario,
-      chosen: chosenOption.text,
-      score: chosenOption.score,
-      maxScore: 3
-    }
+    if (!chosenOption) return null
+    return { dimension: q.dimension, scenario: (q.scenario || '').slice(0, 100), chosen: chosenOption.text, score: chosenOption.score }
   }).filter(Boolean)
 
   // Build dimension breakdown
-  const dimBreakdown = Object.entries(dimScores).map(([dim, ds]) => {
+  const dimBreakdown = Object.entries(dimScores || {}).map(([dim, ds]) => {
     const pct = ds.max > 0 ? Math.round(ds.score / ds.max * 100) : 0
-    return dim + ': ' + ds.score + '/' + ds.max + ' (' + pct + '%)'
+    return dim + ': ' + pct + '%'
   }).join(', ')
 
-  // Group answers by dimension for pattern analysis
+  // Build OPQ summary
+  const opqSummary = opqProfile ? Object.entries(opqProfile).map(([dim, data]) => dim + ': ' + data.label + ' (' + data.pct + '%)').join(', ') : 'Not available'
+
+  // Group SJT answers by dimension
   const byDim = {}
   answerSummary.forEach(a => {
     if (!byDim[a.dimension]) byDim[a.dimension] = []
-    byDim[a.dimension].push({ scenario: a.scenario.slice(0, 120) + '...', chosen: a.chosen, score: a.score })
+    byDim[a.dimension].push({ chosen: a.chosen, score: a.score })
   })
 
-  const systemPrompt = `You are an expert leadership psychologist and organisational consultant writing professional candidate assessment reports. Your analysis must be:
-- Specific to this candidate's actual responses, not generic
-- Evidence-based — reference what they actually chose in specific scenarios
-- Balanced — acknowledge both strengths and development areas honestly
-- Professional but human — not robotic or formulaic
-- Actionable — give recruiters something useful
-Write in third person about the candidate. Use ${name} by name.`
+  const systemPrompt = `You are an expert occupational psychologist writing professional leadership assessment reports. You generate two outputs from the same assessment data:
+1. A candidate-facing qualitative profile — warm, developmental, no scores or labels
+2. A recruiter-facing analytical report — evidence-based, honest, includes recommendation
 
-  // Include OPQ profile if available
-  const opqSection = candidateData.opqProfile
-    ? `\n\nPERSONALITY PROFILE (OPQ-style):\n` + Object.entries(candidateData.opqProfile).map(([dim, data]) => dim + ': ' + data.label + ' (' + data.pct + '%)').join(', ')
-    : ''
+Always write in a professional but human tone. Reference the candidate by name.`
 
-  const userPrompt = `Analyse this leadership assessment for ${name} applying for ${role || 'a leadership role'}.
+  const userPrompt = `Generate a dual leadership assessment report for ${name} applying for ${role || 'a leadership role'}.
 
-OVERALL RESULT: ${fitLabel} | ${leadershipStyle} style | ${leadershipPct}% overall
-DIMENSION SCORES: ${dimBreakdown}${opqSection}
+ASSESSMENT DATA:
+- SJT Overall: ${fitLabel} | ${leadershipStyle} style | ${leadershipPct}%
+- SJT Dimensions: ${dimBreakdown}
+- OPQ Personality: ${opqSummary}
+- SJT Response patterns: ${JSON.stringify(byDim)}
 
-ACTUAL RESPONSES BY DIMENSION:
-${JSON.stringify(byDim, null, 2)}
+Generate a JSON object with TWO sections:
 
-Write a comprehensive professional leadership assessment report in JSON format:
 {
-  "executiveSummary": "3-4 sentence executive summary of this specific candidate's leadership profile. Reference their actual response patterns. Mention their name.",
-  
-  "leadershipProfile": "2-3 paragraph detailed leadership profile. Describe their natural leadership orientation based on what they actually chose. Be specific about HOW they approach leadership situations — not just that they scored X%.",
-  
-  "dimensionInsights": {
-    "conflict": "2-3 sentences specific to their conflict resolution responses. What patterns did you notice? What does this reveal?",
-    "delegation": "2-3 sentences specific to their delegation responses.",
-    "motivation": "2-3 sentences specific to their motivation responses.",
-    "decision": "2-3 sentences specific to their decision making responses.",
-    "communication": "2-3 sentences specific to their communication responses."
+  "candidateReport": {
+    "headline": "2-4 word leadership style label (e.g. 'Empowering Collaborative Leader') — no fit labels, no scores",
+    "opening": "2-3 sentence personalised opening that describes their natural leadership orientation based on BOTH SJT and OPQ data. Warm and specific. Use their name.",
+    "strengths": "2-3 sentence paragraph describing what they do well as a leader. Reference specific patterns from their responses. Positive but evidence-based.",
+    "growthAreas": "2-3 sentence paragraph describing 1-2 areas for leadership development. Framed as opportunity, not failure. Never mention scores.",
+    "personalityInsight": "2 sentences connecting their OPQ personality profile to their leadership style. E.g. high empathy + strong conflict scores = natural mediator.",
+    "closing": "1-2 sentences of genuine encouragement and forward-looking development framing. Professional and warm."
   },
-  
-  "keyStrengths": ["Specific strength 1 based on their responses", "Specific strength 2", "Specific strength 3"],
-  
-  "developmentAreas": ["Specific development area 1 with evidence from responses", "Specific development area 2"],
-  
-  "leadershipRisks": "1-2 sentences on the specific leadership derailer risks this candidate shows based on their response pattern. Be honest.",
-  
-  "recruiterRecommendation": "2-3 sentence recommendation to the hiring manager. Should they proceed? Under what conditions? What to probe in interview?",
-  
-  "interviewQuestions": [
-    "Behavioural question targeting their weakest dimension with specific context",
-    "Behavioural question probing a pattern you noticed in their responses",
-    "Situational question that tests whether their assessment responses match real behaviour",
-    "Question probing their leadership risk area"
-  ]
+
+  "recruiterReport": {
+    "executiveSummary": "3-4 sentences specific to this candidate. Include honest assessment of fit. Reference both SJT and OPQ data.",
+    "fitVerdict": "${fitLabel}",
+    "leadershipProfile": "2-3 paragraph deep analysis of this candidate's leadership capability. Specific, evidence-based, references actual response patterns.",
+    "dimensionInsights": {
+      "conflict": "2-3 sentences on their conflict resolution approach based on their actual SJT choices",
+      "delegation": "2-3 sentences on their delegation approach",
+      "motivation": "2-3 sentences on their motivation approach",
+      "decision": "2-3 sentences on their decision making approach",
+      "communication": "2-3 sentences on their communication approach"
+    },
+    "personalityAnalysis": "2-3 sentences on what their OPQ profile reveals about their personality and how it interacts with their SJT performance",
+    "keyStrengths": ["Specific strength 1 with evidence", "Specific strength 2", "Specific strength 3"],
+    "developmentAreas": ["Specific development area 1 with evidence", "Specific development area 2"],
+    "leadershipRisks": "1-2 sentences on specific derailer risks based on their pattern",
+    "recruiterRecommendation": "3 sentences: overall recommendation, what to probe in interview, any conditions",
+    "interviewQuestions": [
+      "Behavioural question targeting their weakest SJT dimension",
+      "Question probing a pattern in their OPQ profile",
+      "Situational question testing whether responses match real behaviour",
+      "Question probing their specific leadership risk area"
+    ]
+  }
 }
 
-Return ONLY the JSON object. Be specific, evidence-based, and genuinely useful to a recruiter making a hiring decision.`
+Be specific. Reference actual response patterns. The candidate report must never mention scores, percentages, or fit labels.
+Return ONLY the JSON object.`
 
-  const text = await callClaude(systemPrompt, userPrompt, 3000)
+  const text = await callClaude(systemPrompt, userPrompt, 3500)
   const s = text.indexOf('{'), e = text.lastIndexOf('}')
   if (s === -1 || e === -1) throw new Error('No JSON in analysis response')
   return JSON.parse(text.slice(s, e + 1))
