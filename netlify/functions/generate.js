@@ -95,46 +95,175 @@ async function generateQuestions(difficulty) {
 // ── CV Parsing ────────────────────────────────────────────────────────
 async function parseCV(cvBase64, mimeType) {
   const systemPrompt = 'You are a CV parser. Extract structured data from CVs. Return ONLY valid JSON, no explanation, no markdown.'
+  const jsonSchema = '{"name":"Full name","email":"email@example.com","phone":"phone number","dob":"YYYY-MM-DD or null","currentRole":"Job title or null","currentCompany":"Company or null","totalExperience":5,"education":[{"degree":"BSc","institution":"University","year":"2018"}],"experience":[{"title":"Manager","company":"Company","duration":"2020-2023","summary":"One sentence."}],"skills":["Excel"],"languages":["English"]}'
+  const userPrompt = 'Parse this CV and return a JSON object matching this schema. Use null for missing strings, 0 for missing numbers, [] for missing arrays. Return ONLY the JSON.\n\nSchema: ' + jsonSchema
 
-  const userPrompt = 'Parse this CV and extract the following information. Return a JSON object with exactly these fields:\n{\n  "name": "Full name of the candidate",\n  "email": "Email address",\n  "phone": "Phone number",\n  "dob": "Date of birth in YYYY-MM-DD format if found, else null",\n  "currentRole": "Current or most recent job title",\n  "currentCompany": "Current or most recent employer",\n  "totalExperience": "Estimated total years of experience as a number",\n  "education": [\n    {\n      "degree": "Degree name",\n      "institution": "University or school name",\n      "year": "Graduation year"\n    }\n  ],\n  "experience": [\n    {\n      "title": "Job title",\n      "company": "Company name",\n      "duration": "e.g. 2019-2022",\n      "summary": "Brief 1-sentence summary of responsibilities"\n    }\n  ],\n  "skills": ["skill1", "skill2"],\n  "languages": ["English", "Bengali"]\n}\n\nIf a field is not found, use null for strings and [] for arrays.\nReturn ONLY the JSON object.'
+  const isPDF = !mimeType || mimeType === 'application/pdf' || mimeType.includes('pdf')
+
+  let messages
+  if (isPDF) {
+    // PDF: send as document — Claude reads it natively
+    messages = [{
+      role: 'user',
+      content: [
+        { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: cvBase64 } },
+        { type: 'text', text: userPrompt }
+      ]
+    }]
+  } else {
+    // Word/DOCX: extract readable ASCII text from binary and send as text prompt
+    const rawText = Buffer.from(cvBase64, 'base64').toString('utf8')
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\xFF]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .slice(0, 4000)
+    messages = [{
+      role: 'user',
+      content: 'Parse this CV text and return JSON matching this schema: ' + jsonSchema + '\n\nCV text:\n' + rawText + '\n\nReturn ONLY the JSON object.'
+    }]
+  }
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
-      system: systemPrompt,
-      messages: [{
-        role: 'user',
-        content: [
-          {
-            type: 'document',
-            source: {
-              type: 'base64',
-              media_type: mimeType || 'application/pdf',
-              data: cvBase64
-            }
-          },
-          { type: 'text', text: userPrompt }
-        ]
-      }]
-    })
+    headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1500, system: systemPrompt, messages })
   })
 
   if (!res.ok) {
-    const err = await res.json()
-    throw new Error(err.error?.message || 'Claude API error: ' + res.status)
+    const errBody = await res.text()
+    console.error('CV parse error:', res.status, errBody.slice(0, 200))
+    throw new Error('Claude API ' + res.status)
   }
 
   const data = await res.json()
   const text = data.content?.[0]?.text || ''
   const s = text.indexOf('{'), e = text.lastIndexOf('}')
-  if (s === -1 || e === -1) throw new Error('No JSON object in CV parse response')
+  if (s === -1 || e === -1) throw new Error('No JSON in CV parse response')
+  return JSON.parse(text.slice(s, e + 1))
+}
+
+
+// ── AI Leadership SJT Question Generation ────────────────────────────
+async function generateLeadershipSJT(roleTitle, department, difficulty) {
+  const systemPrompt = 'You are an expert psychometric assessment designer specialising in leadership SJT questions. Return ONLY valid JSON, no explanation, no markdown.'
+
+  const prompt = `Generate 15 situational judgement questions for candidates applying for the role of "${roleTitle}" in the ${department || 'Corporate'} department.
+
+Each question must:
+- Present a realistic leadership scenario specific to this role and department
+- Have exactly 4 response options — ALL must be plausible and professionally defensible
+- Use NO obviously wrong answers — a strong leader could justify any option
+- Include specific details (numbers, timelines, percentages, headcounts) to prevent guessing
+- Have one option that reflects optimal leadership judgment for this context
+- Vary across these dimensions: conflict_resolution, delegation, motivation, decision_making, communication
+
+Return a JSON array of exactly 15 objects:
+[{
+  "id": "Q1",
+  "dimension": "conflict",
+  "scenario": "You are the ${roleTitle} and...[specific scenario with context]",
+  "options": [
+    {"text": "Option A — plausible but suboptimal", "score": 1},
+    {"text": "Option B — optimal response", "score": 3},
+    {"text": "Option C — reasonable but misses key element", "score": 2},
+    {"text": "Option D — defensible but reactive", "score": 0}
+  ]
+}]
+
+Dimension values must be one of: conflict, delegation, motivation, decision, communication
+Scores must be 0, 1, 2, or 3. Only one option should score 3.
+Return ONLY the JSON array.`
+
+  const text = await callClaude(systemPrompt, prompt, 4000)
+  return parseArr(text)
+}
+
+// ── Leadership AI Analysis ───────────────────────────────────────────
+async function analyseLeadership(candidateData) {
+  const { name, answers, dimScores, fitLabel, leadershipStyle, leadershipPct, questions, role } = candidateData
+
+  // Build answer summary for Claude — what the candidate actually chose
+  const answerSummary = questions.map(q => {
+    const selected = answers[q.id]
+    if (selected === undefined || selected === null) return null
+    const chosenOption = q.options[selected]
+    return {
+      dimension: q.dimension,
+      scenario: q.scenario,
+      chosen: chosenOption.text,
+      score: chosenOption.score,
+      maxScore: 3
+    }
+  }).filter(Boolean)
+
+  // Build dimension breakdown
+  const dimBreakdown = Object.entries(dimScores).map(([dim, ds]) => {
+    const pct = ds.max > 0 ? Math.round(ds.score / ds.max * 100) : 0
+    return dim + ': ' + ds.score + '/' + ds.max + ' (' + pct + '%)'
+  }).join(', ')
+
+  // Group answers by dimension for pattern analysis
+  const byDim = {}
+  answerSummary.forEach(a => {
+    if (!byDim[a.dimension]) byDim[a.dimension] = []
+    byDim[a.dimension].push({ scenario: a.scenario.slice(0, 120) + '...', chosen: a.chosen, score: a.score })
+  })
+
+  const systemPrompt = `You are an expert leadership psychologist and organisational consultant writing professional candidate assessment reports. Your analysis must be:
+- Specific to this candidate's actual responses, not generic
+- Evidence-based — reference what they actually chose in specific scenarios
+- Balanced — acknowledge both strengths and development areas honestly
+- Professional but human — not robotic or formulaic
+- Actionable — give recruiters something useful
+Write in third person about the candidate. Use ${name} by name.`
+
+  // Include OPQ profile if available
+  const opqSection = candidateData.opqProfile
+    ? `\n\nPERSONALITY PROFILE (OPQ-style):\n` + Object.entries(candidateData.opqProfile).map(([dim, data]) => dim + ': ' + data.label + ' (' + data.pct + '%)').join(', ')
+    : ''
+
+  const userPrompt = `Analyse this leadership assessment for ${name} applying for ${role || 'a leadership role'}.
+
+OVERALL RESULT: ${fitLabel} | ${leadershipStyle} style | ${leadershipPct}% overall
+DIMENSION SCORES: ${dimBreakdown}${opqSection}
+
+ACTUAL RESPONSES BY DIMENSION:
+${JSON.stringify(byDim, null, 2)}
+
+Write a comprehensive professional leadership assessment report in JSON format:
+{
+  "executiveSummary": "3-4 sentence executive summary of this specific candidate's leadership profile. Reference their actual response patterns. Mention their name.",
+  
+  "leadershipProfile": "2-3 paragraph detailed leadership profile. Describe their natural leadership orientation based on what they actually chose. Be specific about HOW they approach leadership situations — not just that they scored X%.",
+  
+  "dimensionInsights": {
+    "conflict": "2-3 sentences specific to their conflict resolution responses. What patterns did you notice? What does this reveal?",
+    "delegation": "2-3 sentences specific to their delegation responses.",
+    "motivation": "2-3 sentences specific to their motivation responses.",
+    "decision": "2-3 sentences specific to their decision making responses.",
+    "communication": "2-3 sentences specific to their communication responses."
+  },
+  
+  "keyStrengths": ["Specific strength 1 based on their responses", "Specific strength 2", "Specific strength 3"],
+  
+  "developmentAreas": ["Specific development area 1 with evidence from responses", "Specific development area 2"],
+  
+  "leadershipRisks": "1-2 sentences on the specific leadership derailer risks this candidate shows based on their response pattern. Be honest.",
+  
+  "recruiterRecommendation": "2-3 sentence recommendation to the hiring manager. Should they proceed? Under what conditions? What to probe in interview?",
+  
+  "interviewQuestions": [
+    "Behavioural question targeting their weakest dimension with specific context",
+    "Behavioural question probing a pattern you noticed in their responses",
+    "Situational question that tests whether their assessment responses match real behaviour",
+    "Question probing their leadership risk area"
+  ]
+}
+
+Return ONLY the JSON object. Be specific, evidence-based, and genuinely useful to a recruiter making a hiring decision.`
+
+  const text = await callClaude(systemPrompt, userPrompt, 3000)
+  const s = text.indexOf('{'), e = text.lastIndexOf('}')
+  if (s === -1 || e === -1) throw new Error('No JSON in analysis response')
   return JSON.parse(text.slice(s, e + 1))
 }
 
@@ -167,6 +296,20 @@ exports.handler = async (event) => {
       if (!difficulty) return { statusCode: 400, headers, body: JSON.stringify({ error: 'difficulty required' }) }
       const questions = await generateQuestions(difficulty)
       return { statusCode: 200, headers, body: JSON.stringify({ questions }) }
+    }
+
+    if (action === 'generate_leadership_sjt') {
+      const { roleTitle, department } = body
+      if (!roleTitle) return { statusCode: 400, headers, body: JSON.stringify({ error: 'roleTitle required' }) }
+      const questions = await generateLeadershipSJT(roleTitle, department)
+      return { statusCode: 200, headers, body: JSON.stringify({ questions }) }
+    }
+
+    if (action === 'analyse_leadership') {
+      const { candidateData } = body
+      if (!candidateData) return { statusCode: 400, headers, body: JSON.stringify({ error: 'candidateData required' }) }
+      const analysis = await analyseLeadership(candidateData)
+      return { statusCode: 200, headers, body: JSON.stringify({ analysis }) }
     }
 
     if (action === 'parse_cv') {
