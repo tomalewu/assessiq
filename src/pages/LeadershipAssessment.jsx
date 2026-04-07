@@ -149,9 +149,16 @@ function LQuiz({ candidate, questions, onDone, totalSecs, setTotalSecs }) {
     }
   }, [totalSecs])
 
-  const q      = questions[idx]
-  const isLast = idx === questions.length - 1
-  const total  = questions.length
+  const q      = questions && questions[idx] ? questions[idx] : null
+  const isLast = q && idx === questions.length - 1
+  const total  = questions ? questions.length : 0
+
+  if (!q) return (
+    <div className="shell">
+      <nav className="nav"><div className="logo"><div className="logo-mark">A</div>AssessIQ</div></nav>
+      <div className="center"><span className="sp sp-lg"/></div>
+    </div>
+  )
 
   const next = () => {
     if (sel === null) return
