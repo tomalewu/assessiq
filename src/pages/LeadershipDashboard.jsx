@@ -705,7 +705,7 @@ export default function LeadershipDashboard() {
                   value={form.expiryDate} onChange={e=>setForm(p=>({...p,expiryDate:e.target.value}))}/>
               </div>
               <div style={{ padding:'12px 14px', background:'var(--accent-dim)', border:'1px solid var(--accent-mid)', borderRadius:9, fontSize:12, color:'var(--ink2)', lineHeight:1.6 }}>
-                📋 This will create a <strong>Leadership SJT Assessment</strong> — 20 situational judgement questions across 5 dimensions. No cognitive test included.
+                📋 This creates a <strong>Leadership Assessment</strong> — 10 AI-generated situational questions specific to this role + 30 personality statements. 45-minute time limit. Fully AI-analysed.
               </div>
             </div>
             <div style={{ display:'flex', gap:10, marginTop:20 }}>
@@ -729,7 +729,7 @@ export default function LeadershipDashboard() {
               <button className="btn btn-p btn-sm" onClick={()=>copyLink(linkModal)}>{copied?'✓ Copied!':'Copy Link'}</button>
             </div>
             <div style={{ background:'var(--accent-dim)', border:'1px solid var(--accent-mid)', borderRadius:9, padding:'10px 14px', fontSize:12, color:'var(--ink2)', marginTop:12 }}>
-              20 SJT questions · 5 dimensions · Qualitative results only for candidates · Full scores visible to you
+              10 situational + 30 personality statements · 45-min · AI-powered analysis
             </div>
             <div style={{ display:'flex', gap:10, marginTop:16 }}>
               <button className="btn btn-s" style={{ flex:1, justifyContent:'center' }} onClick={()=>setLinkModal(null)}>Done</button>

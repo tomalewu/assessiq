@@ -41,18 +41,37 @@ function LWelcome({ role, onBegin }) {
             </p>
           </div>
 
-          <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:24 }}>
+          {/* Assessment structure */}
+          <div className="card card-xl" style={{ padding:20, marginBottom:16, background:'var(--accent-dim)', border:'1px solid var(--accent-mid)' }}>
+            <div style={{ fontWeight:700, fontSize:13, color:'var(--accent)', marginBottom:12 }}>Assessment Structure</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}>
+                <span>📋 Part 1 — Situational Judgement</span>
+                <span style={{ fontWeight:700, color:'var(--accent)' }}>15 questions</span>
+              </div>
+              <div style={{ display:'flex', justifyContent:'space-between', fontSize:13 }}>
+                <span>🧠 Part 2 — Personality Assessment</span>
+                <span style={{ fontWeight:700, color:'var(--accent)' }}>30 statements</span>
+              </div>
+              <div style={{ height:1, background:'var(--accent-mid)', margin:'4px 0' }}/>
+              <div style={{ display:'flex', justifyContent:'space-between', fontSize:13, fontWeight:700 }}>
+                <span>⏱ Total Time Allowed</span>
+                <span style={{ color:'var(--accent)' }}>30 minutes</span>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display:'flex', flexDirection:'column', gap:8, marginBottom:24 }}>
             {[
-              { icon:'📋', label:'20 situational questions', sub:'Real workplace scenarios' },
-              { icon:'⏱', label:'30-minute time limit', sub:'90 seconds per question — reflect carefully' },
-              { icon:'🎯', label:'Qualitative results', sub:'Personalised leadership profile' },
-              { icon:'🔒', label:'No right or wrong answers', sub:'We assess your natural approach' },
+              { icon:'🎯', label:'No right or wrong answers', sub:'We assess your natural leadership approach' },
+              { icon:'🔒', label:'Confidential', sub:'Results are only shared with the recruitment team' },
+              { icon:'📵', label:'No distractions', sub:'Find a quiet space — tab switching is monitored' },
             ].map((item, i) => (
-              <div key={i} className="card card-xl" style={{ padding:'14px 18px', display:'flex', gap:12, alignItems:'center' }}>
-                <span style={{ fontSize:22, flexShrink:0 }}>{item.icon}</span>
+              <div key={i} className="card card-xl" style={{ padding:'12px 16px', display:'flex', gap:12, alignItems:'center' }}>
+                <span style={{ fontSize:20, flexShrink:0 }}>{item.icon}</span>
                 <div>
                   <div style={{ fontWeight:600, fontSize:13 }}>{item.label}</div>
-                  <div style={{ fontSize:12, color:'var(--ink3)' }}>{item.sub}</div>
+                  <div style={{ fontSize:11, color:'var(--ink3)' }}>{item.sub}</div>
                 </div>
               </div>
             ))}
@@ -86,7 +105,7 @@ function LWelcome({ role, onBegin }) {
             Begin Leadership Assessment →
           </button>
           <p style={{ textAlign:'center', fontSize:11, color:'var(--ink3)', marginTop:12, lineHeight:1.6 }}>
-            This assessment has a 30-minute time limit. Find a quiet place and ensure you will not be interrupted.
+            This assessment has a 30-minute time limit covering both parts. Find a quiet place and ensure you will not be interrupted.
           </p>
         </div>
       </div>
@@ -95,11 +114,11 @@ function LWelcome({ role, onBegin }) {
 }
 
 // ── SJT Quiz ─────────────────────────────────────────────────────────
-function LQuiz({ candidate, questions, onDone }) {
+function LQuiz({ candidate, questions, onDone, totalSecs, setTotalSecs }) {
   const [idx, setIdx]         = useState(0)
   const [answers, setAnswers] = useState({})
   const [sel, setSel]         = useState(null)
-  const [secs, setSecs]       = useState(1800) // 30 minutes
+  // Timer managed by parent component (totalSecs prop)
   const [tabSwitches, setTabSwitches] = useState(0)
   const [tabWarning, setTabWarning]   = useState(false)
   const [flagged, setFlagged]         = useState(false)
@@ -123,20 +142,12 @@ function LQuiz({ candidate, questions, onDone }) {
     return () => document.removeEventListener('visibilitychange', handle)
   }, [])
 
-  // Hard 30-minute timer
+  // Auto-submit when global timer hits 0
   useEffect(() => {
-    const tick = setInterval(() => {
-      setSecs(s => {
-        if (s <= 1) {
-          clearInterval(tick)
-          onDone({ ...answersRef.current }, Math.round((Date.now() - t0Ref.current) / 1000), tabSwitches, tabSwitches >= 3)
-          return 0
-        }
-        return s - 1
-      })
-    }, 1000)
-    return () => clearInterval(tick)
-  }, [])
+    if (totalSecs <= 0) {
+      onDone({ ...answersRef.current }, Math.round((Date.now() - t0Ref.current) / 1000), tabSwitches, tabSwitches >= 3)
+    }
+  }, [totalSecs])
 
   const q      = questions[idx]
   const isLast = idx === questions.length - 1
@@ -200,12 +211,12 @@ function LQuiz({ candidate, questions, onDone }) {
             {DIMENSIONS.find(d=>d.id===q.dimension)?.label}
           </div>
           <div style={{ display:'flex', alignItems:'center', gap:6, padding:'5px 12px',
-            background: secs < 300 ? 'var(--bad-dim)' : 'var(--paper2)',
-            border: '1.5px solid ' + (secs < 300 ? 'var(--bad)' : 'var(--line)'),
+            background: totalSecs < 300 ? 'var(--bad-dim)' : 'var(--paper2)',
+            border: '1.5px solid ' + (totalSecs < 300 ? 'var(--bad)' : 'var(--line)'),
             borderRadius: 8, fontSize:13, fontWeight:700,
-            color: secs < 300 ? 'var(--bad)' : 'var(--ink2)' }}>
+            color: totalSecs < 300 ? 'var(--bad)' : 'var(--ink2)' }}>
             <span>⏱</span>
-            {Math.floor(secs/60)}:{String(secs%60).padStart(2,'0')}
+            {Math.floor(totalSecs/60)}:{String(totalSecs%60).padStart(2,'0')}
           </div>
         </div>
       </nav>
@@ -306,11 +317,16 @@ function downloadLeadershipPDF(candidate, results, role) {
 }
 
 // ── OPQ Section ──────────────────────────────────────────────────────
-function OPQSection({ candidate, responses, setResponses, onDone }) {
+function OPQSection({ candidate, responses, setResponses, onDone, totalSecs }) {
   const [currentIdx, setCurrentIdx] = useState(0)
   const total = OPQ_STATEMENTS.length
   const current = OPQ_STATEMENTS[currentIdx]
   const progress = Math.round((currentIdx / total) * 100)
+
+  // Auto-submit when timer hits 0
+  useEffect(() => {
+    if (totalSecs <= 0) onDone()
+  }, [totalSecs])
 
   const labels = [
     { val: 1, label: 'Strongly Disagree' },
@@ -335,9 +351,12 @@ function OPQSection({ candidate, responses, setResponses, onDone }) {
     <div className="shell">
       <nav className="nav">
         <div className="logo"><div className="logo-mark">A</div>AssessIQ</div>
-        <div className="nav-r" style={{ fontSize:13, color:'var(--ink3)' }}>
+        <div className="nav-r" style={{ fontSize:13, color:'var(--ink3)', gap:16 }}>
           {dimInfo && <span>{dimInfo.icon} {dimInfo.label}</span>}
           <span style={{ fontWeight:700, color:'var(--accent)' }}>{currentIdx + 1}/{total}</span>
+          <span style={{ color: totalSecs < 300 ? 'var(--bad)' : 'var(--ink3)', fontWeight: totalSecs < 300 ? 700 : 400 }}>
+            ⏱ {Math.floor(totalSecs/60)}:{String(totalSecs%60).padStart(2,'0')}
+          </span>
         </div>
       </nav>
 
@@ -521,6 +540,8 @@ export default function LeadershipAssessment() {
   const [alreadyTaken, setAlreadyTaken] = useState(null)
   const [opqResponses, setOpqResponses] = useState({})
   const [aiSJTLoading, setAiSJTLoading] = useState(false)
+  const [totalSecs, setTotalSecs] = useState(1800)
+  const timerRef = React.useRef(null)
 
   let role = null
   try {
@@ -597,10 +618,10 @@ export default function LeadershipAssessment() {
 
     // Try to get AI-generated role-specific questions (with 25s timeout)
     setAiSJTLoading(true)
-    let qs = selectQuestions(15, seed)  // fallback bank questions
+    let qs = selectQuestions(15, seed)  // 15 fallback bank questions
     try {
       const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 25000)
+      const timeout = setTimeout(() => controller.abort(), 40000)
       const res = await fetch('/.netlify/functions/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -610,8 +631,8 @@ export default function LeadershipAssessment() {
       clearTimeout(timeout)
       if (res.ok) {
         const data = await res.json()
-        if (data.questions && data.questions.length >= 8) {
-          qs = data.questions.slice(0, 15)
+        if (data.questions && data.questions.length >= 10) {
+          qs = data.questions.slice(0, 15)  // 15 questions
           console.log('AssessIQ: AI generated', qs.length, 'role-specific SJT questions for', role.title)
         }
       }
@@ -622,9 +643,22 @@ export default function LeadershipAssessment() {
 
     setQuestions(qs)
     setStage('quiz')
+    // Start global 30-minute timer covering both SJT and OPQ
+    setTotalSecs(1800)
+    if (timerRef.current) clearInterval(timerRef.current)
+    timerRef.current = setInterval(() => {
+      setTotalSecs(s => {
+        if (s <= 1) {
+          clearInterval(timerRef.current)
+          return 0
+        }
+        return s - 1
+      })
+    }, 1000)
   }
 
   const handleDone = (answers, timeTaken, tabSwitches, flagged) => {
+    if (timerRef.current) clearInterval(timerRef.current)
     const r = scoreLeadership(answers)
     const toSave = { tabSwitches: tabSwitches||0, flagged: flagged||false,
       status: 'completed',
@@ -674,7 +708,7 @@ export default function LeadershipAssessment() {
       .catch(e => console.warn('AssessIQ: AI analysis failed (non-critical):', e.message))
   }
 
-  if (stage === 'quiz' && questions) return <LQuiz candidate={candidate} questions={questions}
+  if (stage === 'quiz' && questions) return <LQuiz candidate={candidate} questions={questions} totalSecs={totalSecs} setTotalSecs={setTotalSecs}
     onDone={(answers, elapsed, tabSwitches, flagged) => {
       // Save SJT answers first then move to OPQ
       const r = scoreLeadership(answers)
@@ -699,6 +733,7 @@ export default function LeadershipAssessment() {
     candidate={candidate}
     responses={opqResponses}
     setResponses={setOpqResponses}
+    totalSecs={totalSecs}
     onDone={() => handleDone(results.answers, results.elapsed, results.tabSwitches, results.flagged)}
   />
   if (stage === 'results' && results) return <LResults candidate={candidate} results={results} role={role} />
