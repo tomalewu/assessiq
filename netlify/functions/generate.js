@@ -146,7 +146,7 @@ async function parseCV(cvBase64, mimeType) {
 async function generateLeadershipSJT(roleTitle, department, difficulty) {
   const systemPrompt = 'You are an expert psychometric assessment designer specialising in leadership SJT questions. Return ONLY valid JSON, no explanation, no markdown.'
 
-  const prompt = `Generate 10 leadership SJT questions for a ${roleTitle} in ${department || 'Corporate'} department.
+  const prompt = `Generate 15 leadership SJT questions for a ${roleTitle} in ${department || 'Corporate'} department.
 
 Return JSON array of 10 objects. Each object:
 {"id":"Q1","dimension":"conflict","scenario":"Specific scenario for ${roleTitle}...","options":[{"text":"Option A","score":1},{"text":"Option B","score":3},{"text":"Option C","score":2},{"text":"Option D","score":0}]}
