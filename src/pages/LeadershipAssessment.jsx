@@ -450,14 +450,31 @@ function OPQSection({ candidate, responses, setResponses, onDone, totalSecs }) {
   )
 }
 
-// ── Results Screen ────────────────────────────────────────────────────
+// ── Results Screen — AI-powered qualitative candidate report ──────────
 function LResults({ candidate, results, role }) {
-  const { dimScores, fitLabel, fitColor, leadershipStyle, pct } = results
-  const overallNarrative = getOverallNarrative(fitLabel, leadershipStyle, pct)
+  const [report, setReport] = React.useState(null)
+  const [loading, setLoading] = React.useState(true)
 
-  const fitEmoji = fitLabel === 'Strong Fit' ? '🌟' : fitLabel === 'Moderate Fit' ? '✨' : '🌱'
-  const fitBg    = fitLabel === 'Strong Fit' ? 'var(--ok-dim)' : fitLabel === 'Moderate Fit' ? '#fffbeb' : 'var(--bad-dim)'
-  const fitBorder = fitLabel === 'Strong Fit' ? 'var(--ok)' : fitLabel === 'Moderate Fit' ? '#f59e0b' : 'var(--bad)'
+  // Poll Firebase for candidateReport (generated in background)
+  React.useEffect(() => {
+    let attempts = 0
+    const poll = async () => {
+      try {
+        const { dbAllCandidates } = await import('../db')
+        const all = await dbAllCandidates()
+        const c = all.find(x => x.id === candidate.id)
+        if (c && c.candidateReport) {
+          setReport(c.candidateReport)
+          setLoading(false)
+          return
+        }
+      } catch(e) {}
+      attempts++
+      if (attempts < 20) setTimeout(poll, 3000)
+      else setLoading(false)
+    }
+    poll()
+  }, [candidate.id])
 
   return (
     <div className="shell">
@@ -467,66 +484,95 @@ function LResults({ candidate, results, role }) {
       <div style={{ display:'flex', justifyContent:'center', padding:'36px 24px' }}>
         <div style={{ width:'100%', maxWidth:620 }}>
 
-          {/* Fit banner */}
-          <div style={{ background:fitBg, border:'1.5px solid '+fitBorder, borderRadius:16,
-            padding:'28px 32px', marginBottom:24, textAlign:'center' }}>
-            <div style={{ fontSize:48, marginBottom:12 }}>{fitEmoji}</div>
-            <div style={{ fontWeight:800, fontSize:22, color:fitColor, marginBottom:8 }}>
-              {fitLabel}
-            </div>
-            <div style={{ fontSize:13, fontWeight:600, color:'var(--ink2)', marginBottom:16 }}>
-              Leadership Style: <span style={{ color:'var(--accent)' }}>{leadershipStyle}</span>
-            </div>
-            <p style={{ fontSize:14, color:'var(--ink2)', lineHeight:1.75, maxWidth:480, margin:'0 auto' }}>
-              {overallNarrative}
+          {/* Header */}
+          <div style={{ textAlign:'center', marginBottom:28 }}>
+            <div style={{ fontSize:48, marginBottom:12 }}>✅</div>
+            <h2 style={{ fontSize:22, fontWeight:800, marginBottom:8 }}>Assessment Complete</h2>
+            <p style={{ fontSize:13, color:'var(--ink3)', lineHeight:1.6 }}>
+              Thank you, <strong>{candidate.name}</strong>. Your personalised leadership profile is below.
             </p>
           </div>
 
-          {/* Dimension narratives */}
-          <div style={{ marginBottom:24 }}>
-            <div style={{ fontWeight:700, fontSize:16, marginBottom:16 }}>Your Leadership Profile</div>
-            <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
-              {DIMENSIONS.map(dim => {
-                const ds  = dimScores[dim.id]
-                const dpct = ds.max > 0 ? Math.round(ds.score / ds.max * 100) : 0
-                const label = dpct >= 70 ? 'Strength' : dpct >= 45 ? 'Developing Well' : 'Focus Area'
-                const lcolor = dpct >= 70 ? 'var(--ok)' : dpct >= 45 ? 'var(--warn)' : 'var(--bad)'
-                const narrative = getDimQualitative(dim.id, dpct)
-                return (
-                  <div key={dim.id} className="card card-xl" style={{ padding:'20px 24px' }}>
-                    <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:10 }}>
-                      <span style={{ fontSize:20 }}>{dim.icon}</span>
-                      <div style={{ flex:1 }}>
-                        <div style={{ fontWeight:700, fontSize:14 }}>{dim.label}</div>
-                      </div>
-                      <span style={{ fontSize:12, fontWeight:700, color:lcolor,
-                        background:lcolor+'22', padding:'3px 10px', borderRadius:999 }}>
-                        {label}
-                      </span>
-                    </div>
-                    <p style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.7, margin:0 }}>
-                      {narrative}
-                    </p>
-                  </div>
-                )
-              })}
+          {loading ? (
+            <div className="card card-xl" style={{ padding:40, textAlign:'center' }}>
+              <span className="sp sp-lg" style={{ marginBottom:20 }}/>
+              <div style={{ fontWeight:700, fontSize:15, marginBottom:8 }}>Generating your personalised report...</div>
+              <p style={{ fontSize:13, color:'var(--ink3)', lineHeight:1.6 }}>
+                Our AI is analysing your responses and building your leadership profile. This takes about 20 seconds.
+              </p>
             </div>
-          </div>
+          ) : report ? (
+            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+              {/* Headline */}
+              <div style={{ background:'var(--accent-dim)', border:'1.5px solid var(--accent-mid)',
+                borderRadius:16, padding:'28px 32px', textAlign:'center' }}>
+                <div style={{ fontWeight:800, fontSize:22, color:'var(--accent)', marginBottom:16 }}>
+                  {report.headline}
+                </div>
+                <p style={{ fontSize:14, color:'var(--ink2)', lineHeight:1.8, maxWidth:480, margin:'0 auto' }}>
+                  {report.opening}
+                </p>
+              </div>
+
+              {/* Strengths */}
+              <div className="card card-xl" style={{ padding:'22px 26px' }}>
+                <div style={{ fontWeight:700, fontSize:14, color:'var(--ok)', marginBottom:10, display:'flex', alignItems:'center', gap:8 }}>
+                  <span>✦</span> Your Leadership Strengths
+                </div>
+                <p style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.8, margin:0 }}>
+                  {report.strengths}
+                </p>
+              </div>
+
+              {/* Personality insight */}
+              {report.personalityInsight && (
+                <div className="card card-xl" style={{ padding:'22px 26px' }}>
+                  <div style={{ fontWeight:700, fontSize:14, color:'var(--accent)', marginBottom:10, display:'flex', alignItems:'center', gap:8 }}>
+                    <span>🧠</span> Your Leadership Personality
+                  </div>
+                  <p style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.8, margin:0 }}>
+                    {report.personalityInsight}
+                  </p>
+                </div>
+              )}
+
+              {/* Growth areas */}
+              <div className="card card-xl" style={{ padding:'22px 26px' }}>
+                <div style={{ fontWeight:700, fontSize:14, color:'var(--warn)', marginBottom:10, display:'flex', alignItems:'center', gap:8 }}>
+                  <span>◈</span> Areas for Growth
+                </div>
+                <p style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.8, margin:0 }}>
+                  {report.growthAreas}
+                </p>
+              </div>
+
+              {/* Closing */}
+              <div style={{ background:'var(--paper2)', borderRadius:12, padding:'18px 24px',
+                fontSize:13, color:'var(--ink3)', lineHeight:1.75, textAlign:'center' }}>
+                {report.closing}
+              </div>
+            </div>
+          ) : (
+            // Fallback if AI failed - show generic confirmation only
+            <div className="card card-xl" style={{ padding:32, textAlign:'center' }}>
+              <div style={{ fontSize:36, marginBottom:12 }}>📋</div>
+              <div style={{ fontWeight:700, fontSize:16, marginBottom:8 }}>Your Assessment Has Been Submitted</div>
+              <p style={{ fontSize:13, color:'var(--ink3)', lineHeight:1.7 }}>
+                Your responses have been recorded and shared with the recruitment team for <strong>{role.title}</strong>. They will review your profile and be in touch.
+              </p>
+            </div>
+          )}
 
           {/* Footer */}
-          <div style={{ background:'var(--paper2)', borderRadius:12, padding:'18px 24px', textAlign:'center', fontSize:13, color:'var(--ink3)', lineHeight:1.7, marginBottom:16 }}>
-            Thank you for completing this assessment, <strong>{candidate.name}</strong>.
-            Your results have been shared with the recruitment team for <strong>{role.title}</strong>.
+          <div style={{ textAlign:'center', marginTop:20, padding:'18px 24px',
+            fontSize:12, color:'var(--ink3)', lineHeight:1.7 }}>
+            Your results have been shared with the recruitment team for <strong>{role ? role.title : ''}</strong>.
             They will be in touch if you are selected to proceed.
           </div>
-          <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap' }}>
-            <button className="btn btn-s btn-lg" style={{ justifyContent:'center' }}
-              onClick={() => downloadLeadershipPDF(candidate, results, role)}>
-              📄 Download PDF Report
-            </button>
+          <div style={{ display:'flex', justifyContent:'center', marginTop:8 }}>
             <button className="btn btn-p btn-lg" style={{ justifyContent:'center' }}
               onClick={() => window.location.href = '/'}>
-              Exit Assessment
+              Close
             </button>
           </div>
         </div>
@@ -687,7 +733,7 @@ export default function LeadershipAssessment() {
     const opqProfile = scoreOPQ(opqResponses)
     dbSaveCandidate(candidate.id, { opqResponses, opqProfile })
 
-    // Run AI analysis in background — saves to Firebase when done, does not block UI
+    // Run AI analysis in background — generates both candidate and recruiter reports
     fetch('/.netlify/functions/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -708,8 +754,11 @@ export default function LeadershipAssessment() {
     }).then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data && data.analysis) {
-          dbSaveCandidate(candidate.id, { aiAnalysis: data.analysis })
-          console.log('AssessIQ: AI analysis saved for', candidate.name)
+          dbSaveCandidate(candidate.id, {
+            aiAnalysis: data.analysis.recruiterReport || data.analysis,
+            candidateReport: data.analysis.candidateReport || null
+          })
+          console.log('AssessIQ: AI reports saved for', candidate.name)
         }
       })
       .catch(e => console.warn('AssessIQ: AI analysis failed (non-critical):', e.message))
