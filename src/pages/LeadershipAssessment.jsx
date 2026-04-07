@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { SJT_QUESTIONS, DIMENSIONS, scoreLeadership, getDimQualitative, getOverallNarrative, selectQuestions } from '../leadership'
 import { dbAddCandidate, dbSaveCandidate, dbAllCandidates, dbLoadSettings } from '../db'
+import { OPQ_STATEMENTS, OPQ_DIMENSIONS, scoreOPQ } from '../opq'
 
 function genId(p) { return p + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,7) }
 
@@ -594,18 +595,22 @@ export default function LeadershipAssessment() {
     const savedCand = dbAddCandidate(candData)
     setCand(savedCand)
 
-    // Try to get AI-generated role-specific questions
+    // Try to get AI-generated role-specific questions (with 25s timeout)
     setAiSJTLoading(true)
     let qs = selectQuestions(15, seed)  // fallback bank questions
     try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 25000)
       const res = await fetch('/.netlify/functions/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'generate_leadership_sjt', roleTitle: role.title, department: role.dept || '' })
+        body: JSON.stringify({ action: 'generate_leadership_sjt', roleTitle: role.title, department: role.dept || '' }),
+        signal: controller.signal
       })
+      clearTimeout(timeout)
       if (res.ok) {
         const data = await res.json()
-        if (data.questions && data.questions.length >= 10) {
+        if (data.questions && data.questions.length >= 8) {
           qs = data.questions.slice(0, 15)
           console.log('AssessIQ: AI generated', qs.length, 'role-specific SJT questions for', role.title)
         }
