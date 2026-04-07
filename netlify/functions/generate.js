@@ -143,26 +143,38 @@ async function parseCV(cvBase64, mimeType) {
 
 
 // ── AI Leadership SJT Question Generation ────────────────────────────
-async function generateLeadershipSJT(roleTitle, department, difficulty) {
-  const systemPrompt = 'You are an expert psychometric assessment designer specialising in leadership SJT questions. Return ONLY valid JSON, no explanation, no markdown.'
+async function generateLeadershipSJT(roleTitle, department) {
+  const systemPrompt = 'You are a leadership assessment designer. Return ONLY valid JSON arrays, no explanation, no markdown.'
 
-  const prompt = `Generate 10 leadership SJT questions for a ${roleTitle} in ${department || 'Corporate'} department.
+  const dims = [
+    { id: 'conflict',      label: 'Conflict Resolution' },
+    { id: 'delegation',    label: 'Delegation & Empowerment' },
+    { id: 'motivation',    label: 'Team Motivation' },
+    { id: 'decision',      label: 'Decision Making' },
+    { id: 'communication', label: 'Communication' },
+  ]
 
-Return JSON array of 10 objects. Each object:
-{"id":"Q1","dimension":"conflict","scenario":"Specific scenario for ${roleTitle}...","options":[{"text":"Option A","score":1},{"text":"Option B","score":3},{"text":"Option C","score":2},{"text":"Option D","score":0}]}
+  // Generate 2 questions per dimension in parallel (5 calls x 2 questions = 10 total)
+  const results = await Promise.all(dims.map(dim => {
+    const prompt = `Generate 2 leadership SJT questions for a ${roleTitle} in ${department || 'Corporate'} department, testing ${dim.label}.
 
-Rules:
-- Scenarios must be specific to ${roleTitle} role with real numbers/timelines
-- All 4 options must be professionally plausible (no obviously wrong answers)
-- Exactly one option scores 3, others score 0-2
-- dimension must be one of: conflict, delegation, motivation, decision, communication
-- Use 2 questions per dimension
+Return JSON array of exactly 2 objects:
+[{"id":"${dim.id.toUpperCase()}1","dimension":"${dim.id}","scenario":"As the ${roleTitle}, you face a specific ${dim.label.toLowerCase()} situation with real context...","options":[{"text":"Plausible option A","score":1},{"text":"Best option B","score":3},{"text":"Reasonable option C","score":2},{"text":"Defensive option D","score":0}]}]
+
+Rules: All 4 options must be professionally defensible. Only one scores 3. Include specific numbers/timelines in scenario.
 Return ONLY the JSON array.`
 
-  const text = await callClaude(systemPrompt, prompt, 5000)
-  const parsed = parseArr(text)
-  console.log('SJT generated:', parsed.length, 'questions')
-  return parsed
+    return callClaude(systemPrompt, prompt, 1200)
+      .then(text => {
+        try { return parseArr(text) } catch(e) { console.warn(dim.id, 'parse failed:', e.message); return [] }
+      })
+      .catch(e => { console.warn(dim.id, 'call failed:', e.message); return [] })
+  }))
+
+  const questions = results.flat().filter(q => q && q.dimension && q.options && q.scenario)
+  console.log('SJT generated:', questions.length, 'questions across', dims.length, 'dimensions')
+  if (questions.length < 5) throw new Error('Not enough SJT questions: ' + questions.length)
+  return questions
 }
 
 // ── Leadership AI Analysis ───────────────────────────────────────────
