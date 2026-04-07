@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { getCurrentUser, setCurrentUser, isAdmin, canEdit } from '../App'
 import { dbRoles, dbAllCandidates, dbAddRole, dbUpdateRole, dbDeleteRole, dbDeleteCandidate, dbSaveCandidate } from '../db'
 import { DIMENSIONS, getDimQualitative, getOverallNarrative } from '../leadership'
+import { OPQ_DIMENSIONS } from '../opq'
 
 // ── Generate HTML Report (for PDF print + Excel link) ────────────────
 function generateReportHTML(candidate) {
@@ -250,6 +251,72 @@ function LeadershipProfileModal({ candidate, onClose }) {
         <div style={{ marginTop:4, fontSize:11, color:'var(--ink3)', textAlign:'center' }}>
           Time taken: {candidate.timeTaken ? Math.floor(candidate.timeTaken/60)+'m '+candidate.timeTaken%60+'s' : '—'}
         </div>
+
+        {/* OPQ Personality Profile in Modal */}
+        {candidate.opqProfile && (
+          <div style={{ marginTop:20, paddingTop:20, borderTop:'1px solid var(--line)' }}>
+            <div style={{ fontWeight:700, fontSize:13, marginBottom:14 }}>Personality Profile</div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+              {OPQ_DIMENSIONS.map(dim => {
+                const score = candidate.opqProfile[dim.id]
+                if (!score) return null
+                const color = score.pct >= 75 ? 'var(--ok)' : score.pct >= 60 ? 'var(--accent)' : score.pct >= 40 ? 'var(--warn)' : 'var(--bad)'
+                return (
+                  <div key={dim.id} style={{ padding:'8px 12px', background:'var(--paper2)', borderRadius:9 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+                      <span style={{ fontSize:12, fontWeight:600 }}>{dim.icon} {dim.label}</span>
+                      <span style={{ fontSize:10, fontWeight:700, color }}>{score.label}</span>
+                    </div>
+                    <div style={{ height:4, background:'var(--paper3)', borderRadius:2, overflow:'hidden' }}>
+                      <div style={{ height:'100%', width:score.pct+'%', background:color, borderRadius:2 }}/>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* AI Analysis Preview */}
+        {candidate.aiAnalysis && (
+          <div style={{ marginTop:20, borderTop:'1px solid var(--line)', paddingTop:20 }}>
+            <div style={{ fontWeight:700, fontSize:13, marginBottom:12, display:'flex', alignItems:'center', gap:8 }}>
+              AI Assessment
+              <span style={{ fontSize:10, fontWeight:600, background:'var(--accent-dim)', color:'var(--accent)', padding:'2px 8px', borderRadius:999 }}>Claude AI</span>
+            </div>
+            {candidate.aiAnalysis.executiveSummary && (
+              <p style={{ fontSize:13, color:'var(--ink2)', lineHeight:1.75, marginBottom:14 }}>{candidate.aiAnalysis.executiveSummary}</p>
+            )}
+            {candidate.aiAnalysis.recruiterRecommendation && (
+              <div style={{ background:'var(--ink)', borderRadius:10, padding:'14px 16px', marginBottom:14 }}>
+                <div style={{ fontSize:10, fontWeight:700, color:'rgba(255,255,255,.45)', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:6 }}>Recruiter Recommendation</div>
+                <p style={{ fontSize:13, color:'rgba(255,255,255,.9)', lineHeight:1.75, margin:0, fontStyle:'italic' }}>{candidate.aiAnalysis.recruiterRecommendation}</p>
+              </div>
+            )}
+            {candidate.aiAnalysis.interviewQuestions && (
+              <div>
+                <div style={{ fontSize:11, fontWeight:700, color:'var(--ink3)', textTransform:'uppercase', letterSpacing:'.05em', marginBottom:10 }}>Suggested Interview Questions</div>
+                {candidate.aiAnalysis.interviewQuestions.map((q, i) => (
+                  <div key={i} style={{ display:'flex', gap:8, marginBottom:10, fontSize:12 }}>
+                    <span style={{ color:'var(--accent)', fontWeight:800, flexShrink:0 }}>{i+1}.</span>
+                    <span style={{ color:'var(--ink2)', lineHeight:1.65 }}>{q}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ textAlign:'center', marginTop:12 }}>
+              <a href={window.location.origin+'/report/leadership/'+candidate.id} target="_blank" rel="noreferrer"
+                style={{ fontSize:12, color:'var(--accent)', fontWeight:600 }}>
+                View full AI report →
+              </a>
+            </div>
+          </div>
+        )}
+        {!candidate.aiAnalysis && candidate.status === 'completed' && (
+          <div style={{ marginTop:16, padding:'12px 16px', background:'var(--paper2)', borderRadius:10, fontSize:12, color:'var(--ink3)', textAlign:'center' }}>
+            ⏳ AI analysis generating — refresh in a few seconds
+          </div>
+        )}
       </div>
     </div>
   )
