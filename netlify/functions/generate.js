@@ -181,101 +181,37 @@ Return ONLY the JSON array.`
 async function analyseLeadership(candidateData) {
   const { name, answers, dimScores, fitLabel, leadershipStyle, leadershipPct, questions, role, opqProfile } = candidateData
 
-  // Build SJT answer summary
-  const answerSummary = (questions || []).map(q => {
-    const selected = answers[q.id]
-    if (selected === undefined || selected === null) return null
-    const chosenOption = q.options[selected]
-    if (!chosenOption) return null
-    return { dimension: q.dimension, scenario: (q.scenario || '').slice(0, 100), chosen: chosenOption.text, score: chosenOption.score }
-  }).filter(Boolean)
-
-  // Build dimension breakdown
-  const dimBreakdown = Object.entries(dimScores || {}).map(([dim, ds]) => {
-    const pct = ds.max > 0 ? Math.round(ds.score / ds.max * 100) : 0
-    return dim + ': ' + pct + '%'
-  }).join(', ')
-
-  // Build OPQ summary
-  const opqSummary = opqProfile ? Object.entries(opqProfile).map(([dim, data]) => dim + ': ' + data.label + ' (' + data.pct + '%)').join(', ') : 'Not available'
-
-  // Group SJT answers by dimension
+  // Build answer summary
   const byDim = {}
-  answerSummary.forEach(a => {
-    if (!byDim[a.dimension]) byDim[a.dimension] = []
-    byDim[a.dimension].push({ chosen: a.chosen, score: a.score })
+  ;(questions || []).forEach(q => {
+    const selected = answers[q.id]
+    if (selected === undefined || selected === null) return
+    const opt = q.options && q.options[selected]
+    if (!opt) return
+    if (!byDim[q.dimension]) byDim[q.dimension] = []
+    byDim[q.dimension].push({ chosen: opt.text.slice(0, 80), score: opt.score })
   })
 
-  const systemPrompt = `You are an expert occupational psychologist writing professional leadership assessment reports. You generate two outputs from the same assessment data:
-1. A candidate-facing qualitative profile — warm, developmental, no scores or labels
-2. A recruiter-facing analytical report — evidence-based, honest, includes recommendation
+  const dimBreakdown = Object.entries(dimScores || {}).map(([dim, ds]) => {
+    const pct = ds.max > 0 ? Math.round(ds.score / ds.max * 100) : 0
+    return dim + ':' + pct + '%'
+  }).join(', ')
 
-Always write in a professional but human tone. Reference the candidate by name.`
+  const opqSummary = opqProfile
+    ? Object.entries(opqProfile).map(([dim, d]) => dim + ':' + d.label).join(', ')
+    : 'not available'
 
-  const userPrompt = `Generate a dual leadership assessment report for ${name} applying for ${role || 'a leadership role'}.
+  const byDimStr = Object.entries(byDim).map(([dim, items]) =>
+    dim + ':[' + items.map(i => 'score' + i.score).join(',') + ']'
+  ).join(' ')
 
-ASSESSMENT DATA:
-- SJT Overall: ${fitLabel} | ${leadershipStyle} style | ${leadershipPct}%
-- SJT Dimensions: ${dimBreakdown}
-- OPQ Personality: ${opqSummary}
-- SJT Response patterns: ${JSON.stringify(byDim)}
+  const systemPrompt = 'You are an expert occupational psychologist. Return ONLY valid JSON objects, no explanation, no markdown.'
 
-Generate a JSON object with TWO sections:
+  // Call 1: Candidate-facing qualitative profile
+  const candidatePrompt = 'Write a candidate leadership profile for ' + name + ' applying for ' + (role || 'leadership role') + '. SJT result: ' + fitLabel + ', ' + leadershipStyle + ' style, ' + leadershipPct + '%. OPQ: ' + opqSummary + '. SJT patterns: ' + byDimStr + '. Return JSON: {"headline":"2-4 word style label no scores","opening":"2-3 personalised sentences using their name and specific observations","strengths":"2-3 sentences on what they do well based on evidence","growthAreas":"2-3 sentences on development framed positively no scores","personalityInsight":"2 sentences connecting OPQ to SJT","closing":"1-2 sentences encouragement"} Return ONLY the JSON object.'
 
-{
-  "candidateReport": {
-    "headline": "2-4 word leadership style label (e.g. 'Empowering Collaborative Leader') — no fit labels, no scores",
-    "opening": "2-3 sentence personalised opening that describes their natural leadership orientation based on BOTH SJT and OPQ data. Warm and specific. Use their name.",
-    "strengths": "2-3 sentence paragraph describing what they do well as a leader. Reference specific patterns from their responses. Positive but evidence-based.",
-    "growthAreas": "2-3 sentence paragraph describing 1-2 areas for leadership development. Framed as opportunity, not failure. Never mention scores.",
-    "personalityInsight": "2 sentences connecting their OPQ personality profile to their leadership style. E.g. high empathy + strong conflict scores = natural mediator.",
-    "closing": "1-2 sentences of genuine encouragement and forward-looking development framing. Professional and warm."
-  },
-
-  "recruiterReport": {
-    "executiveSummary": "3-4 sentences specific to this candidate. Include honest assessment of fit. Reference both SJT and OPQ data.",
-    "fitVerdict": "${fitLabel}",
-    "leadershipProfile": "2-3 paragraph deep analysis of this candidate's leadership capability. Specific, evidence-based, references actual response patterns.",
-    "dimensionInsights": {
-      "conflict": "2-3 sentences on their conflict resolution approach based on their actual SJT choices",
-      "delegation": "2-3 sentences on their delegation approach",
-      "motivation": "2-3 sentences on their motivation approach",
-      "decision": "2-3 sentences on their decision making approach",
-      "communication": "2-3 sentences on their communication approach"
-    },
-    "personalityAnalysis": "2-3 sentences on what their OPQ profile reveals about their personality and how it interacts with their SJT performance",
-    "keyStrengths": ["Specific strength 1 with evidence", "Specific strength 2", "Specific strength 3"],
-    "developmentAreas": ["Specific development area 1 with evidence", "Specific development area 2"],
-    "leadershipRisks": "1-2 sentences on specific derailer risks based on their pattern",
-    "recruiterRecommendation": "3 sentences: overall recommendation, what to probe in interview, any conditions",
-    "interviewQuestions": [
-      "Behavioural question targeting their weakest SJT dimension",
-      "Question probing a pattern in their OPQ profile",
-      "Situational question testing whether responses match real behaviour",
-      "Question probing their specific leadership risk area"
-    ]
-  }
-}
-
-Be specific. Reference actual response patterns. The candidate report must never mention scores, percentages, or fit labels.
-Return ONLY the JSON object.`
-
-  // Split into two parallel calls to stay within token limits
-  const candidatePrompt = `Generate a candidate-facing qualitative leadership profile for ${name} (${role || 'leadership role'}).
-
-Based on: SJT ${fitLabel} | ${leadershipStyle} style | OPQ: ${opqSummary}
-SJT patterns: ${JSON.stringify(byDim)}
-
-Return JSON: {"headline":"2-4 word style label","opening":"2-3 personalised sentences using their name","strengths":"2-3 sentences on what they do well","growthAreas":"2-3 sentences on development areas framed positively","personalityInsight":"2 sentences connecting OPQ to SJT","closing":"1-2 sentences of encouragement"}
-No scores, no fit labels. Return ONLY the JSON object.`
-
-  const recruiterPrompt = `Generate a recruiter assessment report for ${name} applying for ${role || 'a leadership role'}.
-SJT: ${fitLabel} | ${leadershipStyle} | ${leadershipPct}% | Dimensions: ${dimBreakdown}
-OPQ: ${opqSummary}
-SJT patterns: ${JSON.stringify(byDim)}
-
-Return JSON: {"executiveSummary":"3-4 honest sentences","fitVerdict":"${fitLabel}","leadershipProfile":"2 paragraph analysis","dimensionInsights":{"conflict":"2 sentences","delegation":"2 sentences","motivation":"2 sentences","decision":"2 sentences","communication":"2 sentences"},"personalityAnalysis":"2 sentences on OPQ","keyStrengths":["strength1","strength2","strength3"],"developmentAreas":["area1","area2"],"leadershipRisks":"1-2 sentences","recruiterRecommendation":"3 sentences","interviewQuestions":["q1","q2","q3","q4"]}
-Return ONLY the JSON object.`
+  // Call 2: Recruiter analytical report
+  const recruiterPrompt = 'Write a recruiter leadership assessment for ' + name + ' applying for ' + (role || 'leadership role') + '. SJT: ' + fitLabel + ',' + leadershipStyle + ',' + leadershipPct + '%. Dimensions: ' + dimBreakdown + '. OPQ: ' + opqSummary + '. SJT patterns: ' + byDimStr + '. Return JSON: {"executiveSummary":"3-4 honest sentences","fitVerdict":"' + fitLabel + '","leadershipProfile":"2 paragraph analysis","dimensionInsights":{"conflict":"2 sentences","delegation":"2 sentences","motivation":"2 sentences","decision":"2 sentences","communication":"2 sentences"},"personalityAnalysis":"2 sentences","keyStrengths":["s1","s2","s3"],"developmentAreas":["a1","a2"],"leadershipRisks":"1-2 sentences","recruiterRecommendation":"3 sentences","interviewQuestions":["q1","q2","q3","q4"]} Return ONLY the JSON object.'
 
   const [candidateText, recruiterText] = await Promise.all([
     callClaude(systemPrompt, candidatePrompt, 1500),
@@ -284,14 +220,14 @@ Return ONLY the JSON object.`
 
   const parseObj = (text) => {
     const s = text.indexOf('{'), e = text.lastIndexOf('}')
-    if (s === -1 || e === -1) throw new Error('No JSON object in response')
+    if (s === -1 || e === -1) throw new Error('No JSON object in: ' + text.slice(0, 100))
     return JSON.parse(text.slice(s, e + 1))
   }
 
-  return {
-    candidateReport: parseObj(candidateText),
-    recruiterReport: parseObj(recruiterText)
-  }
+  const candidateReport = parseObj(candidateText)
+  const recruiterReport = parseObj(recruiterText)
+  console.log('AI analysis complete for', name)
+  return { candidateReport, recruiterReport }
 }
 
 // ── Handler ───────────────────────────────────────────────────────────
