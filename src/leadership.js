@@ -536,6 +536,7 @@ export const SJT_QUESTIONS = [
 // ── Scoring & Profiling ───────────────────────────────────────────────
 export function scoreLeadership(answers, activeQuestions) {
   const dimScores = {}
+  console.log("AssessIQ scoreLeadership v2 called, questions:", (activeQuestions||[]).length)
   DIMENSIONS.forEach(d => { dimScores[d.id] = { score: 0, max: 0 } })
 
   const allQuestions = (activeQuestions && activeQuestions.length > 0) ? activeQuestions : [...SJT_QUESTIONS, ...EXTRA_QUESTIONS]
