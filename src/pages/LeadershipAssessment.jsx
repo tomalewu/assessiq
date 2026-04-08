@@ -713,7 +713,7 @@ export default function LeadershipAssessment() {
 
   const handleDone = (answers, timeTaken, tabSwitches, flagged) => {
     if (timerRef.current) clearInterval(timerRef.current)
-    const r = scoreLeadership(answers)
+    const r = scoreLeadership(answers, questions)
     const toSave = { tabSwitches: tabSwitches||0, flagged: flagged||false,
       status: 'completed',
       completedAt: new Date().toISOString(),
@@ -768,7 +768,7 @@ export default function LeadershipAssessment() {
   if (stage === 'quiz' && questions) return <LQuiz candidate={candidate} questions={questions} totalSecs={totalSecs} setTotalSecs={setTotalSecs}
     onDone={(answers, elapsed, tabSwitches, flagged) => {
       // Save SJT answers first then move to OPQ
-      const r = scoreLeadership(answers)
+      const r = scoreLeadership(answers, questions)
       const toSave = { tabSwitches: tabSwitches||0, flagged: flagged||false,
         status: 'opq_pending',
         completedAt: new Date().toISOString(),
