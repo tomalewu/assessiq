@@ -29,6 +29,37 @@ async function callClaude(systemPrompt, userPrompt, maxTokens) {
   return data.content?.[0]?.text || ''
 }
 
+// ── Shared JSON array parser (used by generateQuestions + generateLeadershipSJT) ──
+function parseArr(text) {
+  console.log('Parsing response of length:', text.length, 'Preview:', text.slice(0, 200))
+  let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim()
+  const s = clean.indexOf('[')
+  const e = clean.lastIndexOf(']')
+  if (s === -1 || e === -1) throw new Error('No JSON array found in: ' + clean.slice(0, 100))
+  const jsonStr = clean.slice(s, e + 1)
+  try {
+    return JSON.parse(jsonStr)
+  } catch(parseErr) {
+    console.error('JSON parse error, attempting recovery. Text length:', jsonStr.length)
+    const objects = []
+    let depth = 0, start = -1
+    for (let i = 0; i < jsonStr.length; i++) {
+      if (jsonStr[i] === '{') { if (depth === 0) start = i; depth++ }
+      else if (jsonStr[i] === '}') {
+        depth--
+        if (depth === 0 && start !== -1) {
+          try { objects.push(JSON.parse(jsonStr.slice(start, i + 1))) } catch(e) {}
+        }
+      }
+    }
+    if (objects.length >= 2) {
+      console.log('Recovered', objects.length, 'objects from partial JSON')
+      return objects
+    }
+    throw new Error('JSON parse failed and recovery insufficient: ' + parseErr.message)
+  }
+}
+
 // ── Question Generation ───────────────────────────────────────────────
 async function generateQuestions(difficulty) {
   const diffDesc = difficulty === 'hard'
@@ -45,39 +76,6 @@ async function generateQuestions(difficulty) {
     callClaude(systemPrompt, logicPrompt, 3000),
     callClaude(systemPrompt, numPrompt, 3000)
   ])
-
-  const parseArr = (text) => {
-    console.log('Parsing response of length:', text.length, 'Preview:', text.slice(0, 200))
-    // Strip markdown code blocks if present
-    let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim()
-    // Find the JSON array
-    const s = clean.indexOf('[')
-    const e = clean.lastIndexOf(']')
-    if (s === -1 || e === -1) throw new Error('No JSON array found in: ' + clean.slice(0, 100))
-    const jsonStr = clean.slice(s, e + 1)
-    try {
-      return JSON.parse(jsonStr)
-    } catch(parseErr) {
-      // Try to recover partial JSON by finding complete objects
-      console.error('JSON parse error, attempting recovery. Text length:', jsonStr.length)
-      const objects = []
-      let depth = 0, start = -1
-      for (let i = 0; i < jsonStr.length; i++) {
-        if (jsonStr[i] === '{') { if (depth === 0) start = i; depth++ }
-        else if (jsonStr[i] === '}') {
-          depth--
-          if (depth === 0 && start !== -1) {
-            try { objects.push(JSON.parse(jsonStr.slice(start, i + 1))) } catch(e) {}
-          }
-        }
-      }
-      if (objects.length >= 5) {
-        console.log('Recovered', objects.length, 'objects from partial JSON')
-        return objects
-      }
-      throw new Error('JSON parse failed and recovery insufficient: ' + parseErr.message)
-    }
-  }
 
   const logic = parseArr(logicText)
   const num   = parseArr(numText)
