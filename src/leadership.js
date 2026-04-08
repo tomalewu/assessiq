@@ -567,9 +567,10 @@ export function scoreLeadership(answers, activeQuestions) {
   const fitLabel = pct >= 90 ? 'Strong Fit' : pct >= 70 ? 'Moderate Fit' : 'Developing'
   const fitColor = pct >= 72 ? 'var(--ok)' : pct >= 52 ? 'var(--warn)' : 'var(--bad)'
 
+  console.log("AssessIQ dimScores:", JSON.stringify(dimScores), "DIMENSIONS ids:", DIMENSIONS.map(function(d){return d.id}))
   const sorted = DIMENSIONS.map(d => ({
     ...d,
-    pct: dimScores[d.id].max > 0 ? dimScores[d.id].score / dimScores[d.id].max : 0
+    pct: dimScores[d.id] && dimScores[d.id].max > 0 ? dimScores[d.id].score / dimScores[d.id].max : 0
   })).sort((a, b) => b.pct - a.pct)
 
   const top = sorted[0].id
