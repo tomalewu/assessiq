@@ -618,7 +618,7 @@ export function getOverallNarrative(fitLabel, leadershipStyle, pct) {
 export function selectQuestions(n, seed) {
   const perDim = Math.floor(n / DIMENSIONS.length)
   const selected = []
-  const allQuestions = (activeQuestions && activeQuestions.length > 0) ? activeQuestions : [...SJT_QUESTIONS, ...EXTRA_QUESTIONS]
+  const allQuestions = [...SJT_QUESTIONS, ...EXTRA_QUESTIONS]
 
   DIMENSIONS.forEach(dim => {
     const pool = allQuestions.filter(q => q.dimension === dim.id)
