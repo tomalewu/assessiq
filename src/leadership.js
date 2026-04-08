@@ -541,8 +541,9 @@ export function scoreLeadership(answers, activeQuestions) {
   const allQuestions = (activeQuestions && activeQuestions.length > 0) ? activeQuestions : [...SJT_QUESTIONS, ...EXTRA_QUESTIONS]
   allQuestions.forEach(q => {
     const selected = answers[q.id]
-    if (selected !== undefined && selected !== null) {
-      dimScores[q.dimension].score += q.options[selected].score
+    const opt = q.options && q.options[selected]
+    if (selected !== undefined && selected !== null && opt) {
+      dimScores[q.dimension].score += opt.score
       dimScores[q.dimension].max   += 3
     }
   })
