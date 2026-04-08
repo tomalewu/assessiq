@@ -542,11 +542,22 @@ export function scoreLeadership(answers, activeQuestions) {
   const allQuestions = (activeQuestions && activeQuestions.length > 0) ? activeQuestions : [...SJT_QUESTIONS, ...EXTRA_QUESTIONS]
   allQuestions.forEach(q => {
     const selected = answers[q.id]
-    const opt = q.options && q.options[selected]
-    if (selected !== undefined && selected !== null && opt) {
-      dimScores[q.dimension].score += opt.score
-      dimScores[q.dimension].max   += 3
+    if (selected === undefined || selected === null) return
+    if (!q.options || !Array.isArray(q.options)) {
+      console.warn("AssessIQ: question has no options array", q.id)
+      return
     }
+    const opt = q.options[selected]
+    if (!opt) {
+      console.warn("AssessIQ: opt undefined for q.id=" + q.id + " selected=" + selected + " options.length=" + q.options.length)
+      return
+    }
+    if (typeof opt.score !== "number") {
+      console.warn("AssessIQ: opt.score not a number for q.id=" + q.id + " score=" + opt.score + " type=" + typeof opt.score)
+      return
+    }
+    dimScores[q.dimension].score += opt.score
+    dimScores[q.dimension].max   += 3
   })
 
   const total    = Object.values(dimScores).reduce((a, d) => a + d.score, 0)
