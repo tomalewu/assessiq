@@ -533,6 +533,112 @@ export const SJT_QUESTIONS = [
   },
 ]
 
+// ── 10 Additional Hard Questions (genuinely ambiguous — experts disagree) ──
+// Added to each dimension pool for richer seeded selection
+// Scoring: best=3, next=1, rest=0 — wide gap forces precise judgment
+const EXTRA_QUESTIONS = [
+  {
+    id: 'C11', dimension: 'conflict',
+    scenario: 'You are mediating a conflict between two directors. During the session, Director A reveals information that directly contradicts something Director B told you privately last week. Director B looks uncomfortable. The information is relevant to resolving the conflict. You did not know when you agreed to mediate that you would receive contradictory private information from both parties beforehand. What do you do in the moment?',
+    options: [
+      { text: 'Pause the mediation immediately, acknowledge you have received prior information from both parties privately, and offer to step aside as mediator to protect the integrity of the process.', score: 3 },
+      { text: 'Continue the mediation — the contradictory information is now in the open and both parties can address it directly without you needing to disclose your prior knowledge.', score: 0 },
+      { text: 'Address Director B directly: "This seems to conflict with our earlier conversation — can you help me understand the difference?"', score: 0 },
+      { text: 'Make a note but do not act on it in the session — raise the contradiction with Director B privately afterward before your next mediation step.', score: 0 },
+    ]
+  },
+  {
+    id: 'D11', dimension: 'delegation',
+    scenario: 'You have delegated your most important client relationship to a senior team member while you focus on a strategic initiative. Three months in, the client contacts you directly — bypassing the team member — to say they "miss working with you" and want you back on the account. The team member has done nothing wrong and the client results are strong. What do you do?',
+    options: [
+      { text: 'Maintain the delegation — explain warmly to the client that the team member is their primary contact and that this structure serves them best long-term, then brief the team member on what happened.', score: 3 },
+      { text: 'Re-engage directly with the client — a client relationship of this importance cannot be allowed to deteriorate over a structural preference.', score: 0 },
+      { text: 'Create a co-management model where you stay visible to the client while the team member handles day-to-day — satisfy the client without fully reversing the delegation.', score: 1 },
+      { text: 'Have a three-way conversation with the client and team member together — bring the tension into the open rather than managing it behind the scenes.', score: 0 },
+    ]
+  },
+  {
+    id: 'M11', dimension: 'motivation',
+    scenario: 'A team member comes to you and says they have been offered a role at another organisation — one that is genuinely a better career opportunity than what you can offer them. They are telling you out of loyalty, not to negotiate. They have not decided yet. You would lose a key contributor and replacing them would take 3-4 months. What do you say?',
+    options: [
+      { text: 'Tell them honestly that you think they should take it if it is genuinely the better opportunity — your role is to act in their best interest, not retain them at cost to their career.', score: 3 },
+      { text: 'Make the strongest possible retention case — explore every option available to you before accepting the loss of a key contributor.', score: 0 },
+      { text: 'Ask them what would make the decision difficult — understand what is drawing them to stay before deciding how to respond.', score: 0 },
+      { text: 'Support whatever they decide but ask for 2 weeks before they finalise — buy time to plan the transition without pressuring them.', score: 0 },
+    ]
+  },
+  {
+    id: 'DE11', dimension: 'decision',
+    scenario: 'Your data clearly shows that Product Line A (your heritage business, 65% of revenue) is in structural decline — down 6% per year for 3 years. Product Line B (new, 12% of revenue) is growing 40% per year. A full pivot to B would take 18 months and create significant redundancy in your current team. Staying the course protects people in the short term but accelerates the long-term risk. Your board wants a recommendation next month. What do you present?',
+    options: [
+      { text: 'A phased migration plan — accelerate Product B investment using Product A cash flow, with a defined 3-year sunset for Product A and a people transition plan built in from day one.', score: 3 },
+      { text: 'A full immediate pivot — the data is clear and delaying the transition for people reasons will ultimately cost more jobs than acting decisively now.', score: 1 },
+      { text: 'A dual-track strategy — invest in both for 12 months to generate more Product B data before recommending a full pivot.', score: 0 },
+      { text: 'An independent strategic review — a decision of this magnitude requires external validation before you put your name to a recommendation.', score: 0 },
+    ]
+  },
+  {
+    id: 'CO11', dimension: 'communication',
+    scenario: 'You discover that your manager has been misrepresenting your team\'s work to the executive leadership team — not maliciously, but through consistent oversimplification that has led executives to underestimate the complexity and effort involved. Your team is starting to feel undervalued. Your manager is well-regarded and has been helpful to your career. Confronting them risks the relationship. Staying silent allows the misrepresentation to continue. What do you do?',
+    options: [
+      { text: 'Have a direct and private conversation with your manager — share specifically what you have observed, how it is landing with your team, and what a more accurate representation would look like.', score: 3 },
+      { text: 'Find ways to increase your team\'s visibility directly — present in executive forums, circulate written updates, build relationships at that level without confronting your manager.', score: 0 },
+      { text: 'Raise it with your manager\'s manager — the misrepresentation is structural and your manager may not be able to see it without external feedback.', score: 0 },
+      { text: 'Do nothing yet — your manager\'s intent is not malicious and the relationship benefit outweighs the reputational cost to your team in the short term.', score: 0 },
+    ]
+  },
+  {
+    id: 'C12', dimension: 'conflict',
+    scenario: 'You manage a team where two strong factions have formed around two different technical philosophies. The factions are civil but the division is slowing decision-making — every technical choice becomes a proxy debate. Both approaches have legitimate merit. You are not a technical expert yourself. A decision on the platform direction must be made within 2 weeks. What do you do?',
+    options: [
+      { text: 'Commission a structured evaluation with agreed criteria — get both factions to define the decision framework together before evaluating options. The process alignment is more important than the technical outcome.', score: 3 },
+      { text: 'Bring in an external technical expert to make the call — remove yourself and both factions from the decision entirely.', score: 1 },
+      { text: 'Make the call yourself based on the business case presented by each faction — you are the decision-maker and waiting for consensus is the problem.', score: 0 },
+      { text: 'Pick the approach championed by your most technically credible team member and explain your reasoning — anchor the decision in someone the team respects.', score: 0 },
+    ]
+  },
+  {
+    id: 'D12', dimension: 'delegation',
+    scenario: 'You have been asked by your CEO to personally lead a high-profile task force in addition to your current role. You believe one of your direct reports could lead it just as effectively — and the experience would accelerate their development significantly. Taking it yourself would be easier and lower risk. Delegating it would require political navigation with the CEO who asked for you specifically. What do you do?',
+    options: [
+      { text: 'Have a direct conversation with the CEO — explain why you believe your direct report is the right person to lead this, frame it as a deliberate talent investment, and get their buy-in before delegating.', score: 3 },
+      { text: 'Accept the assignment yourself — the CEO asked for you specifically and redirecting it without their input undermines the relationship.', score: 0 },
+      { text: 'Accept and then quietly involve your direct report as a co-lead without formally changing the mandate — they get the development, you maintain the relationship.', score: 0 },
+      { text: 'Delegate it directly and inform the CEO after — the development opportunity is too significant to lose to political caution.', score: 0 },
+    ]
+  },
+  {
+    id: 'M12', dimension: 'motivation',
+    scenario: 'Your organisation has just gone through a hiring freeze. Your highest performer has now been doing two jobs for 6 months — their own plus covering a vacancy you cannot fill. They have not complained but you can see the strain. Their performance is still strong. You have no budget for a bonus or promotion. No hire is coming in the next quarter. What do you do?',
+    options: [
+      { text: 'Have an honest conversation that names the situation, acknowledges what they are carrying, and co-creates non-financial recognition and workload relief — even if imperfect. Silence is the worst response.', score: 3 },
+      { text: 'Formally document their additional contribution and escalate strongly to HR for an off-cycle compensation review — do not accept the constraint without pushing back.', score: 1 },
+      { text: 'Reduce the scope of the vacant role\'s coverage — better for them to do less at high quality than more at increasing personal cost.', score: 1 },
+      { text: 'Do nothing differently — they are performing well and intervening may signal that you have noticed a problem they have not raised themselves.', score: 0 },
+    ]
+  },
+  {
+    id: 'DE12', dimension: 'decision',
+    scenario: 'You have strong data showing that your team\'s biggest performance driver is psychological safety — teams with high safety scores outperform by 34%. Your most productive team has the lowest safety score. Their output metrics are exceptional but three members have quietly flagged the environment to you. The team lead is your most results-oriented manager. What do you decide to do and in what order?',
+    options: [
+      { text: 'Have a direct conversation with the team lead — share the safety data, the specific feedback, and the long-term performance evidence. Then give them a defined timeline to demonstrate change.', score: 3 },
+      { text: 'Do nothing yet — the output metrics are exceptional and acting on qualitative feedback when quantitative results are strong sets a difficult precedent.', score: 0 },
+      { text: 'Run a team health intervention through HR — an external process protects you from the team lead\'s likely resistance.', score: 0 },
+      { text: 'Speak with the three team members who flagged the issue first — build a fuller picture before confronting the team lead.', score: 0 },
+    ]
+  },
+  {
+    id: 'CO12', dimension: 'communication',
+    scenario: 'You are presenting a business case to your board. Midway through, a board member challenges a core assumption with data that appears credible and that you were not aware of. The data, if correct, materially weakens your case. You have 10 more slides. The room is watching how you handle this. What do you do?',
+    options: [
+      { text: 'Stop and engage directly with the challenge: "That is important data I had not seen. Can you share the source? If it holds, it changes my recommendation and I want to get this right rather than right now."', score: 3 },
+      { text: 'Acknowledge the challenge, note it, and continue your presentation — address it in the Q&A where you have more control over the framing.', score: 0 },
+      { text: 'Defend your assumption immediately with the data you have — backing down in the room signals a weak case and weaker judgment.', score: 0 },
+      { text: 'Pause the presentation and ask for a 10-minute break to review the data privately before continuing.', score: 1 },
+    ]
+  },
+]
+
 // ── Scoring & Profiling ───────────────────────────────────────────────
 export function scoreLeadership(answers, activeQuestions) {
   const dimScores = {}
@@ -655,108 +761,3 @@ export function selectQuestions(n, seed) {
   return selected.slice(0, n)
 }
 
-// ── 10 Additional Hard Questions (genuinely ambiguous — experts disagree) ──
-// Added to each dimension pool for richer seeded selection
-// Scoring: best=3, next=1, rest=0 — wide gap forces precise judgment
-const EXTRA_QUESTIONS = [
-  {
-    id: 'C11', dimension: 'conflict',
-    scenario: 'You are mediating a conflict between two directors. During the session, Director A reveals information that directly contradicts something Director B told you privately last week. Director B looks uncomfortable. The information is relevant to resolving the conflict. You did not know when you agreed to mediate that you would receive contradictory private information from both parties beforehand. What do you do in the moment?',
-    options: [
-      { text: 'Pause the mediation immediately, acknowledge you have received prior information from both parties privately, and offer to step aside as mediator to protect the integrity of the process.', score: 3 },
-      { text: 'Continue the mediation — the contradictory information is now in the open and both parties can address it directly without you needing to disclose your prior knowledge.', score: 0 },
-      { text: 'Address Director B directly: "This seems to conflict with our earlier conversation — can you help me understand the difference?"', score: 0 },
-      { text: 'Make a note but do not act on it in the session — raise the contradiction with Director B privately afterward before your next mediation step.', score: 0 },
-    ]
-  },
-  {
-    id: 'D11', dimension: 'delegation',
-    scenario: 'You have delegated your most important client relationship to a senior team member while you focus on a strategic initiative. Three months in, the client contacts you directly — bypassing the team member — to say they "miss working with you" and want you back on the account. The team member has done nothing wrong and the client results are strong. What do you do?',
-    options: [
-      { text: 'Maintain the delegation — explain warmly to the client that the team member is their primary contact and that this structure serves them best long-term, then brief the team member on what happened.', score: 3 },
-      { text: 'Re-engage directly with the client — a client relationship of this importance cannot be allowed to deteriorate over a structural preference.', score: 0 },
-      { text: 'Create a co-management model where you stay visible to the client while the team member handles day-to-day — satisfy the client without fully reversing the delegation.', score: 1 },
-      { text: 'Have a three-way conversation with the client and team member together — bring the tension into the open rather than managing it behind the scenes.', score: 0 },
-    ]
-  },
-  {
-    id: 'M11', dimension: 'motivation',
-    scenario: 'A team member comes to you and says they have been offered a role at another organisation — one that is genuinely a better career opportunity than what you can offer them. They are telling you out of loyalty, not to negotiate. They have not decided yet. You would lose a key contributor and replacing them would take 3-4 months. What do you say?',
-    options: [
-      { text: 'Tell them honestly that you think they should take it if it is genuinely the better opportunity — your role is to act in their best interest, not retain them at cost to their career.', score: 3 },
-      { text: 'Make the strongest possible retention case — explore every option available to you before accepting the loss of a key contributor.', score: 0 },
-      { text: 'Ask them what would make the decision difficult — understand what is drawing them to stay before deciding how to respond.', score: 0 },
-      { text: 'Support whatever they decide but ask for 2 weeks before they finalise — buy time to plan the transition without pressuring them.', score: 0 },
-    ]
-  },
-  {
-    id: 'DE11', dimension: 'decision',
-    scenario: 'Your data clearly shows that Product Line A (your heritage business, 65% of revenue) is in structural decline — down 6% per year for 3 years. Product Line B (new, 12% of revenue) is growing 40% per year. A full pivot to B would take 18 months and create significant redundancy in your current team. Staying the course protects people in the short term but accelerates the long-term risk. Your board wants a recommendation next month. What do you present?',
-    options: [
-      { text: 'A phased migration plan — accelerate Product B investment using Product A cash flow, with a defined 3-year sunset for Product A and a people transition plan built in from day one.', score: 3 },
-      { text: 'A full immediate pivot — the data is clear and delaying the transition for people reasons will ultimately cost more jobs than acting decisively now.', score: 1 },
-      { text: 'A dual-track strategy — invest in both for 12 months to generate more Product B data before recommending a full pivot.', score: 0 },
-      { text: 'An independent strategic review — a decision of this magnitude requires external validation before you put your name to a recommendation.', score: 0 },
-    ]
-  },
-  {
-    id: 'CO11', dimension: 'communication',
-    scenario: 'You discover that your manager has been misrepresenting your team\'s work to the executive leadership team — not maliciously, but through consistent oversimplification that has led executives to underestimate the complexity and effort involved. Your team is starting to feel undervalued. Your manager is well-regarded and has been helpful to your career. Confronting them risks the relationship. Staying silent allows the misrepresentation to continue. What do you do?',
-    options: [
-      { text: 'Have a direct and private conversation with your manager — share specifically what you have observed, how it is landing with your team, and what a more accurate representation would look like.', score: 3 },
-      { text: 'Find ways to increase your team\'s visibility directly — present in executive forums, circulate written updates, build relationships at that level without confronting your manager.', score: 0 },
-      { text: 'Raise it with your manager\'s manager — the misrepresentation is structural and your manager may not be able to see it without external feedback.', score: 0 },
-      { text: 'Do nothing yet — your manager\'s intent is not malicious and the relationship benefit outweighs the reputational cost to your team in the short term.', score: 0 },
-    ]
-  },
-  {
-    id: 'C12', dimension: 'conflict',
-    scenario: 'You manage a team where two strong factions have formed around two different technical philosophies. The factions are civil but the division is slowing decision-making — every technical choice becomes a proxy debate. Both approaches have legitimate merit. You are not a technical expert yourself. A decision on the platform direction must be made within 2 weeks. What do you do?',
-    options: [
-      { text: 'Commission a structured evaluation with agreed criteria — get both factions to define the decision framework together before evaluating options. The process alignment is more important than the technical outcome.', score: 3 },
-      { text: 'Bring in an external technical expert to make the call — remove yourself and both factions from the decision entirely.', score: 1 },
-      { text: 'Make the call yourself based on the business case presented by each faction — you are the decision-maker and waiting for consensus is the problem.', score: 0 },
-      { text: 'Pick the approach championed by your most technically credible team member and explain your reasoning — anchor the decision in someone the team respects.', score: 0 },
-    ]
-  },
-  {
-    id: 'D12', dimension: 'delegation',
-    scenario: 'You have been asked by your CEO to personally lead a high-profile task force in addition to your current role. You believe one of your direct reports could lead it just as effectively — and the experience would accelerate their development significantly. Taking it yourself would be easier and lower risk. Delegating it would require political navigation with the CEO who asked for you specifically. What do you do?',
-    options: [
-      { text: 'Have a direct conversation with the CEO — explain why you believe your direct report is the right person to lead this, frame it as a deliberate talent investment, and get their buy-in before delegating.', score: 3 },
-      { text: 'Accept the assignment yourself — the CEO asked for you specifically and redirecting it without their input undermines the relationship.', score: 0 },
-      { text: 'Accept and then quietly involve your direct report as a co-lead without formally changing the mandate — they get the development, you maintain the relationship.', score: 0 },
-      { text: 'Delegate it directly and inform the CEO after — the development opportunity is too significant to lose to political caution.', score: 0 },
-    ]
-  },
-  {
-    id: 'M12', dimension: 'motivation',
-    scenario: 'Your organisation has just gone through a hiring freeze. Your highest performer has now been doing two jobs for 6 months — their own plus covering a vacancy you cannot fill. They have not complained but you can see the strain. Their performance is still strong. You have no budget for a bonus or promotion. No hire is coming in the next quarter. What do you do?',
-    options: [
-      { text: 'Have an honest conversation that names the situation, acknowledges what they are carrying, and co-creates non-financial recognition and workload relief — even if imperfect. Silence is the worst response.', score: 3 },
-      { text: 'Formally document their additional contribution and escalate strongly to HR for an off-cycle compensation review — do not accept the constraint without pushing back.', score: 1 },
-      { text: 'Reduce the scope of the vacant role\'s coverage — better for them to do less at high quality than more at increasing personal cost.', score: 1 },
-      { text: 'Do nothing differently — they are performing well and intervening may signal that you have noticed a problem they have not raised themselves.', score: 0 },
-    ]
-  },
-  {
-    id: 'DE12', dimension: 'decision',
-    scenario: 'You have strong data showing that your team\'s biggest performance driver is psychological safety — teams with high safety scores outperform by 34%. Your most productive team has the lowest safety score. Their output metrics are exceptional but three members have quietly flagged the environment to you. The team lead is your most results-oriented manager. What do you decide to do and in what order?',
-    options: [
-      { text: 'Have a direct conversation with the team lead — share the safety data, the specific feedback, and the long-term performance evidence. Then give them a defined timeline to demonstrate change.', score: 3 },
-      { text: 'Do nothing yet — the output metrics are exceptional and acting on qualitative feedback when quantitative results are strong sets a difficult precedent.', score: 0 },
-      { text: 'Run a team health intervention through HR — an external process protects you from the team lead\'s likely resistance.', score: 0 },
-      { text: 'Speak with the three team members who flagged the issue first — build a fuller picture before confronting the team lead.', score: 0 },
-    ]
-  },
-  {
-    id: 'CO12', dimension: 'communication',
-    scenario: 'You are presenting a business case to your board. Midway through, a board member challenges a core assumption with data that appears credible and that you were not aware of. The data, if correct, materially weakens your case. You have 10 more slides. The room is watching how you handle this. What do you do?',
-    options: [
-      { text: 'Stop and engage directly with the challenge: "That is important data I had not seen. Can you share the source? If it holds, it changes my recommendation and I want to get this right rather than right now."', score: 3 },
-      { text: 'Acknowledge the challenge, note it, and continue your presentation — address it in the Q&A where you have more control over the framing.', score: 0 },
-      { text: 'Defend your assumption immediately with the data you have — backing down in the room signals a weak case and weaker judgment.', score: 0 },
-      { text: 'Pause the presentation and ask for a 10-minute break to review the data privately before continuing.', score: 1 },
-    ]
-  },
-]
