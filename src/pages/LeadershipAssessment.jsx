@@ -687,14 +687,15 @@ export default function LeadershipAssessment() {
         const data = await res.json()
         if (data.questions && data.questions.length >= 10) {
           const rawQs = data.questions.slice(0, 15)
-          // Validate each AI question has exactly 4 scoreable options
-          qs = rawQs.filter(q => {
+          // Validate each AI question has exactly 4 scoreable options with numeric scores
+          const validQs = rawQs.filter(q => {
             if (!q || !q.dimension || !q.scenario) return false
-            if (!Array.isArray(q.options) || q.options.length < 4) return false
-            return q.options.every(o => o && typeof o.text === "string" && typeof o.score === "number")
+            if (!Array.isArray(q.options) || q.options.length !== 4) return false
+            if (!["conflict","delegation","motivation","decision","communication"].includes(q.dimension)) return false
+            return q.options.every(o => o && typeof o.text === "string" && typeof o.score === "number" && !isNaN(o.score))
           })
-          if (qs.length < 10) qs = selectQuestions(15, seed)  // fallback if too many bad questions
-          console.log("AssessIQ: AI generated", qs.length, "valid SJT questions for", role.title)
+          console.log("AssessIQ: AI raw", rawQs.length, "valid after filter", validQs.length)
+          qs = validQs.length >= 10 ? validQs : selectQuestions(15, seed)
         }
       }
     } catch(e) {
@@ -776,6 +777,12 @@ export default function LeadershipAssessment() {
     onDone={(answers, elapsed, tabSwitches, flagged) => {
       // Save SJT answers first then move to OPQ
       console.log("AssessIQ: onDone called, answers keys:", Object.keys(answers).length, "questions:", (questions||[]).length)
+      // Deep inspect first question to verify structure
+      if (questions && questions[0]) {
+        const q0 = questions[0]
+        console.log("AssessIQ: Q0 id=" + q0.id + " dim=" + q0.dimension + " opts=" + (q0.options ? q0.options.length : "none"))
+        if (q0.options && q0.options[0]) console.log("AssessIQ: Q0.opt0 score=" + q0.options[0].score + " type=" + typeof q0.options[0].score)
+      }
       if (questions && questions.length > 0) {
         questions.forEach((q, qi) => {
           if (!q.options || !Array.isArray(q.options)) { console.error("BAD Q no options array:", qi, q.id); return }
