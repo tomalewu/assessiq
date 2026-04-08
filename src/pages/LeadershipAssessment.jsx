@@ -777,21 +777,6 @@ export default function LeadershipAssessment() {
     onDone={(answers, elapsed, tabSwitches, flagged) => {
       // Save SJT answers first then move to OPQ
       console.log("AssessIQ: onDone called, answers keys:", Object.keys(answers).length, "questions:", (questions||[]).length)
-      // Deep inspect first question to verify structure
-      if (questions && questions[0]) {
-        const q0 = questions[0]
-        console.log("AssessIQ: Q0 id=" + q0.id + " dim=" + q0.dimension + " opts=" + (q0.options ? q0.options.length : "none"))
-        if (q0.options && q0.options[0]) console.log("AssessIQ: Q0.opt0 score=" + q0.options[0].score + " type=" + typeof q0.options[0].score)
-      }
-      if (questions && questions.length > 0) {
-        questions.forEach((q, qi) => {
-          if (!q.options || !Array.isArray(q.options)) { console.error("BAD Q no options array:", qi, q.id); return }
-          q.options.forEach((o, oi) => {
-            if (o === null || o === undefined) console.error("BAD OPT null/undef:", qi, q.id, oi)
-            else if (typeof o.score !== "number") console.error("BAD OPT score type:", qi, q.id, oi, typeof o.score, o.score)
-          })
-        })
-      }
       const r = scoreLeadership(answers, questions)
       const toSave = { tabSwitches: tabSwitches||0, flagged: flagged||false,
         status: 'opq_pending',
