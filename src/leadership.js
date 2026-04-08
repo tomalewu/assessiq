@@ -534,11 +534,11 @@ export const SJT_QUESTIONS = [
 ]
 
 // ── Scoring & Profiling ───────────────────────────────────────────────
-export function scoreLeadership(answers) {
+export function scoreLeadership(answers, activeQuestions) {
   const dimScores = {}
   DIMENSIONS.forEach(d => { dimScores[d.id] = { score: 0, max: 0 } })
 
-  const allQuestions = [...SJT_QUESTIONS, ...EXTRA_QUESTIONS]
+  const allQuestions = (activeQuestions && activeQuestions.length > 0) ? activeQuestions : [...SJT_QUESTIONS, ...EXTRA_QUESTIONS]
   allQuestions.forEach(q => {
     const selected = answers[q.id]
     if (selected !== undefined && selected !== null) {
@@ -618,7 +618,7 @@ export function getOverallNarrative(fitLabel, leadershipStyle, pct) {
 export function selectQuestions(n, seed) {
   const perDim = Math.floor(n / DIMENSIONS.length)
   const selected = []
-  const allQuestions = [...SJT_QUESTIONS, ...EXTRA_QUESTIONS]
+  const allQuestions = (activeQuestions && activeQuestions.length > 0) ? activeQuestions : [...SJT_QUESTIONS, ...EXTRA_QUESTIONS]
 
   DIMENSIONS.forEach(dim => {
     const pool = allQuestions.filter(q => q.dimension === dim.id)
