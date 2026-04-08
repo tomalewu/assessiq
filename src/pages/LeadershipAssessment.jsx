@@ -686,8 +686,15 @@ export default function LeadershipAssessment() {
       if (res.ok) {
         const data = await res.json()
         if (data.questions && data.questions.length >= 10) {
-          qs = data.questions.slice(0, 15)  // 15 questions
-          console.log('AssessIQ: AI generated', qs.length, 'role-specific SJT questions for', role.title)
+          const rawQs = data.questions.slice(0, 15)
+          // Validate each AI question has exactly 4 scoreable options
+          qs = rawQs.filter(q => {
+            if (!q || !q.dimension || !q.scenario) return false
+            if (!Array.isArray(q.options) || q.options.length < 4) return false
+            return q.options.every(o => o && typeof o.text === "string" && typeof o.score === "number")
+          })
+          if (qs.length < 10) qs = selectQuestions(15, seed)  // fallback if too many bad questions
+          console.log("AssessIQ: AI generated", qs.length, "valid SJT questions for", role.title)
         }
       }
     } catch(e) {
