@@ -260,10 +260,38 @@ Generate a JSON object with TWO sections:
 Be specific. Reference actual response patterns. The candidate report must never mention scores, percentages, or fit labels.
 Return ONLY the JSON object.`
 
-  const text = await callClaude(systemPrompt, userPrompt, 3500)
-  const s = text.indexOf('{'), e = text.lastIndexOf('}')
-  if (s === -1 || e === -1) throw new Error('No JSON in analysis response')
-  return JSON.parse(text.slice(s, e + 1))
+  // Split into two parallel calls to stay within token limits
+  const candidatePrompt = `Generate a candidate-facing qualitative leadership profile for ${name} (${role || 'leadership role'}).
+
+Based on: SJT ${fitLabel} | ${leadershipStyle} style | OPQ: ${opqSummary}
+SJT patterns: ${JSON.stringify(byDim)}
+
+Return JSON: {"headline":"2-4 word style label","opening":"2-3 personalised sentences using their name","strengths":"2-3 sentences on what they do well","growthAreas":"2-3 sentences on development areas framed positively","personalityInsight":"2 sentences connecting OPQ to SJT","closing":"1-2 sentences of encouragement"}
+No scores, no fit labels. Return ONLY the JSON object.`
+
+  const recruiterPrompt = `Generate a recruiter assessment report for ${name} applying for ${role || 'a leadership role'}.
+SJT: ${fitLabel} | ${leadershipStyle} | ${leadershipPct}% | Dimensions: ${dimBreakdown}
+OPQ: ${opqSummary}
+SJT patterns: ${JSON.stringify(byDim)}
+
+Return JSON: {"executiveSummary":"3-4 honest sentences","fitVerdict":"${fitLabel}","leadershipProfile":"2 paragraph analysis","dimensionInsights":{"conflict":"2 sentences","delegation":"2 sentences","motivation":"2 sentences","decision":"2 sentences","communication":"2 sentences"},"personalityAnalysis":"2 sentences on OPQ","keyStrengths":["strength1","strength2","strength3"],"developmentAreas":["area1","area2"],"leadershipRisks":"1-2 sentences","recruiterRecommendation":"3 sentences","interviewQuestions":["q1","q2","q3","q4"]}
+Return ONLY the JSON object.`
+
+  const [candidateText, recruiterText] = await Promise.all([
+    callClaude(systemPrompt, candidatePrompt, 1500),
+    callClaude(systemPrompt, recruiterPrompt, 2500)
+  ])
+
+  const parseObj = (text) => {
+    const s = text.indexOf('{'), e = text.lastIndexOf('}')
+    if (s === -1 || e === -1) throw new Error('No JSON object in response')
+    return JSON.parse(text.slice(s, e + 1))
+  }
+
+  return {
+    candidateReport: parseObj(candidateText),
+    recruiterReport: parseObj(recruiterText)
+  }
 }
 
 // ── Handler ───────────────────────────────────────────────────────────
@@ -321,11 +349,11 @@ exports.handler = async (event) => {
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Unknown action. Use generate or parse_cv.' }) }
 
   } catch (err) {
-    console.error('Function error:', err.message, err.stack)
+    console.error('Function error:', err.message)
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: err.message, stack: err.stack })
+      body: JSON.stringify({ error: err.message })
     }
   }
 }
