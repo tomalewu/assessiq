@@ -462,18 +462,19 @@ function LResults({ candidate, results, role }) {
       try {
         const { dbAllCandidates } = await import('../db')
         const all = await dbAllCandidates()
-        const c = all.find(x => x.id === candidate.id)
+        const c = (all || []).find(x => x.id === candidate.id)
         if (c && c.candidateReport) {
           setReport(c.candidateReport)
           setLoading(false)
           return
         }
-      } catch(e) {}
+      } catch(e) { console.warn('Poll error:', e.message) }
       attempts++
-      if (attempts < 20) setTimeout(poll, 3000)
-      else setLoading(false)
+      if (attempts < 30) setTimeout(poll, 2000)
+      else { console.warn('AI report timed out after 60s'); setLoading(false) }
     }
-    poll()
+    // Start polling after 5 second delay to give AI time to start
+    setTimeout(poll, 5000)
   }, [candidate.id])
 
   return (
