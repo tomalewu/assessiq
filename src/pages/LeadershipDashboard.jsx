@@ -498,8 +498,8 @@ export default function LeadershipDashboard() {
     try {
       const [r, c] = await Promise.all([dbRoles(), dbAllCandidates()])
       // Filter only leadership roles
-      const lRoles = (r||[]).filter(role => role.assessmentType === 'leadership')
-      const lCands = (c||[]).filter(cand => cand.assessmentType === 'leadership')
+      const lRoles = (r||[]).filter(role => role.assessmentType === 'leadership' || (!role.assessmentType && !role.difficulty))
+      const lCands = (c||[]).filter(cand => cand.assessmentType === 'leadership' || (!cand.assessmentType && cand.fitLabel))
       setRoles(lRoles); setAllCandidates(lCands)
       setOnline(true)
     } catch(e) { setOnline(false) }
