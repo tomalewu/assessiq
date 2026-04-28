@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { dbRoleByLink, dbAddCandidate, dbSaveCandidate, dbLoadSettings, dbAllCandidates } from '../db'
+import { dbRoleByLink, dbAddCandidate, dbSaveCandidate, dbLoadSettings, dbAllCandidates, dbRoles } from '../db'
 import { loadQuestions } from '../questions'
 import { buildProfile, TRAIT_NAMES, TRAIT_COLORS } from '../scoring'
 
@@ -730,12 +730,15 @@ function Quiz({ candidate, questions, onDone, difficulty }) {
 export default function Assessment() {
   const { linkId } = useParams()
   const nav        = useNavigate()
-  const role = (() => {
+
+  // Decode role from URL first (for immediate render)
+  const urlRole = (() => {
     try { const d = JSON.parse(atob(linkId)); if (d && d.title) return d } catch {}
     try { return dbRoleByLink(linkId) } catch {}
     return null
   })()
 
+  const [role, setRole] = useState(urlRole)
   const [stage,    setStage]   = useState('welcome')
   const [candidate, setCand]  = useState(null)
   const [questions, setQs]    = useState(null)
@@ -743,6 +746,15 @@ export default function Assessment() {
   const [profile,  setProfile]= useState(null)
   const [prevCand, setPrevCand] = useState(null)
   const [ageRejected, setAgeRejected] = useState(null) // {age, limit}
+
+  // Fetch live role from Firestore to get current expiryDate
+  useEffect(() => {
+    if (!urlRole) return
+    dbRoles().then(roles => {
+      const live = (roles || []).find(r => r.id === urlRole.id)
+      if (live) setRole(Object.assign({}, urlRole, { expiryDate: live.expiryDate || urlRole.expiryDate || '' }))
+    }).catch(() => {})
+  }, [])
 
   if (!role) return (
     <div className="shell">
