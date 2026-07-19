@@ -455,26 +455,29 @@ function LResults({ candidate, results, role }) {
   const [report, setReport] = React.useState(null)
   const [loading, setLoading] = React.useState(true)
 
-  // Poll Firebase for candidateReport (generated in background)
+  // Poll Firebase for candidateReport — show submitted card immediately,
+  // profile appears automatically if AI completes within 40 seconds
   React.useEffect(() => {
     let attempts = 0
+    let cancelled = false
     const poll = async () => {
+      if (cancelled) return
       try {
         const { dbAllCandidates } = await import('../db')
         const all = await dbAllCandidates()
         const c = (all || []).find(x => x.id === candidate.id)
         if (c && c.candidateReport) {
-          setReport(c.candidateReport)
-          setLoading(false)
+          if (!cancelled) { setReport(c.candidateReport); setLoading(false) }
           return
         }
       } catch(e) { console.warn('Poll error:', e.message) }
       attempts++
-      if (attempts < 30) setTimeout(poll, 2000)
-      else { console.warn('AI report timed out after 60s'); setLoading(false) }
+      if (attempts < 20 && !cancelled) setTimeout(poll, 2000)
+      else if (!cancelled) { setLoading(false) }
     }
-    // Start polling after 5 second delay to give AI time to start
-    setTimeout(poll, 5000)
+    // Start polling after 3 second delay
+    const t = setTimeout(poll, 3000)
+    return () => { cancelled = true; clearTimeout(t) }
   }, [candidate.id])
 
   return (
@@ -490,19 +493,26 @@ function LResults({ candidate, results, role }) {
             <div style={{ fontSize:48, marginBottom:12 }}>✅</div>
             <h2 style={{ fontSize:22, fontWeight:800, marginBottom:8 }}>Assessment Complete</h2>
             <p style={{ fontSize:13, color:'var(--ink3)', lineHeight:1.6 }}>
-              Thank you, <strong>{candidate.name}</strong>. Your personalised leadership profile is below.
+              Thank you, <strong>{candidate.name}</strong>. Your assessment is complete.
             </p>
           </div>
 
-          {loading ? (
-            <div className="card card-xl" style={{ padding:40, textAlign:'center' }}>
-              <span className="sp sp-lg" style={{ marginBottom:20 }}/>
-              <div style={{ fontWeight:700, fontSize:15, marginBottom:8 }}>Generating your personalised report...</div>
-              <p style={{ fontSize:13, color:'var(--ink3)', lineHeight:1.6 }}>
-                Our AI is analysing your responses and building your leadership profile. This takes about 20 seconds.
-              </p>
-            </div>
-          ) : report ? (
+          {/* Always show submitted confirmation first */}
+          <div className="card card-xl" style={{ padding:32, textAlign:'center', marginBottom: loading || !report ? 0 : 16 }}>
+            <div style={{ fontSize:36, marginBottom:12 }}>📋</div>
+            <div style={{ fontWeight:700, fontSize:16, marginBottom:8 }}>Your Assessment Has Been Submitted</div>
+            <p style={{ fontSize:13, color:'var(--ink3)', lineHeight:1.7 }}>
+              Your responses have been recorded and shared with the recruitment team for <strong>{role.title}</strong>. They will review your profile and be in touch.
+            </p>
+            {loading && (
+              <div style={{ marginTop:20, paddingTop:16, borderTop:'1px solid var(--line)', display:'flex', alignItems:'center', justifyContent:'center', gap:10, color:'var(--ink3)', fontSize:12 }}>
+                <span className="sp sp-sm"/>
+                Your personalised leadership profile is being generated and will appear below shortly...
+              </div>
+            )}
+          </div>
+
+          {!loading && report ? (
             <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
               {/* Headline */}
               <div style={{ background:'var(--accent-dim)', border:'1.5px solid var(--accent-mid)',
@@ -552,15 +562,6 @@ function LResults({ candidate, results, role }) {
                 fontSize:13, color:'var(--ink3)', lineHeight:1.75, textAlign:'center' }}>
                 {report.closing}
               </div>
-            </div>
-          ) : (
-            // Fallback if AI failed - show generic confirmation only
-            <div className="card card-xl" style={{ padding:32, textAlign:'center' }}>
-              <div style={{ fontSize:36, marginBottom:12 }}>📋</div>
-              <div style={{ fontWeight:700, fontSize:16, marginBottom:8 }}>Your Assessment Has Been Submitted</div>
-              <p style={{ fontSize:13, color:'var(--ink3)', lineHeight:1.7 }}>
-                Your responses have been recorded and shared with the recruitment team for <strong>{role.title}</strong>. They will review your profile and be in touch.
-              </p>
             </div>
           )}
 
