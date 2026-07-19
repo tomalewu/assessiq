@@ -513,7 +513,7 @@ function LResults({ candidate, results, role }) {
           </div>
 
           {!loading && report ? (
-            <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:16, marginTop:16 }}>
               {/* Headline */}
               <div style={{ background:'var(--accent-dim)', border:'1.5px solid var(--accent-mid)',
                 borderRadius:16, padding:'28px 32px', textAlign:'center' }}>
@@ -563,7 +563,7 @@ function LResults({ candidate, results, role }) {
                 {report.closing}
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Footer */}
           <div style={{ textAlign:'center', marginTop:20, padding:'18px 24px',
