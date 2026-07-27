@@ -11,7 +11,11 @@ import DashboardCharts from '../components/Charts'
 function exportCSV(candidates, roles) {
   const roleMap = {}
   roles.forEach(r => { roleMap[r.id] = r })
-  const headers = ['Rank','Name','Email','Phone','DOB','Role','Score','Logic','Numerical','Percentile','Time (min)','Result','CV','Status','Notes','Date']
+  const headers = [
+    'Rank','Name','Email','Phone','DOB','Role','Score','Logic','Numerical','Percentile','Time (min)','Result',
+    'CV','Status','Notes','Date','Report URL',
+    'Current Role','Current Company','Experience (yrs)','Highest Education','Institution','Skills','Languages'
+  ]
   const sorted = [...candidates].filter(c => c.status === 'completed').sort((a,b) => (b.totalScore||0)-(a.totalScore||0))
   const rankMap = {}
   sorted.forEach((c,i) => { rankMap[c.id] = i+1 })
@@ -19,6 +23,12 @@ function exportCSV(candidates, roles) {
     const role      = roleMap[c.roleId]
     const threshold = role?.threshold || 12
     const passed    = c.status === 'completed' && (c.totalScore||0) >= threshold
+    const p         = c.cvParsed || null
+    const firstEdu  = p && p.education && p.education.length > 0 ? p.education[0] : null
+    const eduDegree = firstEdu ? [firstEdu.degree, firstEdu.year ? '(' + firstEdu.year + ')' : ''].filter(Boolean).join(' ') : ''
+    const eduInst   = firstEdu ? (firstEdu.institution || '') : ''
+    const skillsStr = p && p.skills && p.skills.length > 0 ? p.skills.join(', ') : ''
+    const langStr   = p && p.languages && p.languages.length > 0 ? p.languages.join(', ') : ''
     return [
       rankMap[c.id] || '',
       c.name, c.email, c.phone || '',
@@ -31,7 +41,14 @@ function exportCSV(candidates, roles) {
       c.cvUrl ? 'Yes' : '',
       c.status, c.notes || '',
       c.completedAt ? new Date(c.completedAt).toLocaleDateString('en-GB') : '',
-      c.status === 'completed' ? window.location.origin + '/report/cognitive/' + c.id : ''
+      c.status === 'completed' ? window.location.origin + '/report/cognitive/' + c.id : '',
+      p ? (p.currentRole || '') : '',
+      p ? (p.currentCompany || '') : '',
+      p ? (p.totalExperience ? p.totalExperience + ' yrs' : '') : '',
+      eduDegree,
+      eduInst,
+      skillsStr,
+      langStr
     ].map(v => '"' + String(v).replace(/"/g,'""') + '"').join(',')
   })
   const csv = [headers.join(','), ...rows].join('\n')
@@ -125,7 +142,17 @@ function exportExcel(candidates, roles) {
     if (rank === 1) rowClass = 'rank1'
     else if (rank === 2) rowClass = 'rank2'
     else if (rank === 3) rowClass = 'rank3'
-    html += '<tr class="' + rowClass + '">' + row.map(v => '<td>' + String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</td>').join('') + '</tr>'
+    html += '<tr class="' + rowClass + '">'
+    row.forEach((v, vi) => {
+      if (vi === 12 && v) {
+        html += '<td><a href="' + v + '" target="_blank" style="color:#4f46e5;font-weight:600;text-decoration:none">View CV</a></td>'
+      } else if (vi === 15 && v) {
+        html += '<td><a href="' + v + '" target="_blank" style="color:#4f46e5;font-weight:600;text-decoration:none">Report</a></td>'
+      } else {
+        html += '<td>' + String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</td>'
+      }
+    })
+    html += '</tr>'
   })
   html += '</table></body></html>'
 
