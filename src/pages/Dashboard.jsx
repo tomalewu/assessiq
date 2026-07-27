@@ -49,11 +49,34 @@ function exportExcel(candidates, roles) {
   const rankMap = {}
   sorted.forEach((c,i) => { rankMap[c.id] = i+1 })
 
-  const headers = ['Rank','Name','Email','Phone','DOB','Role','Score /20','Logic /10','Numerical /10','Percentile','Time (min)','Result','CV','Notes','Date','Report URL']
+  const headers = [
+    'Rank','Name','Email','Phone','DOB','Role',
+    'Score /20','Logic /10','Numerical /10','Percentile','Time (min)','Result',
+    'CV','Notes','Date','Report URL',
+    'Current Role','Current Company','Experience (yrs)','Highest Education','Institution','Skills','Languages'
+  ]
+
   const rows = candidates.map(c => {
     const role      = roleMap[c.roleId]
     const threshold = role?.threshold || 12
     const passed    = c.status === 'completed' && (c.totalScore||0) >= threshold
+    const p         = c.cvParsed || null
+
+    // Education: first entry = highest qualification
+    const firstEdu    = p && p.education && p.education.length > 0 ? p.education[0] : null
+    const eduDegree   = firstEdu ? [firstEdu.degree, firstEdu.year ? '(' + firstEdu.year + ')' : ''].filter(Boolean).join(' ') : ''
+    const eduInst     = firstEdu ? (firstEdu.institution || '') : ''
+
+    // Skills as comma-separated
+    const skillsStr = p && p.skills && p.skills.length > 0
+      ? p.skills.join(', ')
+      : ''
+
+    // Languages
+    const langStr = p && p.languages && p.languages.length > 0
+      ? p.languages.join(', ')
+      : ''
+
     return [
       rankMap[c.id] || '',
       c.name, c.email, c.phone || '',
@@ -65,25 +88,33 @@ function exportExcel(candidates, roles) {
       c.status === 'completed' ? (passed ? 'Pass' : 'Fail') : 'Pending',
       c.cvUrl ? c.cvUrl : '',
       c.notes || '',
-      c.completedAt ? new Date(c.completedAt).toLocaleDateString('en-GB') : ''
+      c.completedAt ? new Date(c.completedAt).toLocaleDateString('en-GB') : '',
+      c.status === 'completed' ? window.location.origin + '/report/cognitive/' + c.id : '',
+      p ? (p.currentRole || '') : '',
+      p ? (p.currentCompany || '') : '',
+      p ? (p.totalExperience ? p.totalExperience + ' yrs' : '') : '',
+      eduDegree,
+      eduInst,
+      skillsStr,
+      langStr
     ]
   })
 
   // Build HTML table that Excel can open
-  const passColor  = '#d1fae5'
-  const failColor  = '#fee2e2'
-  const headerColor = '#1e1b4b'
+  const passColor = '#d1fae5'
+  const failColor = '#fee2e2'
 
   let html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'
   html += '<head><meta charset="UTF-8"><style>'
   html += 'table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:12px}'
-  html += 'th{background:#1e1b4b;color:#fff;padding:8px 12px;border:1px solid #ccc;text-align:left}'
-  html += 'td{padding:7px 12px;border:1px solid #ddd}'
+  html += 'th{background:#1e1b4b;color:#fff;padding:8px 12px;border:1px solid #ccc;text-align:left;white-space:nowrap}'
+  html += 'td{padding:7px 12px;border:1px solid #ddd;vertical-align:top}'
   html += '.pass{background:' + passColor + '}'
   html += '.fail{background:' + failColor + '}'
   html += '.rank1{background:#fef9c3;font-weight:bold}'
   html += '.rank2{background:#f1f5f9}'
   html += '.rank3{background:#fef3c7}'
+
   html += '</style></head><body><table>'
   html += '<tr>' + headers.map(h => '<th>' + h + '</th>').join('') + '</tr>'
 
@@ -278,7 +309,7 @@ function BulkInviteModal({ role, onClose }) {
   useEffect(() => { setPreview(parse(csv)) }, [csv])
 
   const getLink = () => {
-    const payload = btoa(JSON.stringify({ id: role.id, linkId: role.linkId, title: role.title, dept: role.dept||'', isMTO: role.isMTO||false, ageLimit: role.ageLimit||28, threshold: role.threshold||12, recruiterEmail: role.recruiterEmail||'', difficulty: role.difficulty||'medium', expiryDate: role.expiryDate||'' }))
+    const payload = btoa(JSON.stringify({ id: role.id, linkId: role.linkId, title: role.title, dept: role.dept||'', isMTO: role.isMTO||false, ageLimit: role.ageLimit||28, threshold: role.threshold||12, recruiterEmail: role.recruiterEmail||'', difficulty: role.difficulty||'medium' }))
     return window.location.origin + '/assess/' + payload
   }
 
@@ -640,7 +671,7 @@ export default function Dashboard() {
   }
 
   const getLink = r => {
-    const payload = btoa(JSON.stringify({ id:r.id, linkId:r.linkId, title:r.title, dept:r.dept||'', isMTO:r.isMTO||false, ageLimit:r.ageLimit||28, threshold:r.threshold||12, recruiterEmail:r.recruiterEmail||'', difficulty:r.difficulty||'medium', expiryDate:r.expiryDate||'' }))
+    const payload = btoa(JSON.stringify({ id:r.id, linkId:r.linkId, title:r.title, dept:r.dept||'', isMTO:r.isMTO||false, ageLimit:r.ageLimit||28, threshold:r.threshold||12, recruiterEmail:r.recruiterEmail||'', difficulty:r.difficulty||'medium' }))
     return window.location.origin+'/assess/'+payload
   }
 
