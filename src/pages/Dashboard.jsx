@@ -624,6 +624,240 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
   )
 }
 
+// ── CV Insights Tab ───────────────────────────────────────────────────
+function CVInsightsTab({ candidates, roles, onViewResult }) {
+  const [selectedRole, setSelectedRole] = useState('all')
+  const [search, setSearch]             = useState('')
+  const [sortBy, setSort]               = useState('score')
+  const [expanded, setExpanded]         = useState(null)
+
+  const roleMap = {}
+  roles.forEach(r => { roleMap[r.id] = r })
+
+  // Only passed candidates with CVs
+  const withCV = candidates.filter(c => {
+    const role      = roleMap[c.roleId]
+    const threshold = role?.threshold || 12
+    const passed    = c.status === 'completed' && (c.totalScore||0) >= threshold
+    return passed && c.cvUrl
+  })
+
+  // Role options for dropdown
+  const roleOptions = roles.filter(r => withCV.some(c => c.roleId === r.id))
+
+  // Filter by role
+  const byRole = selectedRole === 'all' ? withCV : withCV.filter(c => c.roleId === selectedRole)
+
+  // Filter by search
+  const filtered = byRole.filter(c => {
+    if (!search.trim()) return true
+    const q = search.toLowerCase()
+    const p = c.cvParsed || {}
+    return (
+      (c.name||'').toLowerCase().includes(q) ||
+      (c.email||'').toLowerCase().includes(q) ||
+      (p.currentRole||'').toLowerCase().includes(q) ||
+      (p.currentCompany||'').toLowerCase().includes(q) ||
+      (p.skills||[]).some(s => s.toLowerCase().includes(q))
+    )
+  })
+
+  // Sort
+  const sorted = [...filtered].sort((a,b) => {
+    if (sortBy === 'score') return (b.totalScore||0) - (a.totalScore||0)
+    if (sortBy === 'name') return (a.name||'').localeCompare(b.name||'')
+    if (sortBy === 'exp') {
+      const ae = a.cvParsed?.totalExperience || 0
+      const be = b.cvParsed?.totalExperience || 0
+      return be - ae
+    }
+    return 0
+  })
+
+  const fmtDate = d => !d ? '' : new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="shdr" style={{ marginBottom:16 }}>
+        <div>
+          <div className="stitle">CV Insights</div>
+          <div className="ssub">{withCV.length} passed candidates with CVs · Filter by role · Search by name or skill</div>
+        </div>
+        <div style={{ display:'flex', gap:8 }}>
+          <button className="btn btn-s btn-sm" style={{ fontSize:11 }}
+            onClick={() => exportCSV(filtered, roles)}>📥 CSV</button>
+          <button className="btn btn-s btn-sm" style={{ fontSize:11, background:'#f0fdf4', border:'1px solid #86efac', color:'#166534' }}
+            onClick={() => exportExcel(filtered, roles)}>📊 Excel</button>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div style={{ display:'flex', gap:10, marginBottom:16, flexWrap:'wrap' }}>
+        <select value={selectedRole} onChange={e => { setSelectedRole(e.target.value); setExpanded(null) }}
+          style={{ padding:'8px 12px', border:'1.5px solid var(--line)', borderRadius:'var(--r-sm)', fontFamily:'inherit', fontSize:13, background:'var(--paper)', outline:'none', minWidth:200 }}>
+          <option value="all">All Roles ({withCV.length} candidates)</option>
+          {roleOptions.map(r => {
+            const count = withCV.filter(c => c.roleId === r.id).length
+            return <option key={r.id} value={r.id}>{r.title} ({count})</option>
+          })}
+        </select>
+        <input placeholder="Search name, skill, company..."
+          value={search} onChange={e => setSearch(e.target.value)}
+          style={{ flex:1, minWidth:200, padding:'8px 12px', border:'1.5px solid var(--line)', borderRadius:'var(--r-sm)', fontFamily:'inherit', fontSize:13, outline:'none', background:'var(--paper)' }}/>
+        <select value={sortBy} onChange={e => setSort(e.target.value)}
+          style={{ padding:'8px 12px', border:'1.5px solid var(--line)', borderRadius:'var(--r-sm)', fontFamily:'inherit', fontSize:13, background:'var(--paper)', outline:'none' }}>
+          <option value="score">Sort: Score</option>
+          <option value="name">Sort: Name</option>
+          <option value="exp">Sort: Experience</option>
+        </select>
+      </div>
+
+      {/* Summary strip */}
+      <div style={{ display:'flex', gap:10, marginBottom:16, flexWrap:'wrap' }}>
+        {[
+          { label:'Showing', value: sorted.length + ' candidates' },
+          { label:'With experience data', value: sorted.filter(c => c.cvParsed?.totalExperience).length },
+          { label:'With education data', value: sorted.filter(c => c.cvParsed?.education?.length > 0).length },
+          { label:'With skills listed', value: sorted.filter(c => c.cvParsed?.skills?.length > 0).length },
+        ].map(s => (
+          <div key={s.label} style={{ padding:'8px 14px', background:'var(--paper2)', borderRadius:8, fontSize:12 }}>
+            <span style={{ color:'var(--ink3)' }}>{s.label}: </span>
+            <strong>{s.value}</strong>
+          </div>
+        ))}
+      </div>
+
+      {/* Candidate cards */}
+      {sorted.length === 0 ? (
+        <div style={{ textAlign:'center', padding:'60px 0', color:'var(--ink3)' }}>
+          No passed candidates with CVs found{search ? ' matching "' + search + '"' : ''}.
+        </div>
+      ) : (
+        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          {sorted.map((c, idx) => {
+            const role      = roleMap[c.roleId]
+            const threshold = role?.threshold || 12
+            const p         = c.cvParsed || null
+            const firstEdu  = p?.education?.[0] || null
+            const isOpen    = expanded === c.id
+
+            return (
+              <div key={c.id} className="card" style={{ padding:0, overflow:'hidden' }}>
+                {/* Row */}
+                <div style={{ padding:'14px 20px', display:'flex', alignItems:'center', gap:14, cursor:'pointer' }}
+                  onClick={() => setExpanded(isOpen ? null : c.id)}>
+                  {/* Rank */}
+                  <div style={{ fontSize:13, fontWeight:700, color:'var(--ink3)', minWidth:28, textAlign:'center' }}>
+                    {idx+1}
+                  </div>
+                  {/* Name + email */}
+                  <div style={{ flex:2, minWidth:0 }}>
+                    <div style={{ fontWeight:700, fontSize:14 }}>{c.name}</div>
+                    <div style={{ fontSize:11, color:'var(--ink3)' }}>{c.email}</div>
+                  </div>
+                  {/* Score */}
+                  <div style={{ textAlign:'center', minWidth:60 }}>
+                    <div style={{ fontWeight:800, fontSize:16, color:'var(--accent)' }}>{c.totalScore}<span style={{ fontSize:12, fontWeight:400, color:'var(--ink3)' }}>/20</span></div>
+                    <div style={{ fontSize:10, color:'var(--ink3)' }}>{c.percentile}th pct</div>
+                  </div>
+                  {/* Current role */}
+                  <div style={{ flex:2, minWidth:0 }}>
+                    {p?.currentRole ? (
+                      <>
+                        <div style={{ fontSize:13, fontWeight:600 }}>{p.currentRole}</div>
+                        <div style={{ fontSize:11, color:'var(--ink3)' }}>{p.currentCompany || ''}</div>
+                      </>
+                    ) : (
+                      <span style={{ fontSize:12, color:'var(--ink3)' }}>—</span>
+                    )}
+                  </div>
+                  {/* Experience */}
+                  <div style={{ minWidth:60, textAlign:'center' }}>
+                    {p?.totalExperience ? (
+                      <>
+                        <div style={{ fontWeight:700, fontSize:14 }}>{p.totalExperience}</div>
+                        <div style={{ fontSize:10, color:'var(--ink3)' }}>yrs exp</div>
+                      </>
+                    ) : <span style={{ color:'var(--ink3)', fontSize:12 }}>—</span>}
+                  </div>
+                  {/* Education */}
+                  <div style={{ flex:2, minWidth:0 }}>
+                    {firstEdu ? (
+                      <>
+                        <div style={{ fontSize:12, fontWeight:600 }}>{firstEdu.degree}</div>
+                        <div style={{ fontSize:11, color:'var(--ink3)' }}>{firstEdu.institution}</div>
+                      </>
+                    ) : <span style={{ fontSize:12, color:'var(--ink3)' }}>—</span>}
+                  </div>
+                  {/* Actions */}
+                  <div style={{ display:'flex', gap:6, flexShrink:0 }} onClick={e => e.stopPropagation()}>
+                    <a href={c.cvUrl} target="_blank" rel="noreferrer"
+                      className="btn btn-s btn-sm" style={{ fontSize:11, textDecoration:'none' }}>📎 CV</a>
+                    <button className="btn btn-g btn-sm" style={{ fontSize:11 }}
+                      onClick={() => onViewResult({ cand:c, profile:null })}>📄 Report</button>
+                  </div>
+                  {/* Expand arrow */}
+                  <div style={{ fontSize:16, color:'var(--ink3)', transition:'transform .2s', transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>▾</div>
+                </div>
+
+                {/* Expanded skills panel */}
+                {isOpen && (
+                  <div style={{ borderTop:'1px solid var(--line)', background:'var(--paper2)', padding:'16px 20px' }}>
+                    <div style={{ display:'flex', gap:24, flexWrap:'wrap' }}>
+                      {/* Skills */}
+                      {p?.skills?.length > 0 && (
+                        <div style={{ flex:2, minWidth:200 }}>
+                          <div style={{ fontSize:11, fontWeight:700, color:'var(--ink3)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>Skills</div>
+                          <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                            {p.skills.map((s,i) => (
+                              <span key={i} style={{ background:'var(--accent-dim)', color:'var(--accent)', fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:999 }}>{s}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {/* Languages */}
+                      {p?.languages?.length > 0 && (
+                        <div style={{ minWidth:120 }}>
+                          <div style={{ fontSize:11, fontWeight:700, color:'var(--ink3)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>Languages</div>
+                          <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                            {p.languages.map((l,i) => (
+                              <span key={i} style={{ background:'var(--ok-dim)', color:'var(--ok)', fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:999 }}>{l}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {/* All education */}
+                      {p?.education?.length > 1 && (
+                        <div style={{ minWidth:200 }}>
+                          <div style={{ fontSize:11, fontWeight:700, color:'var(--ink3)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>Education</div>
+                          {p.education.map((e,i) => (
+                            <div key={i} style={{ fontSize:12, marginBottom:4 }}>
+                              <strong>{e.degree}</strong>
+                              {e.institution && <span style={{ color:'var(--ink3)' }}> — {e.institution}</span>}
+                              {e.year && <span style={{ color:'var(--ink3)' }}> ({e.year})</span>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {/* Date + Role */}
+                      <div style={{ minWidth:120 }}>
+                        <div style={{ fontSize:11, fontWeight:700, color:'var(--ink3)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>Assessed</div>
+                        <div style={{ fontSize:12 }}>{fmtDate(c.completedAt)}</div>
+                        <div style={{ fontSize:11, color:'var(--ink3)', marginTop:4 }}>{role?.title || c.roleName || ''}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const nav         = useNavigate()
   const me          = getCurrentUser()
@@ -845,7 +1079,7 @@ export default function Dashboard() {
         {!globalSearch.trim() && (
           <>
             <div style={{ display:'flex', gap:0, marginBottom:20, background:'var(--paper2)', borderRadius:'var(--r-sm)', padding:3, border:'1px solid var(--line)', width:'fit-content' }}>
-              {[['roles','📋 Roles'],['ranking','🏆 Ranking'],['analytics','📊 Analytics']].map(([id,label])=>(
+              {[['roles','📋 Roles'],['ranking','🏆 Ranking'],['analytics','📊 Analytics'],['cvinsights','🎓 CV Insights']].map(([id,label])=>(
                 <button key={id} onClick={()=>setActiveTab(id)}
                   style={{ padding:'7px 18px', borderRadius:6, border:'none', fontFamily:'inherit', fontSize:12, fontWeight:600, cursor:'pointer',
                     background:activeTab===id?'var(--paper)':'transparent', color:activeTab===id?'var(--ink)':'var(--ink3)',
@@ -955,6 +1189,11 @@ export default function Dashboard() {
                   <DashboardCharts candidates={allCandidates} roles={roles}/>
                 )}
               </div>
+            )}
+
+            {/* CV Insights tab */}
+            {activeTab==='cvinsights' && (
+              <CVInsightsTab candidates={allCandidates} roles={roles} onViewResult={setViewResult}/>
             )}
           </>
         )}
