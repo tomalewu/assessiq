@@ -13,6 +13,7 @@ function exportCSV(candidates, roles) {
   roles.forEach(r => { roleMap[r.id] = r })
   const headers = [
     'Rank','Name','Email','Phone','DOB','Role','Score','Logic','Numerical','Percentile','Time (min)','Result',
+    'Tab Switches','Flagged',
     'CV','Status','Notes','Date','Report URL',
     'Current Role','Current Company','Experience (yrs)','Highest Education','Institution','Skills','Languages'
   ]
@@ -38,6 +39,8 @@ function exportCSV(candidates, roles) {
       c.percentile ? c.percentile+'th' : '',
       c.timeTaken ? (c.timeTaken/60).toFixed(1) : '',
       c.status === 'completed' ? (passed ? 'Pass' : 'Fail') : '',
+      c.tabSwitches > 0 ? c.tabSwitches : 0,
+      c.flagged ? 'Yes' : 'No',
       c.cvUrl ? 'Yes' : '',
       c.status, c.notes || '',
       c.completedAt ? new Date(c.completedAt).toLocaleDateString('en-GB') : '',
@@ -69,6 +72,7 @@ function exportExcel(candidates, roles) {
   const headers = [
     'Rank','Name','Email','Phone','DOB','Role',
     'Score /20','Logic /10','Numerical /10','Percentile','Time (min)','Result',
+    'Tab Switches','Flagged',
     'CV','Notes','Date','Report URL',
     'Current Role','Current Company','Experience (yrs)','Highest Education','Institution','Skills','Languages'
   ]
@@ -103,6 +107,8 @@ function exportExcel(candidates, roles) {
       c.percentile ? c.percentile + 'th' : '',
       c.timeTaken ? (c.timeTaken/60).toFixed(1) : '',
       c.status === 'completed' ? (passed ? 'Pass' : 'Fail') : 'Pending',
+      c.tabSwitches > 0 ? c.tabSwitches : 0,
+      c.flagged ? 'Yes' : 'No',
       c.cvUrl ? c.cvUrl : '',
       c.notes || '',
       c.completedAt ? new Date(c.completedAt).toLocaleDateString('en-GB') : '',
@@ -131,6 +137,7 @@ function exportExcel(candidates, roles) {
   html += '.rank1{background:#fef9c3;font-weight:bold}'
   html += '.rank2{background:#f1f5f9}'
   html += '.rank3{background:#fef3c7}'
+  html += '.flagged{color:#dc2626;font-weight:700}'
 
   html += '</style></head><body><table>'
   html += '<tr>' + headers.map(h => '<th>' + h + '</th>').join('') + '</tr>'
@@ -144,10 +151,12 @@ function exportExcel(candidates, roles) {
     else if (rank === 3) rowClass = 'rank3'
     html += '<tr class="' + rowClass + '">'
     row.forEach((v, vi) => {
-      if (vi === 12 && v) {
+      if (vi === 14 && v) {
         html += '<td><a href="' + v + '" target="_blank" style="color:#4f46e5;font-weight:600;text-decoration:none">View CV</a></td>'
-      } else if (vi === 15 && v) {
+      } else if (vi === 17 && v) {
         html += '<td><a href="' + v + '" target="_blank" style="color:#4f46e5;font-weight:600;text-decoration:none">Report</a></td>'
+      } else if (vi === 13) {
+        html += '<td class="' + (v === 'Yes' ? 'flagged' : '') + '">' + String(v) + '</td>'
       } else {
         html += '<td>' + String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</td>'
       }
