@@ -181,3 +181,36 @@ export async function dbCandidatesByRole(roleId) {
   const all = await dbAllCandidates()
   return all.filter(c => c.roleId === roleId)
 }
+
+// ── In-Tray Scoring Results ───────────────────────────────────────────
+export async function dbSaveInTrayResult(result) {
+  const id = result.candidateId
+    ? 'itr_' + result.candidateId.replace(/\s+/g, '_').toLowerCase()
+    : 'itr_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5)
+  const record = { ...result, id, savedAt: new Date().toISOString() }
+  // localStorage
+  const existing = JSON.parse(localStorage.getItem('aiq_intray') || '[]')
+  const idx = existing.findIndex(function(r) { return r.id === id })
+  if (idx !== -1) { existing[idx] = record } else { existing.push(record) }
+  localStorage.setItem('aiq_intray', JSON.stringify(existing))
+  // Firestore
+  fbSet('intray_results', id, record)
+  return record
+}
+
+export async function dbAllInTrayResults() {
+  try {
+    const remote = await fbGetAll('intray_results')
+    if (remote && remote.length > 0) {
+      localStorage.setItem('aiq_intray', JSON.stringify(remote))
+      return remote
+    }
+  } catch(e) { console.warn('dbAllInTrayResults remote failed', e.message) }
+  return JSON.parse(localStorage.getItem('aiq_intray') || '[]')
+}
+
+export async function dbDeleteInTrayResult(id) {
+  const existing = JSON.parse(localStorage.getItem('aiq_intray') || '[]')
+  localStorage.setItem('aiq_intray', JSON.stringify(existing.filter(function(r) { return r.id !== id })))
+  fbDelete('intray_results', id)
+}
