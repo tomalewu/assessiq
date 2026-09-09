@@ -29,37 +29,6 @@ async function callClaude(systemPrompt, userPrompt, maxTokens) {
   return data.content?.[0]?.text || ''
 }
 
-// ── Shared JSON array parser (used by generateQuestions + generateLeadershipSJT) ──
-function parseArr(text) {
-  console.log('Parsing response of length:', text.length, 'Preview:', text.slice(0, 200))
-  let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim()
-  const s = clean.indexOf('[')
-  const e = clean.lastIndexOf(']')
-  if (s === -1 || e === -1) throw new Error('No JSON array found in: ' + clean.slice(0, 100))
-  const jsonStr = clean.slice(s, e + 1)
-  try {
-    return JSON.parse(jsonStr)
-  } catch(parseErr) {
-    console.error('JSON parse error, attempting recovery. Text length:', jsonStr.length)
-    const objects = []
-    let depth = 0, start = -1
-    for (let i = 0; i < jsonStr.length; i++) {
-      if (jsonStr[i] === '{') { if (depth === 0) start = i; depth++ }
-      else if (jsonStr[i] === '}') {
-        depth--
-        if (depth === 0 && start !== -1) {
-          try { objects.push(JSON.parse(jsonStr.slice(start, i + 1))) } catch(e) {}
-        }
-      }
-    }
-    if (objects.length >= 2) {
-      console.log('Recovered', objects.length, 'objects from partial JSON')
-      return objects
-    }
-    throw new Error('JSON parse failed and recovery insufficient: ' + parseErr.message)
-  }
-}
-
 // ── Question Generation ───────────────────────────────────────────────
 async function generateQuestions(difficulty) {
   const diffDesc = difficulty === 'hard'
@@ -76,6 +45,39 @@ async function generateQuestions(difficulty) {
     callClaude(systemPrompt, logicPrompt, 3000),
     callClaude(systemPrompt, numPrompt, 3000)
   ])
+
+  const parseArr = (text) => {
+    console.log('Parsing response of length:', text.length, 'Preview:', text.slice(0, 200))
+    // Strip markdown code blocks if present
+    let clean = text.replace(/```json/gi, '').replace(/```/g, '').trim()
+    // Find the JSON array
+    const s = clean.indexOf('[')
+    const e = clean.lastIndexOf(']')
+    if (s === -1 || e === -1) throw new Error('No JSON array found in: ' + clean.slice(0, 100))
+    const jsonStr = clean.slice(s, e + 1)
+    try {
+      return JSON.parse(jsonStr)
+    } catch(parseErr) {
+      // Try to recover partial JSON by finding complete objects
+      console.error('JSON parse error, attempting recovery. Text length:', jsonStr.length)
+      const objects = []
+      let depth = 0, start = -1
+      for (let i = 0; i < jsonStr.length; i++) {
+        if (jsonStr[i] === '{') { if (depth === 0) start = i; depth++ }
+        else if (jsonStr[i] === '}') {
+          depth--
+          if (depth === 0 && start !== -1) {
+            try { objects.push(JSON.parse(jsonStr.slice(start, i + 1))) } catch(e) {}
+          }
+        }
+      }
+      if (objects.length >= 5) {
+        console.log('Recovered', objects.length, 'objects from partial JSON')
+        return objects
+      }
+      throw new Error('JSON parse failed and recovery insufficient: ' + parseErr.message)
+    }
+  }
 
   const logic = parseArr(logicText)
   const num   = parseArr(numText)
@@ -229,6 +231,151 @@ async function analyseLeadership(candidateData) {
 }
 
 // ── Handler ───────────────────────────────────────────────────────────
+// ── In-Tray Scoring ───────────────────────────────────────────────────
+async function scoreInTray(fileBase64, mimeType, candidateIndex, totalCandidates) {
+  const SCORING_PROMPT = `You are an expert assessment evaluator for ACI Group's ACI Next Wave Future Leadership Program. You are scoring a candidate's In-Tray Case Analysis answer booklet.
+
+THE EXERCISE CONTEXT:
+Candidates were told they are a new MTO at ACI Group's Corporate Supply Chain division. Their manager Mr. Kamrul Hassan was away for 2 hours. They had 9 documents to work through and 60 minutes to complete 6 questions.
+
+THE 9 DOCUMENTS CANDIDATES SAW:
+- Doc 1: Manager note - handle what you can, priorities marked with *
+- Doc 2 (URGENT*): Supplier delay - Apex Packaging delayed 14 days, only 6 days stock left of SKU-112, two unqualified backup suppliers available, decision needed by 10am
+- Doc 3 (URGENT*): Client complaint - Galaxy Retail reporting mislabelled products across 3 of 4 deliveries, threatening 30% order cut, Tk 2.8 crore account
+- Doc 4: Finance circular - Q2 cost variance reports due 5pm today
+- Doc 5: Colleague email - wants 30-min meeting on demand forecasting, suggests 3pm
+- Doc 6 (URGENT*): HSE memo - 12 pallets blocking fire exit Warehouse Bay 3, Category A violation, must clear within 4 hours, inspector returns 2pm
+- Doc 7: HR circular - nominate team member for Lean Six Sigma training, deadline Friday
+- Doc 8: Manager handwritten note - prepare one-paragraph supplier performance summary for 3pm meeting
+- Doc 9: Apex Packaging scorecard - On-Time: Q4:94% Q1:88% Q2:71% / Quality: Q4:99% Q1:97% Q2:93% / Response Time: Q4:2d Q1:3d Q2:6d / Cost Variance: Q4:+1% Q1:+3% Q2:+7% / Rating: Q4:Excellent Q1:Good Q2:Below Standard
+
+MARKING CRITERIA:
+
+Q1 - Prioritisation (15 marks):
+Strong answer: Doc 6 HSE and Doc 2 supplier delay ranked 1 and 2. Doc 3 client complaint ranked 3. Doc 8/9 supplier summary ranked 4. Doc 4 finance report ranked 5. Docs 5 and 7 ranked lowest.
+15-13: Correct order with clear specific reasoning for each item
+12-9: Mostly correct, minor errors, reasonable justification
+8-5: Gets 1-2 urgent items right but misses others
+4-1: Incorrect prioritisation with poor reasoning
+0: Not attempted or completely illogical
+
+Q2 - Supplier Delay Response (25 marks):
+Must contain all three: (a) recommends using backup supplier under emergency protocol - does not simply approve outright or refuse, (b) explicitly flags qualification risk with a condition or next step, (c) states what to prepare/escalate for manager's return.
+25-22: All three elements, professional tone, clear and actionable
+21-16: Two of three elements clearly present
+15-9: Only one element clearly present or very vague
+8-3: Misses core challenge or is inappropriate
+2-0: Not attempted
+
+Q3 - Client Complaint Response (20 marks):
+Must have: empathetic opening, no admission of liability, specific realistic next step commitment, protects relationship without unkeepable promises.
+20-18: All elements, professional tone, specific commitment
+17-13: Most elements, tone appropriate, commitment slightly vague
+12-8: Acknowledges issue but lacks specific next step
+7-3: Generic or poorly structured
+2-0: Not attempted or damaging
+
+Q4 - Safety Issue Action Plan (15 marks):
+Must show: contacts warehouse supervisor immediately, confirms action in writing, notifies HSE before 2pm, escalates to manager, treats as legal/safety matter with hard deadline.
+15-13: All actions, appropriate urgency, clear ownership
+12-9: Most actions, urgency understood, one step missing
+8-5: Understands seriousness but plan is incomplete
+4-1: Takes some action but misses urgency or 2pm deadline
+0: Not attempted or dismisses issue
+
+Q5 - Supplier Performance Summary (15 marks):
+Must: note deteriorating trend across ALL four metrics, specifically flag Q2 as significantly below standard, recommend discussing supplier status without making the decision.
+15-13: All metrics, trend identified clearly, appropriate recommendation
+12-9: Most metrics, trend partially identified, reasonable conclusion
+8-5: Some metrics, no clear trend analysis
+4-1: Superficial summary
+0: Not attempted
+
+Q6 - Reflection (10 marks):
+Must: identify 2-3 correct items NOT handled (finance report, training nomination, colleague meeting - these are low urgency or outside MTO authority) with sound reasoning showing understanding of scope and authority.
+10-9: Correct items, reasoning shows clear understanding of scope
+8-6: Most correct items with reasonable reasoning
+5-3: Some correct items but reasoning weak
+2-1: Misunderstands the concept
+0: Not attempted
+
+COMPETENCY CONVERSION:
+After scoring Q1-Q6, convert to 1-5 competency scores:
+- Drive & Initiative = Q1 + Q4 + Q6 (max 40 marks)
+- Thinking Quality = Q2 + Q5 (max 40 marks)
+- Communication = Q3 (max 20 marks)
+
+Conversion scale (% of competency max):
+85-100% = 5 (Exceptional)
+70-84% = 4 (Strong)
+50-69% = 3 (Developing)
+30-49% = 2 (Emerging)
+0-29% = 1 (Insufficient)
+
+IMPORTANT: Respond ONLY with valid JSON. No text before or after. No markdown. Use this exact structure:
+{
+  "candidateName": "string",
+  "candidateId": "string",
+  "legibility": "Clear|Mostly clear|Some sections unclear",
+  "legibilityNotes": "string or empty",
+  "questions": {
+    "q1": { "score": 0, "max": 15, "observation": "string" },
+    "q2": { "score": 0, "max": 25, "observation": "string" },
+    "q3": { "score": 0, "max": 20, "observation": "string" },
+    "q4": { "score": 0, "max": 15, "observation": "string" },
+    "q5": { "score": 0, "max": 15, "observation": "string" },
+    "q6": { "score": 0, "max": 10, "observation": "string" }
+  },
+  "rawTotal": 0,
+  "competencies": {
+    "driveInitiative": { "raw": 0, "max": 40, "pct": 0, "score": 0, "level": "string" },
+    "thinkingQuality": { "raw": 0, "max": 40, "pct": 0, "score": 0, "level": "string" },
+    "communication": { "raw": 0, "max": 20, "pct": 0, "score": 0, "level": "string" }
+  },
+  "overallAssessment": "string (4-5 sentences)",
+  "integrityFlag": false,
+  "integrityNote": "string or empty"
+}`
+
+  // Build content array based on file type
+  const isPDF = mimeType === 'application/pdf'
+  const content = [
+    {
+      type: isPDF ? 'document' : 'image',
+      source: {
+        type: 'base64',
+        media_type: mimeType,
+        data: fileBase64
+      }
+    },
+    {
+      type: 'text',
+      text: 'Please score this candidate answer booklet (' + candidateIndex + ' of ' + totalCandidates + ') according to the marking criteria. Return ONLY valid JSON.'
+    }
+  ]
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-beta': 'pdfs-2024-09-25',
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'claude-opus-4-5',
+      max_tokens: 2000,
+      system: SCORING_PROMPT,
+      messages: [{ role: 'user', content }]
+    })
+  })
+
+  if (!resp.ok) throw new Error('Anthropic API error: ' + resp.status)
+  const data = await resp.json()
+  const raw = data.content[0].text.replace(/```json|```/gi, '').trim()
+  return JSON.parse(raw)
+}
+
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -280,7 +427,15 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers, body: JSON.stringify({ parsed }) }
     }
 
-    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Unknown action. Use generate or parse_cv.' }) }
+    if (action === 'score_intray') {
+      const { fileBase64, mimeType, candidateIndex, totalCandidates } = body
+      if (!fileBase64) return { statusCode: 400, headers, body: JSON.stringify({ error: 'fileBase64 required' }) }
+      if (!mimeType) return { statusCode: 400, headers, body: JSON.stringify({ error: 'mimeType required' }) }
+      const result = await scoreInTray(fileBase64, mimeType, candidateIndex || 1, totalCandidates || 1)
+      return { statusCode: 200, headers, body: JSON.stringify({ result }) }
+    }
+
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Unknown action.' }) }
 
   } catch (err) {
     console.error('Function error:', err.message)
