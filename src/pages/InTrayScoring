@@ -1,4 +1,4 @@
-mport { useState, useRef } from 'react'
+import { useState, useRef } from 'react'
  
 // ── Excel export ──────────────────────────────────────────────────────
 function exportResultsExcel(results) {
