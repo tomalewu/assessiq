@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { dbSaveInTrayResult, dbAllInTrayResults, dbDeleteInTrayResult } from '../db'
 
 // ── Excel export ──────────────────────────────────────────────────────
 function exportResultsExcel(results) {
   const headers = [
-    'Rank','Candidate Name','Candidate ID','Legibility',
+    'Rank','Candidate Name','Candidate ID','Saved At','Legibility',
     'Q1 Prioritisation /15','Q2 Supplier Delay /25','Q3 Client Complaint /20',
     'Q4 Safety Issue /15','Q5 Supplier Summary /15','Q6 Reflection /10',
     'Raw Total /100',
@@ -12,9 +13,7 @@ function exportResultsExcel(results) {
     'Communication (1-5)','Communication Level',
     'Overall Assessment','Integrity Flag','Notes'
   ]
-
   const sorted = [...results].sort(function(a, b) { return b.rawTotal - a.rawTotal })
-
   let html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'
   html += '<head><meta charset="UTF-8"><style>'
   html += 'table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:11px}'
@@ -25,13 +24,12 @@ function exportResultsExcel(results) {
   html += '.alt{background:#f9fafb}'
   html += '</style></head><body><table>'
   html += '<tr>' + headers.map(function(h) { return '<th>' + h + '</th>' }).join('') + '</tr>'
-
   sorted.forEach(function(r, idx) {
     var rowClass = r.integrityFlag ? 'flag' : idx % 2 === 0 ? '' : 'alt'
     if (idx < 3 && !r.integrityFlag) rowClass = 'top'
+    var fmtDate = r.savedAt ? new Date(r.savedAt).toLocaleDateString('en-GB') : ''
     var row = [
-      idx + 1,
-      r.candidateName, r.candidateId, r.legibility,
+      idx+1, r.candidateName, r.candidateId, fmtDate, r.legibility,
       r.questions.q1.score, r.questions.q2.score, r.questions.q3.score,
       r.questions.q4.score, r.questions.q5.score, r.questions.q6.score,
       r.rawTotal,
@@ -49,7 +47,6 @@ function exportResultsExcel(results) {
     html += '</tr>'
   })
   html += '</table></body></html>'
-
   var blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' })
   var url = URL.createObjectURL(blob)
   var a = document.createElement('a')
@@ -57,7 +54,6 @@ function exportResultsExcel(results) {
   URL.revokeObjectURL(url)
 }
 
-// ── Level badge colour ────────────────────────────────────────────────
 function levelColor(score) {
   if (score >= 5) return 'var(--ok)'
   if (score >= 4) return '#10b981'
@@ -70,139 +66,155 @@ function ScoreBar({ score, max }) {
   var pct = max > 0 ? Math.round(score / max * 100) : 0
   var color = pct >= 85 ? 'var(--ok)' : pct >= 70 ? '#10b981' : pct >= 50 ? 'var(--warn)' : pct >= 30 ? '#f97316' : 'var(--bad)'
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <div style={{ flex: 1, height: 6, background: 'var(--line)', borderRadius: 3, overflow: 'hidden' }}>
-        <div style={{ width: pct + '%', height: '100%', background: color, borderRadius: 3, transition: 'width .4s' }}/>
+    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+      <div style={{ flex:1, height:6, background:'var(--line)', borderRadius:3, overflow:'hidden' }}>
+        <div style={{ width:pct+'%', height:'100%', background:color, borderRadius:3, transition:'width .4s' }}/>
       </div>
-      <span style={{ fontSize: 12, fontWeight: 700, color, minWidth: 28 }}>{score}/{max}</span>
+      <span style={{ fontSize:12, fontWeight:700, color, minWidth:28 }}>{score}/{max}</span>
     </div>
   )
 }
 
-// ── Candidate result card ─────────────────────────────────────────────
-function CandidateCard({ result, rank }) {
+function CandidateCard({ result, rank, onDelete }) {
   var [open, setOpen] = useState(false)
+  var [confirming, setConfirming] = useState(false)
   var q = result.questions
   var c = result.competencies
+  var fmtDate = result.savedAt ? new Date(result.savedAt).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : ''
+
+  function handleDelete(e) {
+    e.stopPropagation()
+    if (!confirming) { setConfirming(true); return }
+    onDelete(result.id)
+  }
 
   return (
-    <div className="card" style={{ marginBottom: 10, overflow: 'hidden' }}>
-      {/* Summary row */}
-      <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}
+    <div className="card" style={{ marginBottom:10, overflow:'hidden' }}>
+      <div style={{ padding:'14px 20px', display:'flex', alignItems:'center', gap:14, cursor:'pointer' }}
         onClick={function() { setOpen(!open) }}>
-        <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--ink3)', minWidth: 28, textAlign: 'center' }}>
+        <div style={{ fontWeight:800, fontSize:16, color:'var(--ink3)', minWidth:28, textAlign:'center' }}>
           #{rank}
         </div>
-        <div style={{ flex: 2 }}>
-          <div style={{ fontWeight: 700, fontSize: 14 }}>{result.candidateName}</div>
-          <div style={{ fontSize: 11, color: 'var(--ink3)' }}>{result.candidateId}</div>
+        <div style={{ flex:2 }}>
+          <div style={{ fontWeight:700, fontSize:14 }}>{result.candidateName}</div>
+          <div style={{ fontSize:11, color:'var(--ink3)' }}>{result.candidateId} {fmtDate ? '\u00b7 Scored ' + fmtDate : ''}</div>
         </div>
-        <div style={{ textAlign: 'center', minWidth: 70 }}>
-          <div style={{ fontWeight: 800, fontSize: 20, color: 'var(--accent)' }}>{result.rawTotal}<span style={{ fontSize: 12, color: 'var(--ink3)', fontWeight: 400 }}>/100</span></div>
-          <div style={{ fontSize: 10, color: 'var(--ink3)' }}>Raw Score</div>
+        <div style={{ textAlign:'center', minWidth:70 }}>
+          <div style={{ fontWeight:800, fontSize:20, color:'var(--accent)' }}>
+            {result.rawTotal}<span style={{ fontSize:12, color:'var(--ink3)', fontWeight:400 }}>/100</span>
+          </div>
+          <div style={{ fontSize:10, color:'var(--ink3)' }}>Raw Score</div>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+        <div style={{ display:'flex', gap:8, flexShrink:0 }}>
           {[
-            { label: 'Drive', val: c.driveInitiative.score },
-            { label: 'Thinking', val: c.thinkingQuality.score },
-            { label: 'Comms', val: c.communication.score }
+            { label:'Drive', val:c.driveInitiative.score },
+            { label:'Thinking', val:c.thinkingQuality.score },
+            { label:'Comms', val:c.communication.score }
           ].map(function(comp) {
             return (
-              <div key={comp.label} style={{ textAlign: 'center', minWidth: 52 }}>
-                <div style={{ fontWeight: 800, fontSize: 16, color: levelColor(comp.val) }}>{comp.val}<span style={{ fontSize: 10 }}>/5</span></div>
-                <div style={{ fontSize: 10, color: 'var(--ink3)' }}>{comp.label}</div>
+              <div key={comp.label} style={{ textAlign:'center', minWidth:52 }}>
+                <div style={{ fontWeight:800, fontSize:16, color:levelColor(comp.val) }}>{comp.val}<span style={{ fontSize:10 }}>/5</span></div>
+                <div style={{ fontSize:10, color:'var(--ink3)' }}>{comp.label}</div>
               </div>
             )
           })}
         </div>
         {result.integrityFlag && (
-          <div style={{ background: 'var(--bad)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4 }}>
-            FLAG
-          </div>
+          <div style={{ background:'var(--bad)', color:'#fff', fontSize:11, fontWeight:700, padding:'3px 8px', borderRadius:4 }}>FLAG</div>
         )}
-        {result.legibility !== 'Clear' && (
-          <div style={{ background: 'var(--warn)', color: '#fff', fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 4 }}>
+        {result.legibility && result.legibility !== 'Clear' && (
+          <div style={{ background:'var(--warn)', color:'#fff', fontSize:11, fontWeight:700, padding:'3px 8px', borderRadius:4 }}>
             {result.legibility}
           </div>
         )}
-        <div style={{ fontSize: 18, color: 'var(--ink3)', transition: 'transform .2s', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>
+        <button
+          onClick={handleDelete}
+          style={{ background:confirming?'var(--bad)':'none', border:confirming?'none':'none',
+            color:confirming?'#fff':'var(--bad)', cursor:'pointer', fontSize:12, fontWeight:700,
+            padding:confirming?'4px 10px':'0 4px', borderRadius:4, flexShrink:0 }}
+          title="Delete this result">
+          {confirming ? 'Confirm delete?' : '\uD83D\uDDD1'}
+        </button>
+        {confirming && (
+          <button onClick={function(e) { e.stopPropagation(); setConfirming(false) }}
+            style={{ background:'none', border:'1px solid var(--line)', color:'var(--ink3)', cursor:'pointer',
+              fontSize:11, padding:'3px 8px', borderRadius:4 }}>
+            Cancel
+          </button>
+        )}
+        <div style={{ fontSize:18, color:'var(--ink3)', transition:'transform .2s', transform:open?'rotate(180deg)':'rotate(0deg)' }}>
           {'\u25be'}
         </div>
       </div>
 
-      {/* Expanded detail */}
       {open && (
-        <div style={{ borderTop: '1px solid var(--line)', background: 'var(--paper2)', padding: '20px 24px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 20 }}>
-            {/* Question scores */}
+        <div style={{ borderTop:'1px solid var(--line)', background:'var(--paper2)', padding:'20px 24px' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24, marginBottom:20 }}>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--ink3)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 12 }}>
+              <div style={{ fontWeight:700, fontSize:12, color:'var(--ink3)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:12 }}>
                 Question Scores
               </div>
               {[
-                { key: 'q1', label: 'Q1 Prioritisation', max: 15 },
-                { key: 'q2', label: 'Q2 Supplier Delay', max: 25 },
-                { key: 'q3', label: 'Q3 Client Complaint', max: 20 },
-                { key: 'q4', label: 'Q4 Safety Issue', max: 15 },
-                { key: 'q5', label: 'Q5 Supplier Summary', max: 15 },
-                { key: 'q6', label: 'Q6 Reflection', max: 10 }
+                { key:'q1', label:'Q1 Prioritisation', max:15 },
+                { key:'q2', label:'Q2 Supplier Delay', max:25 },
+                { key:'q3', label:'Q3 Client Complaint', max:20 },
+                { key:'q4', label:'Q4 Safety Issue', max:15 },
+                { key:'q5', label:'Q5 Supplier Summary', max:15 },
+                { key:'q6', label:'Q6 Reflection', max:10 }
               ].map(function(qItem) {
                 return (
-                  <div key={qItem.key} style={{ marginBottom: 10 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 3 }}>{qItem.label}</div>
+                  <div key={qItem.key} style={{ marginBottom:10 }}>
+                    <div style={{ fontSize:12, fontWeight:600, marginBottom:3 }}>{qItem.label}</div>
                     <ScoreBar score={q[qItem.key].score} max={qItem.max}/>
-                    <div style={{ fontSize: 11, color: 'var(--ink3)', marginTop: 3, lineHeight: 1.5 }}>
+                    <div style={{ fontSize:11, color:'var(--ink3)', marginTop:3, lineHeight:1.5 }}>
                       {q[qItem.key].observation}
                     </div>
                   </div>
                 )
               })}
             </div>
-
-            {/* Competency scores + assessment */}
             <div>
-              <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--ink3)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 12 }}>
-                Competency Scores
+              <div style={{ fontWeight:700, fontSize:12, color:'var(--ink3)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:12 }}>
+                Competency Scores (for Master Sheet)
               </div>
               {[
-                { key: 'driveInitiative', label: 'Drive & Initiative' },
-                { key: 'thinkingQuality', label: 'Thinking Quality' },
-                { key: 'communication', label: 'Communication' }
+                { key:'driveInitiative', label:'Drive & Initiative' },
+                { key:'thinkingQuality', label:'Thinking Quality' },
+                { key:'communication', label:'Communication' }
               ].map(function(comp) {
                 var cv = c[comp.key]
                 return (
-                  <div key={comp.key} style={{ marginBottom: 14, padding: '10px 14px', background: 'var(--paper)', borderRadius: 8, border: '1px solid var(--line)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600 }}>{comp.label}</span>
-                      <span style={{ fontWeight: 800, fontSize: 18, color: levelColor(cv.score) }}>{cv.score}<span style={{ fontSize: 11, fontWeight: 400, color: 'var(--ink3)' }}>/5</span></span>
+                  <div key={comp.key} style={{ marginBottom:14, padding:'10px 14px', background:'var(--paper)', borderRadius:8, border:'1px solid var(--line)' }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:4 }}>
+                      <span style={{ fontSize:13, fontWeight:600 }}>{comp.label}</span>
+                      <span style={{ fontWeight:800, fontSize:18, color:levelColor(cv.score) }}>
+                        {cv.score}<span style={{ fontSize:11, fontWeight:400, color:'var(--ink3)' }}>/5</span>
+                      </span>
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--ink3)' }}>
-                      {cv.raw}/{cv.max} raw ({cv.pct}%) {'\u2014'} <span style={{ fontWeight: 600, color: levelColor(cv.score) }}>{cv.level}</span>
+                    <div style={{ fontSize:11, color:'var(--ink3)' }}>
+                      {cv.raw}/{cv.max} raw ({cv.pct}%) {'\u2014'} <span style={{ fontWeight:600, color:levelColor(cv.score) }}>{cv.level}</span>
                     </div>
                   </div>
                 )
               })}
-
-              <div style={{ marginTop: 16 }}>
-                <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--ink3)', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 8 }}>
+              <div style={{ marginTop:16 }}>
+                <div style={{ fontWeight:700, fontSize:12, color:'var(--ink3)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>
                   Overall Assessment
                 </div>
-                <div style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--ink)', background: 'var(--paper)', padding: '12px 14px', borderRadius: 8, border: '1px solid var(--line)' }}>
+                <div style={{ fontSize:13, lineHeight:1.7, color:'var(--ink)', background:'var(--paper)', padding:'12px 14px', borderRadius:8, border:'1px solid var(--line)' }}>
                   {result.overallAssessment}
                 </div>
               </div>
-
               {result.integrityFlag && (
-                <div style={{ marginTop: 12, background: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 8, padding: '10px 14px' }}>
-                  <div style={{ fontWeight: 700, color: '#991b1b', fontSize: 12, marginBottom: 4 }}>INTEGRITY FLAG</div>
-                  <div style={{ fontSize: 12, color: '#991b1b' }}>{result.integrityNote}</div>
+                <div style={{ marginTop:12, background:'#fee2e2', border:'1px solid #fca5a5', borderRadius:8, padding:'10px 14px' }}>
+                  <div style={{ fontWeight:700, color:'#991b1b', fontSize:12, marginBottom:4 }}>INTEGRITY FLAG</div>
+                  <div style={{ fontSize:12, color:'#991b1b' }}>{result.integrityNote}</div>
                 </div>
               )}
-
               {result.legibilityNotes && (
-                <div style={{ marginTop: 12, background: '#fef9c3', border: '1px solid #fde68a', borderRadius: 8, padding: '10px 14px' }}>
-                  <div style={{ fontWeight: 700, color: '#92400e', fontSize: 12, marginBottom: 4 }}>LEGIBILITY NOTE</div>
-                  <div style={{ fontSize: 12, color: '#92400e' }}>{result.legibilityNotes}</div>
+                <div style={{ marginTop:12, background:'#fef9c3', border:'1px solid #fde68a', borderRadius:8, padding:'10px 14px' }}>
+                  <div style={{ fontWeight:700, color:'#92400e', fontSize:12, marginBottom:4 }}>LEGIBILITY NOTE</div>
+                  <div style={{ fontSize:12, color:'#92400e' }}>{result.legibilityNotes}</div>
                 </div>
               )}
             </div>
@@ -217,13 +229,23 @@ function CandidateCard({ result, rank }) {
 export default function InTrayScoring() {
   var [files, setFiles] = useState([])
   var [results, setResults] = useState([])
+  var [loading, setLoading] = useState(true)
   var [processing, setProcessing] = useState(false)
-  var [progress, setProgress] = useState({ current: 0, total: 0, name: '' })
+  var [progress, setProgress] = useState({ current:0, total:0, name:'' })
   var [errors, setErrors] = useState([])
   var [dragOver, setDragOver] = useState(false)
+  var [showUpload, setShowUpload] = useState(false)
   var fileRef = useRef()
 
-  var ACCEPTED = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+  var ACCEPTED = ['application/pdf','image/jpeg','image/jpg','image/png','image/webp']
+
+  // Load saved results from Firestore on mount
+  useEffect(function() {
+    dbAllInTrayResults().then(function(saved) {
+      if (saved && saved.length > 0) setResults(saved)
+      setLoading(false)
+    }).catch(function() { setLoading(false) })
+  }, [])
 
   function handleFiles(incoming) {
     var valid = Array.from(incoming).filter(function(f) {
@@ -252,210 +274,228 @@ export default function InTrayScoring() {
   function getMimeType(file) {
     if (file.type && ACCEPTED.includes(file.type)) return file.type
     var ext = file.name.split('.').pop().toLowerCase()
-    var map = { pdf: 'application/pdf', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', webp: 'image/webp' }
+    var map = { pdf:'application/pdf', jpg:'image/jpeg', jpeg:'image/jpeg', png:'image/png', webp:'image/webp' }
     return map[ext] || 'image/jpeg'
   }
 
   async function scoreAll() {
     if (files.length === 0) return
     setProcessing(true)
-    setResults([])
     setErrors([])
-    var scored = []
+    var newResults = []
     var errs = []
 
     for (var i = 0; i < files.length; i++) {
       var file = files[i]
-      setProgress({ current: i + 1, total: files.length, name: file.name })
+      setProgress({ current:i+1, total:files.length, name:file.name })
       try {
         var b64 = await toBase64(file)
         var mime = getMimeType(file)
         var resp = await fetch('/.netlify/functions/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'score_intray',
-            fileBase64: b64,
-            mimeType: mime,
-            candidateIndex: i + 1,
-            totalCandidates: files.length
+          method:'POST',
+          headers:{ 'Content-Type':'application/json' },
+          body:JSON.stringify({
+            action:'score_intray',
+            fileBase64:b64,
+            mimeType:mime,
+            candidateIndex:i+1,
+            totalCandidates:files.length
           })
         })
         if (!resp.ok) throw new Error('Server error ' + resp.status)
         var data = await resp.json()
         if (data.result) {
-          scored.push(data.result)
+          // Save to Firestore and persist
+          var saved = await dbSaveInTrayResult(data.result)
+          newResults.push(saved)
+          // Merge with existing results (replace if same candidateId)
+          setResults(function(prev) {
+            var filtered = prev.filter(function(r) { return r.id !== saved.id })
+            return [...filtered, saved]
+          })
         } else {
-          errs.push({ file: file.name, error: 'No result returned' })
+          errs.push({ file:file.name, error:'No result returned' })
         }
-      } catch (e) {
-        errs.push({ file: file.name, error: e.message })
+      } catch(e) {
+        errs.push({ file:file.name, error:e.message })
       }
     }
 
-    setResults(scored)
     setErrors(errs)
     setProcessing(false)
-    setProgress({ current: 0, total: 0, name: '' })
+    setProgress({ current:0, total:0, name:'' })
+    setFiles([])
+    setShowUpload(false)
+  }
+
+  async function handleDelete(id) {
+    await dbDeleteInTrayResult(id)
+    setResults(function(prev) { return prev.filter(function(r) { return r.id !== id }) })
   }
 
   var sorted = [...results].sort(function(a, b) { return b.rawTotal - a.rawTotal })
   var flagged = results.filter(function(r) { return r.integrityFlag }).length
   var avgScore = results.length > 0 ? Math.round(results.reduce(function(s, r) { return s + r.rawTotal }, 0) / results.length) : 0
 
-  return (
-    <div className="shell">
-      <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 16px' }}>
+  if (loading) {
+    return (
+      <div style={{ textAlign:'center', padding:'60px 0', color:'var(--ink3)' }}>
+        <span className="sp sp-lg"/>
+        <div style={{ marginTop:16, fontSize:14 }}>Loading saved results...</div>
+      </div>
+    )
+  }
 
-        {/* Header */}
-        <div style={{ marginBottom: 24, paddingTop: 16 }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--ink)', marginBottom: 4 }}>
-            In-Tray Scoring Agent
+  return (
+    <div style={{ maxWidth:960, margin:'0 auto', padding:'0 4px' }}>
+
+      {/* Header */}
+      <div style={{ marginBottom:20, paddingTop:4 }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+          <div>
+            <div style={{ fontSize:20, fontWeight:800, color:'var(--ink)', marginBottom:4 }}>
+              In-Tray Scoring Agent
+            </div>
+            <div style={{ fontSize:12, color:'var(--ink3)' }}>
+              ACI Next Wave Assessment Centre {'\u2014'} Results are saved automatically and persist across sessions.
+            </div>
           </div>
-          <div style={{ fontSize: 13, color: 'var(--ink3)' }}>
-            ACI Next Wave Assessment Centre {'\u2014'} Upload scanned answer booklets (PDF or image) to automatically score and rank candidates.
+          <div style={{ display:'flex', gap:8 }}>
+            {results.length > 0 && (
+              <button className="btn btn-s btn-sm"
+                style={{ background:'#f0fdf4', border:'1px solid #86efac', color:'#166534', fontSize:12 }}
+                onClick={function() { exportResultsExcel(results) }}>
+                {'\uD83D\uDCCA'} Export Excel
+              </button>
+            )}
+            <button className="btn btn-p btn-sm" onClick={function() { setShowUpload(!showUpload) }}>
+              {showUpload ? 'Cancel' : '+ Score New Booklets'}
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Upload area */}
-        {!processing && results.length === 0 && (
+      {/* Upload panel — only shown when toggled */}
+      {showUpload && !processing && (
+        <div className="card" style={{ padding:'20px', marginBottom:20 }}>
           <div
             style={{
-              border: '2px dashed ' + (dragOver ? 'var(--accent)' : 'var(--line)'),
-              borderRadius: 12, padding: '40px 24px', textAlign: 'center',
-              background: dragOver ? 'var(--accent-dim)' : 'var(--paper2)',
-              cursor: 'pointer', transition: 'all .2s', marginBottom: 20
+              border:'2px dashed '+(dragOver?'var(--accent)':'var(--line)'),
+              borderRadius:10, padding:'28px 20px', textAlign:'center',
+              background:dragOver?'var(--accent-dim)':'var(--paper2)',
+              cursor:'pointer', transition:'all .2s', marginBottom:files.length>0?16:0
             }}
             onClick={function() { fileRef.current.click() }}
             onDragOver={function(e) { e.preventDefault(); setDragOver(true) }}
             onDragLeave={function() { setDragOver(false) }}
             onDrop={function(e) { e.preventDefault(); setDragOver(false); handleFiles(e.dataTransfer.files) }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>{'\uD83D\uDCC4'}</div>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 6 }}>Drop answer booklets here or click to browse</div>
-            <div style={{ fontSize: 12, color: 'var(--ink3)' }}>Accepts PDF, JPG, PNG, WEBP {'\u2014'} one file per candidate {'\u2014'} all candidates at once</div>
+            <div style={{ fontSize:28, marginBottom:8 }}>{'\uD83D\uDCC4'}</div>
+            <div style={{ fontWeight:700, fontSize:13, marginBottom:4 }}>Drop answer booklets here or click to browse</div>
+            <div style={{ fontSize:11, color:'var(--ink3)' }}>PDF, JPG, PNG, WEBP {'\u2014'} one file per candidate {'\u2014'} upload all at once</div>
             <input ref={fileRef} type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp"
-              style={{ display: 'none' }}
+              style={{ display:'none' }}
               onChange={function(e) { handleFiles(e.target.files) }}/>
           </div>
-        )}
-
-        {/* File list */}
-        {files.length > 0 && !processing && results.length === 0 && (
-          <div className="card" style={{ padding: '16px 20px', marginBottom: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ fontWeight: 700, fontSize: 14 }}>{files.length} booklet{files.length !== 1 ? 's' : ''} ready to score</div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn-s btn-sm" style={{ fontSize: 12 }}
-                  onClick={function() { fileRef.current.click() }}>+ Add more</button>
-                <button className="btn btn-p" onClick={scoreAll}>
-                  Score All {files.length} Booklet{files.length !== 1 ? 's' : ''}
-                </button>
-              </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {files.map(function(f, i) {
-                var isPDF = f.type === 'application/pdf' || f.name.endsWith('.pdf')
-                return (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--paper2)', borderRadius: 8 }}>
-                    <span style={{ fontSize: 18 }}>{isPDF ? '\uD83D\uDCCB' : '\uD83D\uDDBC\uFE0F'}</span>
-                    <span style={{ flex: 1, fontSize: 13, fontWeight: 500 }}>{f.name}</span>
-                    <span style={{ fontSize: 11, color: 'var(--ink3)', background: isPDF ? '#ede9fe' : '#e0f2fe', padding: '2px 8px', borderRadius: 4, fontWeight: 600 }}>
-                      {isPDF ? 'PDF' : 'Image'}
-                    </span>
-                    <span style={{ fontSize: 11, color: 'var(--ink3)' }}>{(f.size / 1024 / 1024).toFixed(1)} MB</span>
-                    <button style={{ background: 'none', border: 'none', color: 'var(--bad)', cursor: 'pointer', fontSize: 16, padding: '0 4px' }}
-                      onClick={function() { removeFile(i) }}>{'\u00D7'}</button>
-                  </div>
-                )
-              })}
-            </div>
-            <input ref={fileRef} type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp"
-              style={{ display: 'none' }}
-              onChange={function(e) { handleFiles(e.target.files) }}/>
-          </div>
-        )}
-
-        {/* Processing indicator */}
-        {processing && (
-          <div className="card card-xl" style={{ padding: '40px 32px', textAlign: 'center', marginBottom: 20 }}>
-            <span className="sp sp-lg" style={{ marginBottom: 20 }}/>
-            <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>
-              Scoring booklet {progress.current} of {progress.total}
-            </div>
-            <div style={{ fontSize: 13, color: 'var(--ink3)', marginBottom: 16 }}>{progress.name}</div>
-            <div style={{ width: '100%', height: 6, background: 'var(--line)', borderRadius: 3, overflow: 'hidden' }}>
-              <div style={{ width: (progress.current / progress.total * 100) + '%', height: '100%', background: 'var(--accent)', borderRadius: 3, transition: 'width .4s' }}/>
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--ink3)', marginTop: 12 }}>
-              Each booklet takes 20{'\u201330'} seconds {'\u2014'} please wait
-            </div>
-          </div>
-        )}
-
-        {/* Results */}
-        {results.length > 0 && !processing && (
-          <>
-            {/* Summary strip */}
-            <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-              {[
-                { label: 'Booklets scored', value: results.length, color: 'var(--accent)' },
-                { label: 'Average score', value: avgScore + '/100', color: 'var(--ink)' },
-                { label: 'Top score', value: sorted[0].rawTotal + '/100', color: 'var(--ok)' },
-                { label: 'Integrity flags', value: flagged, color: flagged > 0 ? 'var(--bad)' : 'var(--ok)' },
-                { label: 'Errors', value: errors.length, color: errors.length > 0 ? 'var(--warn)' : 'var(--ok)' }
-              ].map(function(s) {
-                return (
-                  <div key={s.label} style={{ padding: '12px 18px', background: 'var(--paper)', borderRadius: 10, border: '1px solid var(--line)', flex: 1, minWidth: 120 }}>
-                    <div style={{ fontSize: 11, color: 'var(--ink3)', marginBottom: 4 }}>{s.label}</div>
-                    <div style={{ fontWeight: 800, fontSize: 20, color: s.color }}>{s.value}</div>
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Action buttons */}
-            <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-              <button className="btn btn-s" onClick={function() { exportResultsExcel(results) }}
-                style={{ background: '#f0fdf4', border: '1px solid #86efac', color: '#166534', fontSize: 13 }}>
-                {'\uD83D\uDCCA'} Export Excel
-              </button>
-              <button className="btn btn-g btn-sm" style={{ fontSize: 13 }}
-                onClick={function() { setResults([]); setFiles([]); setErrors([]) }}>
-                Score new batch
-              </button>
-            </div>
-
-            {/* Error notice */}
-            {errors.length > 0 && (
-              <div style={{ background: '#fef9c3', border: '1px solid #fde68a', borderRadius: 8, padding: '12px 16px', marginBottom: 16 }}>
-                <div style={{ fontWeight: 700, color: '#92400e', marginBottom: 4 }}>
-                  {errors.length} booklet{errors.length !== 1 ? 's' : ''} could not be scored:
-                </div>
-                {errors.map(function(e, i) {
-                  return <div key={i} style={{ fontSize: 12, color: '#92400e' }}>{e.file}: {e.error}</div>
+          {files.length > 0 && (
+            <>
+              <div style={{ display:'flex', flexDirection:'column', gap:5, marginBottom:14 }}>
+                {files.map(function(f, i) {
+                  var isPDF = f.type==='application/pdf' || f.name.endsWith('.pdf')
+                  return (
+                    <div key={i} style={{ display:'flex', alignItems:'center', gap:10, padding:'7px 12px', background:'var(--paper2)', borderRadius:7 }}>
+                      <span style={{ fontSize:16 }}>{isPDF?'\uD83D\uDCCB':'\uD83D\uDDBC\uFE0F'}</span>
+                      <span style={{ flex:1, fontSize:12, fontWeight:500 }}>{f.name}</span>
+                      <span style={{ fontSize:10, color:'var(--ink3)', background:isPDF?'#ede9fe':'#e0f2fe', padding:'2px 7px', borderRadius:4, fontWeight:600 }}>
+                        {isPDF?'PDF':'Image'}
+                      </span>
+                      <span style={{ fontSize:10, color:'var(--ink3)' }}>{(f.size/1024/1024).toFixed(1)} MB</span>
+                      <button style={{ background:'none', border:'none', color:'var(--bad)', cursor:'pointer', fontSize:15, padding:'0 3px' }}
+                        onClick={function() { removeFile(i) }}>{'\u00D7'}</button>
+                    </div>
+                  )
                 })}
               </div>
-            )}
+              <div style={{ display:'flex', gap:8 }}>
+                <button className="btn btn-p" onClick={scoreAll}>
+                  Score {files.length} Booklet{files.length!==1?'s':''}
+                </button>
+                <button className="btn btn-g btn-sm" onClick={function() { fileRef.current.click() }}>+ Add more</button>
+              </div>
+            </>
+          )}
+          <input ref={fileRef} type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.webp"
+            style={{ display:'none' }}
+            onChange={function(e) { handleFiles(e.target.files) }}/>
+        </div>
+      )}
 
-            {/* Ranked results */}
-            <div style={{ marginBottom: 8, fontSize: 12, color: 'var(--ink3)', fontWeight: 600 }}>
-              Ranked by raw score {'\u2014'} click any row to expand
-            </div>
-            {sorted.map(function(r, i) {
-              return <CandidateCard key={r.candidateId + i} result={r} rank={i + 1}/>
-            })}
-          </>
-        )}
-
-        {/* Empty state when no files yet and no results */}
-        {files.length === 0 && results.length === 0 && !processing && (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--ink3)' }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>{'\uD83D\uDCCB'}</div>
-            <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 6 }}>No booklets uploaded yet</div>
-            <div style={{ fontSize: 13 }}>Drag and drop scanned answer sheets above to get started</div>
+      {/* Processing indicator */}
+      {processing && (
+        <div className="card card-xl" style={{ padding:'32px', textAlign:'center', marginBottom:20 }}>
+          <span className="sp sp-lg" style={{ marginBottom:16 }}/>
+          <div style={{ fontWeight:700, fontSize:15, marginBottom:6 }}>
+            Scoring booklet {progress.current} of {progress.total}
           </div>
-        )}
-      </div>
+          <div style={{ fontSize:12, color:'var(--ink3)', marginBottom:14 }}>{progress.name}</div>
+          <div style={{ width:'100%', height:6, background:'var(--line)', borderRadius:3, overflow:'hidden' }}>
+            <div style={{ width:(progress.current/progress.total*100)+'%', height:'100%', background:'var(--accent)', borderRadius:3, transition:'width .4s' }}/>
+          </div>
+          <div style={{ fontSize:11, color:'var(--ink3)', marginTop:10 }}>
+            Each booklet takes 20{'\u201330'} seconds. Results save automatically as each one completes.
+          </div>
+        </div>
+      )}
+
+      {/* Error notice */}
+      {errors.length > 0 && (
+        <div style={{ background:'#fef9c3', border:'1px solid #fde68a', borderRadius:8, padding:'12px 16px', marginBottom:14 }}>
+          <div style={{ fontWeight:700, color:'#92400e', marginBottom:4 }}>
+            {errors.length} booklet{errors.length!==1?'s':''} could not be scored:
+          </div>
+          {errors.map(function(e, i) {
+            return <div key={i} style={{ fontSize:12, color:'#92400e' }}>{e.file}: {e.error}</div>
+          })}
+        </div>
+      )}
+
+      {/* Results */}
+      {results.length > 0 && (
+        <>
+          {/* Summary strip */}
+          <div style={{ display:'flex', gap:10, marginBottom:16, flexWrap:'wrap' }}>
+            {[
+              { label:'Total scored', value:results.length, color:'var(--accent)' },
+              { label:'Average score', value:avgScore+'/100', color:'var(--ink)' },
+              { label:'Top score', value:sorted[0].rawTotal+'/100', color:'var(--ok)' },
+              { label:'Integrity flags', value:flagged, color:flagged>0?'var(--bad)':'var(--ok)' },
+            ].map(function(s) {
+              return (
+                <div key={s.label} style={{ padding:'10px 16px', background:'var(--paper)', borderRadius:10, border:'1px solid var(--line)', flex:1, minWidth:110 }}>
+                  <div style={{ fontSize:11, color:'var(--ink3)', marginBottom:3 }}>{s.label}</div>
+                  <div style={{ fontWeight:800, fontSize:18, color:s.color }}>{s.value}</div>
+                </div>
+              )
+            })}
+          </div>
+
+          <div style={{ marginBottom:8, fontSize:11, color:'var(--ink3)', fontWeight:600 }}>
+            Ranked by raw score {'\u2014'} click any row to expand {'\u2014'} use the {'\uD83D\uDDD1'} icon to delete a result
+          </div>
+          {sorted.map(function(r, i) {
+            return <CandidateCard key={r.id} result={r} rank={i+1} onDelete={handleDelete}/>
+          })}
+        </>
+      )}
+
+      {/* Empty state */}
+      {results.length === 0 && !processing && !showUpload && (
+        <div style={{ textAlign:'center', padding:'60px 0', color:'var(--ink3)' }}>
+          <div style={{ fontSize:48, marginBottom:12 }}>{'\uD83D\uDCCB'}</div>
+          <div style={{ fontWeight:600, fontSize:14, marginBottom:6 }}>No results yet</div>
+          <div style={{ fontSize:12, marginBottom:20 }}>Click "Score New Booklets" above to upload and score answer sheets</div>
+          <button className="btn btn-p" onClick={function() { setShowUpload(true) }}>+ Score New Booklets</button>
+        </div>
+      )}
     </div>
   )
 }
