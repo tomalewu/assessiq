@@ -7,7 +7,7 @@ import { buildProfile } from '../scoring'
 import ResultsModal from '../components/ResultsModal'
 import DashboardCharts from '../components/Charts'
 import InTrayScoring from './InTrayScoring.jsx'
- 
+
 // ── CSV Export ────────────────────────────────────────────────────────
 function exportCSV(candidates, roles) {
   const roleMap = {}
@@ -41,7 +41,7 @@ function exportCSV(candidates, roles) {
   const a = document.createElement('a'); a.href=url; a.download='assessiq_results.csv'; a.click()
   URL.revokeObjectURL(url)
 }
- 
+
 // ── Excel Export ─────────────────────────────────────────────────────
 function exportExcel(candidates, roles) {
   const roleMap = {}
@@ -49,7 +49,7 @@ function exportExcel(candidates, roles) {
   const sorted = [...candidates].filter(c => c.status === 'completed').sort((a,b) => (b.totalScore||0)-(a.totalScore||0))
   const rankMap = {}
   sorted.forEach((c,i) => { rankMap[c.id] = i+1 })
- 
+
   const headers = ['Rank','Name','Email','Phone','DOB','Role','Score /20','Logic /10','Numerical /10','Percentile','Time (min)','Result','CV','Notes','Date','Report URL']
   const rows = candidates.map(c => {
     const role      = roleMap[c.roleId]
@@ -69,12 +69,12 @@ function exportExcel(candidates, roles) {
       c.completedAt ? new Date(c.completedAt).toLocaleDateString('en-GB') : ''
     ]
   })
- 
+
   // Build HTML table that Excel can open
   const passColor  = '#d1fae5'
   const failColor  = '#fee2e2'
   const headerColor = '#1e1b4b'
- 
+
   let html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'
   html += '<head><meta charset="UTF-8"><style>'
   html += 'table{border-collapse:collapse;font-family:Arial,sans-serif;font-size:12px}'
@@ -87,7 +87,7 @@ function exportExcel(candidates, roles) {
   html += '.rank3{background:#fef3c7}'
   html += '</style></head><body><table>'
   html += '<tr>' + headers.map(h => '<th>' + h + '</th>').join('') + '</tr>'
- 
+
   rows.forEach((row, i) => {
     const result = row[11]
     const rank   = row[0]
@@ -98,20 +98,20 @@ function exportExcel(candidates, roles) {
     html += '<tr class="' + rowClass + '">' + row.map(v => '<td>' + String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</td>').join('') + '</tr>'
   })
   html += '</table></body></html>'
- 
+
   const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' })
   const url  = URL.createObjectURL(blob)
   const a    = document.createElement('a')
   a.href = url; a.download = 'assessiq_results.xls'; a.click()
   URL.revokeObjectURL(url)
 }
- 
+
 // ── Bulk PDF (all candidates one doc) ────────────────────────────────
 function BulkPDFModal({ candidates, roles, origin, onClose }) {
   const roleMap = {}
   roles.forEach(r => { roleMap[r.id] = r })
   const completed = candidates.filter(c => c.status === 'completed')
- 
+
   return (
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()} style={{ maxWidth:500 }}>
@@ -164,7 +164,7 @@ function BulkPDFModal({ candidates, roles, origin, onClose }) {
     </div>
   )
 }
- 
+
 // ── CV Parsed Data Panel ─────────────────────────────────────────────
 function CVParsedPanel({ parsed }) {
   if (!parsed) return (
@@ -192,7 +192,7 @@ function CVParsedPanel({ parsed }) {
           </div>
         ))}
       </div>
- 
+
       {/* Education */}
       {parsed.education && parsed.education.length > 0 && (
         <div style={{ background:'var(--paper2)', borderRadius:10, padding:'14px 18px' }}>
@@ -206,7 +206,7 @@ function CVParsedPanel({ parsed }) {
           ))}
         </div>
       )}
- 
+
       {/* Experience */}
       {parsed.experience && parsed.experience.length > 0 && (
         <div style={{ background:'var(--paper2)', borderRadius:10, padding:'14px 18px' }}>
@@ -220,7 +220,7 @@ function CVParsedPanel({ parsed }) {
           ))}
         </div>
       )}
- 
+
       {/* Skills */}
       {parsed.skills && parsed.skills.length > 0 && (
         <div style={{ background:'var(--paper2)', borderRadius:10, padding:'14px 18px' }}>
@@ -233,7 +233,7 @@ function CVParsedPanel({ parsed }) {
           </div>
         </div>
       )}
- 
+
       {/* Languages */}
       {parsed.languages && parsed.languages.length > 0 && (
         <div style={{ background:'var(--paper2)', borderRadius:10, padding:'14px 18px' }}>
@@ -249,7 +249,7 @@ function CVParsedPanel({ parsed }) {
     </div>
   )
 }
- 
+
 // ── Connection Status ─────────────────────────────────────────────────
 function ConnectionDot({ online }) {
   return (
@@ -261,13 +261,13 @@ function ConnectionDot({ online }) {
     </div>
   )
 }
- 
+
 // ── Bulk Invite Modal ─────────────────────────────────────────────────
 function BulkInviteModal({ role, onClose }) {
   const [csv, setCsv]       = useState('')
   const [preview, setPreview] = useState([])
   const [copied, setCopied]   = useState(false)
- 
+
   const parse = (text) => {
     const lines = text.trim().split('\n').filter(Boolean)
     return lines.map(l => {
@@ -275,21 +275,21 @@ function BulkInviteModal({ role, onClose }) {
       return { name: name||'', email: email||name||'' }
     }).filter(r => r.email.includes('@'))
   }
- 
+
   useEffect(() => { setPreview(parse(csv)) }, [csv])
- 
+
   const getLink = () => {
     const payload = btoa(JSON.stringify({ id: role.id, linkId: role.linkId, title: role.title, dept: role.dept||'', isMTO: role.isMTO||false, ageLimit: role.ageLimit||28, threshold: role.threshold||12, recruiterEmail: role.recruiterEmail||'', difficulty: role.difficulty||'medium' }))
     return window.location.origin + '/assess/' + payload
   }
- 
+
   const copyAll = () => {
     const link = getLink()
     const lines = preview.map(r => r.name + ' <' + r.email + '> — ' + link).join('\n')
     navigator.clipboard.writeText(lines).catch(()=>{})
     setCopied(true); setTimeout(()=>setCopied(false),2000)
   }
- 
+
   return (
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:520}}>
@@ -316,7 +316,7 @@ function BulkInviteModal({ role, onClose }) {
     </div>
   )
 }
- 
+
 // ── Role Card with expandable candidates ──────────────────────────────
 function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onManageExpiry, onEditThreshold, onViewResult, onNote, onDeleteCand, userIsAdmin, userCanEdit, me }) {
   const [expanded, setExpanded]   = useState(false)
@@ -327,12 +327,12 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
   const [sortDir, setSortDir]     = useState('desc')
   const [editingThreshold, setEditingThreshold] = useState(false)
   const PER_PAGE = 20
- 
+
   const rc    = candidates.filter(c => c.roleId === role.id)
   const rdone = rc.filter(c => c.status === 'completed')
   const passed = rdone.filter(c => (c.totalScore||0) >= (role.threshold||12))
   const passRate = rdone.length > 0 ? Math.round(passed.length / rdone.length * 100) : 0
- 
+
   // Filter + search + sort
   let filtered = rc
   if (filterStatus === 'flagged') filtered = filtered.filter(c => c.flagged)
@@ -353,7 +353,7 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
   const totalPages = Math.ceil(filtered.length / PER_PAGE)
   const paginated  = filtered.slice((page-1)*PER_PAGE, page*PER_PAGE)
   const fmtDate    = d => !d ? '—' : new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})
- 
+
   return (
     <div className="card" style={{ padding:0, overflow:'hidden', marginBottom:12 }}>
       {/* Role header */}
@@ -425,7 +425,7 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
           <div style={{ fontSize:18, color:'var(--ink3)', marginLeft:4, transition:'transform .2s', transform: expanded?'rotate(180deg)':'rotate(0deg)' }}>▾</div>
         </div>
       </div>
- 
+
       {/* Expanded candidates */}
       {expanded && (
         <div style={{ borderTop:'1px solid var(--line)', background:'var(--paper2)' }}>
@@ -474,7 +474,7 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
               )}
             </div>
           </div>
- 
+
           {/* Table */}
           {paginated.length === 0 ? (
             <div style={{ textAlign:'center', padding:'32px', color:'var(--ink3)', fontSize:13 }}>
@@ -532,7 +532,7 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
               </table>
             </div>
           )}
- 
+
           {/* Pagination */}
           {totalPages > 1 && (
             <div style={{ padding:'12px 20px', display:'flex', alignItems:'center', justifyContent:'space-between', borderTop:'1px solid var(--line)' }}>
@@ -551,7 +551,7 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
               </div>
             </div>
           )}
- 
+
           {/* Role summary footer */}
           <div style={{ padding:'10px 20px', borderTop:'1px solid var(--line)', display:'flex', justifyContent:'space-between', fontSize:12, color:'var(--ink3)' }}>
             <span>{filtered.length} candidate{filtered.length!==1?'s':''}{search?' matching':''}  ·  {rdone.length} completed  ·  {passed.length} passed</span>
@@ -566,7 +566,187 @@ function RoleCard({ role, candidates, onLink, onBulk, onDelete, onArchive, onMan
     </div>
   )
 }
- 
+
+// ── CV Insights Tab ───────────────────────────────────────────────────
+function CVInsightsTab({ candidates, roles, onViewResult }) {
+  const [selectedRole, setSelectedRole] = useState('all')
+  const [search, setSearch]             = useState('')
+  const [sortBy, setSort]               = useState('score')
+  const [expanded, setExpanded]         = useState(null)
+
+  const roleMap = {}
+  roles.forEach(r => { roleMap[r.id] = r })
+
+  const withCV = candidates.filter(c => {
+    const role      = roleMap[c.roleId]
+    const threshold = role?.threshold || 12
+    const passed    = c.status === 'completed' && (c.totalScore||0) >= threshold
+    return passed && c.cvUrl
+  })
+
+  const roleOptions = roles.filter(r => withCV.some(c => c.roleId === r.id))
+  const byRole = selectedRole === 'all' ? withCV : withCV.filter(c => c.roleId === selectedRole)
+
+  const filtered = byRole.filter(c => {
+    if (!search.trim()) return true
+    const q = search.toLowerCase()
+    const p = c.cvParsed || {}
+    return (
+      (c.name||'').toLowerCase().includes(q) ||
+      (c.email||'').toLowerCase().includes(q) ||
+      (p.currentRole||'').toLowerCase().includes(q) ||
+      (p.currentCompany||'').toLowerCase().includes(q) ||
+      (p.skills||[]).some(s => s.toLowerCase().includes(q))
+    )
+  })
+
+  const sorted = [...filtered].sort((a,b) => {
+    if (sortBy === 'score') return (b.totalScore||0) - (a.totalScore||0)
+    if (sortBy === 'name') return (a.name||'').localeCompare(b.name||'')
+    if (sortBy === 'exp') return ((b.cvParsed?.totalExperience)||0) - ((a.cvParsed?.totalExperience)||0)
+    return 0
+  })
+
+  const fmtDate = d => !d ? '' : new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})
+
+  return (
+    <div>
+      <div className="shdr" style={{ marginBottom:16 }}>
+        <div>
+          <div className="stitle">CV Insights</div>
+          <div className="ssub">{withCV.length} passed candidates with CVs</div>
+        </div>
+        <div style={{ display:'flex', gap:8 }}>
+          <button className="btn btn-s btn-sm" style={{ fontSize:11 }}
+            onClick={() => exportCSV(filtered, roles)}>CSV</button>
+          <button className="btn btn-s btn-sm" style={{ fontSize:11, background:'#f0fdf4', border:'1px solid #86efac', color:'#166534' }}
+            onClick={() => exportExcel(filtered, roles)}>Excel</button>
+        </div>
+      </div>
+
+      <div style={{ display:'flex', gap:10, marginBottom:16, flexWrap:'wrap' }}>
+        <select value={selectedRole} onChange={e => { setSelectedRole(e.target.value); setExpanded(null) }}
+          style={{ padding:'8px 12px', border:'1.5px solid var(--line)', borderRadius:'var(--r-sm)', fontFamily:'inherit', fontSize:13, background:'var(--paper)', outline:'none', minWidth:200 }}>
+          <option value="all">All Roles ({withCV.length} candidates)</option>
+          {roleOptions.map(r => {
+            const count = withCV.filter(c => c.roleId === r.id).length
+            return <option key={r.id} value={r.id}>{r.title} ({count})</option>
+          })}
+        </select>
+        <input placeholder="Search name, skill, company..."
+          value={search} onChange={e => setSearch(e.target.value)}
+          style={{ flex:1, minWidth:200, padding:'8px 12px', border:'1.5px solid var(--line)', borderRadius:'var(--r-sm)', fontFamily:'inherit', fontSize:13, outline:'none', background:'var(--paper)' }}/>
+        <select value={sortBy} onChange={e => setSort(e.target.value)}
+          style={{ padding:'8px 12px', border:'1.5px solid var(--line)', borderRadius:'var(--r-sm)', fontFamily:'inherit', fontSize:13, background:'var(--paper)', outline:'none' }}>
+          <option value="score">Sort: Score</option>
+          <option value="name">Sort: Name</option>
+          <option value="exp">Sort: Experience</option>
+        </select>
+      </div>
+
+      <div style={{ display:'flex', gap:10, marginBottom:16, flexWrap:'wrap' }}>
+        {[
+          { label:'Showing', value: sorted.length + ' candidates' },
+          { label:'With experience', value: sorted.filter(c => c.cvParsed?.totalExperience).length },
+          { label:'With education', value: sorted.filter(c => c.cvParsed?.education?.length > 0).length },
+          { label:'With skills', value: sorted.filter(c => c.cvParsed?.skills?.length > 0).length },
+        ].map(s => (
+          <div key={s.label} style={{ padding:'8px 14px', background:'var(--paper2)', borderRadius:8, fontSize:12 }}>
+            <span style={{ color:'var(--ink3)' }}>{s.label}: </span><strong>{s.value}</strong>
+          </div>
+        ))}
+      </div>
+
+      {sorted.length === 0 ? (
+        <div style={{ textAlign:'center', padding:'60px 0', color:'var(--ink3)' }}>
+          No passed candidates with CVs found{search ? ' matching ' + search : ''}.
+        </div>
+      ) : (
+        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          {sorted.map((c, idx) => {
+            const role     = roleMap[c.roleId]
+            const p        = c.cvParsed || null
+            const firstEdu = p?.education?.[0] || null
+            const isOpen   = expanded === c.id
+            return (
+              <div key={c.id} className="card" style={{ padding:0, overflow:'hidden' }}>
+                <div style={{ padding:'14px 20px', display:'flex', alignItems:'center', gap:14, cursor:'pointer' }}
+                  onClick={() => setExpanded(isOpen ? null : c.id)}>
+                  <div style={{ fontSize:13, fontWeight:700, color:'var(--ink3)', minWidth:28, textAlign:'center' }}>{idx+1}</div>
+                  <div style={{ flex:2, minWidth:0 }}>
+                    <div style={{ fontWeight:700, fontSize:14 }}>{c.name}</div>
+                    <div style={{ fontSize:11, color:'var(--ink3)' }}>{c.email}</div>
+                  </div>
+                  <div style={{ textAlign:'center', minWidth:60 }}>
+                    <div style={{ fontWeight:800, fontSize:16, color:'var(--accent)' }}>{c.totalScore}<span style={{ fontSize:12, fontWeight:400, color:'var(--ink3)' }}>/20</span></div>
+                    <div style={{ fontSize:10, color:'var(--ink3)' }}>{c.percentile}th pct</div>
+                  </div>
+                  <div style={{ flex:2, minWidth:0 }}>
+                    {p?.currentRole ? (
+                      <><div style={{ fontSize:13, fontWeight:600 }}>{p.currentRole}</div>
+                      <div style={{ fontSize:11, color:'var(--ink3)' }}>{p.currentCompany||''}</div></>
+                    ) : <span style={{ fontSize:12, color:'var(--ink3)' }}>{'—'}</span>}
+                  </div>
+                  <div style={{ minWidth:60, textAlign:'center' }}>
+                    {p?.totalExperience ? (
+                      <><div style={{ fontWeight:700, fontSize:14 }}>{p.totalExperience}</div>
+                      <div style={{ fontSize:10, color:'var(--ink3)' }}>yrs exp</div></>
+                    ) : <span style={{ color:'var(--ink3)', fontSize:12 }}>{'—'}</span>}
+                  </div>
+                  <div style={{ flex:2, minWidth:0 }}>
+                    {firstEdu ? (
+                      <><div style={{ fontSize:12, fontWeight:600 }}>{firstEdu.degree}</div>
+                      <div style={{ fontSize:11, color:'var(--ink3)' }}>{firstEdu.institution}</div></>
+                    ) : <span style={{ fontSize:12, color:'var(--ink3)' }}>{'—'}</span>}
+                  </div>
+                  <div style={{ display:'flex', gap:6, flexShrink:0 }} onClick={e => e.stopPropagation()}>
+                    <a href={c.cvUrl} target="_blank" rel="noreferrer"
+                      className="btn btn-s btn-sm" style={{ fontSize:11, textDecoration:'none' }}>CV</a>
+                    <button className="btn btn-g btn-sm" style={{ fontSize:11 }}
+                      onClick={() => onViewResult({ cand:c, profile:null })}>Report</button>
+                  </div>
+                  <div style={{ fontSize:16, color:'var(--ink3)', transition:'transform .2s', transform: isOpen?'rotate(180deg)':'rotate(0deg)' }}>{'▾'}</div>
+                </div>
+                {isOpen && (
+                  <div style={{ borderTop:'1px solid var(--line)', background:'var(--paper2)', padding:'16px 20px' }}>
+                    <div style={{ display:'flex', gap:24, flexWrap:'wrap' }}>
+                      {p?.skills?.length > 0 && (
+                        <div style={{ flex:2, minWidth:200 }}>
+                          <div style={{ fontSize:11, fontWeight:700, color:'var(--ink3)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>Skills</div>
+                          <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                            {p.skills.map((s,i) => (
+                              <span key={i} style={{ background:'var(--accent-dim)', color:'var(--accent)', fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:999 }}>{s}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {p?.languages?.length > 0 && (
+                        <div style={{ minWidth:120 }}>
+                          <div style={{ fontSize:11, fontWeight:700, color:'var(--ink3)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>Languages</div>
+                          <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+                            {p.languages.map((l,i) => (
+                              <span key={i} style={{ background:'var(--ok-dim)', color:'var(--ok)', fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:999 }}>{l}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <div style={{ minWidth:120 }}>
+                        <div style={{ fontSize:11, fontWeight:700, color:'var(--ink3)', textTransform:'uppercase', letterSpacing:'.5px', marginBottom:8 }}>Assessed</div>
+                        <div style={{ fontSize:12 }}>{fmtDate(c.completedAt)}</div>
+                        <div style={{ fontSize:11, color:'var(--ink3)', marginTop:4 }}>{role?.title||c.roleName||''}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const nav         = useNavigate()
   const me          = getCurrentUser()
@@ -574,7 +754,7 @@ export default function Dashboard() {
   const userCanEdit = me?.role === 'admin' || me?.role === 'recruiter' || me?.isSuper
   const userIsViewer = me?.role === 'viewer'
   const logout      = () => { setCurrentUser(null); nav('/') }
- 
+
   const [roles, setRoles]                 = useState([])
   const [allCandidates, setAllCandidates] = useState([])
   const [loading, setLoading]             = useState(true)
@@ -596,7 +776,7 @@ export default function Dashboard() {
   const [showCharts, setShowCharts]       = useState(false)
   const [bulkPDFModal, setBulkPDFModal]   = useState(null)
   const [showArchived, setShowArchived]   = useState(false)
- 
+
   const refresh = useCallback(async () => {
     try {
       const [r, c] = await Promise.all([dbRoles(), dbAllCandidates()])
@@ -610,23 +790,23 @@ export default function Dashboard() {
       setOnline(false)
     } finally { setLoading(false) }
   }, [])
- 
+
   useEffect(() => { refresh(); const t=setInterval(refresh,5000); return()=>clearInterval(t) },[refresh])
   useEffect(() => {
     const fn=()=>{ if(document.visibilityState==='visible') refresh() }
     document.addEventListener('visibilitychange',fn)
     return()=>document.removeEventListener('visibilitychange',fn)
   },[refresh])
- 
+
   const done = allCandidates.filter(c=>c.status==='completed')
   const avg  = done.length ? Math.round(done.reduce((a,c)=>a+(c.totalScore||0),0)/done.length) : 0
- 
+
   // Global search across all candidates
   const globalResults = globalSearch.trim() ? allCandidates.filter(c => {
     const q = globalSearch.toLowerCase()
     return (c.name||'').toLowerCase().includes(q) || (c.email||'').toLowerCase().includes(q)
   }) : []
- 
+
   const makeRole = () => {
     if(!form.title.trim()) return
     setCreating(true)
@@ -639,29 +819,29 @@ export default function Dashboard() {
     setForm({ title:'', dept:'', threshold:12, isMTO:false, ageLimit:28, recruiterEmail:'' })
     setNewRoleModal(false); setCreating(false); refresh()
   }
- 
+
   const getLink = r => {
     const payload = btoa(JSON.stringify({ id:r.id, linkId:r.linkId, title:r.title, dept:r.dept||'', isMTO:r.isMTO||false, ageLimit:r.ageLimit||28, threshold:r.threshold||12, recruiterEmail:r.recruiterEmail||'', difficulty:r.difficulty||'medium' }))
     return window.location.origin+'/assess/'+payload
   }
- 
+
   const copyLink = r => {
     navigator.clipboard.writeText(getLink(r)).catch(()=>{})
     setCopied(true); setTimeout(()=>setCopied(false),2000)
   }
- 
+
   const handleDelete = async () => {
     if(!deleteConfirm) return
     if(deleteConfirm.type==='role') dbDeleteRole(deleteConfirm.id)
     else dbDeleteCandidate(deleteConfirm.id)
     setDeleteConfirm(null); await refresh()
   }
- 
+
   const saveNote = () => {
     if(!noteModal) return
     dbSaveCandidate(noteModal.id,{notes:noteText}); setNoteModal(null); refresh()
   }
- 
+
   // Ranking across all roles
   const rankingCands = [...allCandidates]
     .filter(c=>c.status==='completed')
@@ -670,7 +850,7 @@ export default function Dashboard() {
       return { ...c, passed:(c.totalScore||0)>=(role?.threshold||12), profile:buildProfile(c.totalScore,c.logicScore,c.numScore,c.timeTaken), roleTitle:role?.title||c.roleName||'' }
     })
     .sort((a,b)=>b.totalScore!==a.totalScore?(b.totalScore||0)-(a.totalScore||0):(a.timeTaken||9999)-(b.timeTaken||9999))
- 
+
   if(loading) return(
     <div className="shell">
       <nav className="nav"><div className="logo"><div className="logo-mark">A</div>AssessIQ</div></nav>
@@ -682,7 +862,7 @@ export default function Dashboard() {
       </div>
     </div>
   )
- 
+
   return(
     <div className="shell">
       <nav className="nav">
@@ -701,13 +881,13 @@ export default function Dashboard() {
           <button className="btn btn-g btn-sm" onClick={logout}>Sign out</button>
         </div>
       </nav>
- 
+
       <div className="page">
         <div style={{marginBottom:20}}>
           <h1 style={{fontSize:24,fontWeight:800,letterSpacing:'-.5px'}}>Assessment Hub</h1>
           <p style={{color:'var(--ink3)',marginTop:4,fontSize:13}}>Create roles, share links, track cognitive profiles</p>
         </div>
- 
+
         {/* Stats */}
         <div className="g4" style={{marginBottom:20}}>
           {[
@@ -722,7 +902,7 @@ export default function Dashboard() {
             </div>
           ))}
         </div>
- 
+
         {/* Global search */}
         <div style={{ marginBottom:20, position:'relative' }}>
           <input
@@ -738,7 +918,7 @@ export default function Dashboard() {
               style={{ position:'absolute', right:12, top:'50%', transform:'translateY(-50%)', background:'none', border:'none', cursor:'pointer', fontSize:16, color:'var(--ink3)' }}>✕</button>
           )}
         </div>
- 
+
         {/* Global search results */}
         {globalSearch.trim() && (
           <div style={{ marginBottom:24 }}>
@@ -783,12 +963,12 @@ export default function Dashboard() {
             )}
           </div>
         )}
- 
+
         {/* Tabs */}
         {!globalSearch.trim() && (
           <>
             <div style={{ display:'flex', gap:0, marginBottom:20, background:'var(--paper2)', borderRadius:'var(--r-sm)', padding:3, border:'1px solid var(--line)', width:'fit-content' }}>
-              {[['roles','📋 Roles'],['ranking','🏆 Ranking'],['analytics','📊 Analytics'],['intray','📝 In-Tray Scoring']].map(([id,label])=>(
+              {[['roles','📋 Roles'],['ranking','🏆 Ranking'],['analytics','📊 Analytics'],['cvinsights','🎓 CV Insights'],['intray','📝 In-Tray Scoring']].map(([id,label])=>(
                 <button key={id} onClick={()=>setActiveTab(id)}
                   style={{ padding:'7px 18px', borderRadius:6, border:'none', fontFamily:'inherit', fontSize:12, fontWeight:600, cursor:'pointer',
                     background:activeTab===id?'var(--paper)':'transparent', color:activeTab===id?'var(--ink)':'var(--ink3)',
@@ -797,7 +977,7 @@ export default function Dashboard() {
                 </button>
               ))}
             </div>
- 
+
             {/* Roles tab */}
             {activeTab==='roles' && (
               <div>
@@ -847,7 +1027,7 @@ export default function Dashboard() {
                 )}
               </div>
             )}
- 
+
             {/* Ranking tab */}
             {activeTab==='ranking' && (
               <div>
@@ -888,7 +1068,7 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
- 
+
             {/* Analytics tab */}
             {activeTab==='analytics' && (
               <div>
@@ -899,14 +1079,18 @@ export default function Dashboard() {
                 )}
               </div>
             )}
- 
+
+            {activeTab==='cvinsights' && (
+              <CVInsightsTab candidates={allCandidates} roles={roles} onViewResult={setViewResult}/>
+            )}
+
             {activeTab==='intray' && (
               <InTrayScoring/>
             )}
           </>
         )}
       </div>
- 
+
       {/* Modals */}
       {newRoleModal&&(
         <div className="overlay" onClick={()=>setNewRoleModal(false)}>
@@ -981,7 +1165,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
- 
+
       {linkModal&&(
         <div className="overlay" onClick={()=>setLinkModal(null)}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
@@ -1004,9 +1188,9 @@ export default function Dashboard() {
           </div>
         </div>
       )}
- 
+
       {bulkModal&&<BulkInviteModal role={bulkModal} onClose={()=>setBulkModal(null)}/>}
- 
+
       {noteModal&&(
         <div className="overlay" onClick={()=>setNoteModal(null)}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
@@ -1023,7 +1207,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
- 
+
       {expiryModal&&(
         <div className="overlay" onClick={()=>setExpiryModal(null)}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
@@ -1079,7 +1263,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
- 
+
       {deleteConfirm&&(
         <div className="overlay" onClick={()=>setDeleteConfirm(null)}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
@@ -1093,7 +1277,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
- 
+
       {bulkPDFModal&&(
         <BulkPDFModal
           candidates={bulkPDFModal.candidates}
@@ -1102,7 +1286,7 @@ export default function Dashboard() {
           onClose={()=>setBulkPDFModal(null)}
         />
       )}
- 
+
       {viewResult&&(
         <ResultsModal
           candidate={viewResult.cand}
@@ -1115,4 +1299,3 @@ export default function Dashboard() {
     </div>
   )
 }
- 
