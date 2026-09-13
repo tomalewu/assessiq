@@ -363,7 +363,7 @@ IMPORTANT: Respond ONLY with valid JSON. No text before or after. No markdown. U
       'content-type': 'application/json'
     },
     body: JSON.stringify({
-      model: 'claude-opus-4-5',
+      model: 'claude-haiku-4-5-20251001',
       max_tokens: 2000,
       system: SCORING_PROMPT,
       messages: [{ role: 'user', content }]
